@@ -1,8 +1,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-    body { font-family: 'Inter', sans-serif !important; }
-    
+    body {
+        font-family: 'Inter', sans-serif !important;
+    }
+
     .navbar {
         background-color: #ffffff !important;
         padding: 1rem 0 !important;
@@ -19,8 +21,15 @@
         gap: 5px !important;
     }
 
-    .brand-adira { font-weight: 800 !important; color: #000000 !important; }
-    .brand-marmer { font-weight: 400 !important; color: #7f8c8d !important; }
+    .brand-adira {
+        font-weight: 800 !important;
+        color: #000000 !important;
+    }
+
+    .brand-marmer {
+        font-weight: 400 !important;
+        color: #7f8c8d !important;
+    }
 
     .nav-link {
         font-weight: 600 !important;
@@ -35,7 +44,9 @@
         text-decoration: underline !important;
     }
 
-    .nav-link:hover { color: #b08d44 !important; }
+    .nav-link:hover {
+        color: #b08d44 !important;
+    }
 
     .btn-logout {
         background: none !important;
@@ -81,74 +92,79 @@
 
                 @auth
                     {{-- --- MENU UNTUK ADMIN --- --}}
-                    @if(Auth::user()->role == 'admin')
+                    @if (Auth::user()->role == 'admin')
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('admin/dashboard*') ? 'active' : '' }}" 
-                               href="{{ route('admin.dashboard') }}">Dashboard</a>
+                            <a class="nav-link {{ Request::is('admin/dashboard*') ? 'active' : '' }}"
+                                href="{{ route('admin.dashboard') }}">Dashboard</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('admin/pengrajin*') ? 'active' : '' }}" 
-                               href="{{ route('admin.pengrajin.index') }}">Data Pengguna</a>
+                            <a class="nav-link {{ Request::is('admin/pengguna*') ? 'active' : '' }}"
+                                href="{{ route('admin.pengguna.index') }}">Data Pengguna</a>
                         </li>
                         <li class="nav-item">
                             {{-- PERBAIKAN DI SINI: admin.produk diganti admin.produk.index --}}
-                            <a class="nav-link {{ Request::is('admin/produk*') ? 'active' : '' }}" 
-                               href="{{ route('admin.produk.index') }}">Manajemen Produk</a>
+                            <a class="nav-link {{ Request::is('admin/produk*') ? 'active' : '' }}"
+                                href="{{ route('admin.produk.index') }}">Manajemen Produk</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('admin/pesanan*') ? 'active' : '' }}" 
-                               href="{{ route('admin.pesanan.baru') }}">Pesanan</a>
+                            <a class="nav-link {{ Request::is('admin/pesanan*') ? 'active' : '' }}"
+                                href="{{ route('admin.pesanan.baru') }}">Pesanan</a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarLaporan" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarLaporan" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
                                 Laporan
                             </a>
                             <ul class="dropdown-menu border-0 shadow" aria-labelledby="navbarLaporan">
-                                <li><a class="dropdown-item" href="{{ route('admin.laporan.pesanan') }}">Laporan Pesanan</a></li>
-                                <li><a class="dropdown-item" href="{{ route('admin.laporan.keuangan') }}">Laporan Keuangan</a></li>
-                                <li><a class="dropdown-item" href="{{ route('admin.laporan.pengguna') }}">Laporan Pengguna</a></li>
-                                <li><a class="dropdown-item" href="{{ route('admin.laporan.penjualan') }}">Laporan Penjualan</a></li>
+                                <li><a class="dropdown-item" href="{{ route('admin.laporan.pesanan') }}">Laporan Pesanan</a>
+                                </li>
+                                <li><a class="dropdown-item" href="{{ route('admin.laporan.keuangan') }}">Laporan
+                                        Keuangan</a></li>
+                                <li><a class="dropdown-item" href="{{ route('admin.laporan.pengguna') }}">Laporan
+                                        Pengguna</a></li>
+                                <li><a class="dropdown-item" href="{{ route('admin.laporan.penjualan') }}">Laporan
+                                        Penjualan</a></li>
                             </ul>
                         </li>
 
-                    {{-- --- MENU UNTUK PENGRAJIN --- --}}
+                        {{-- --- MENU UNTUK PENGRAJIN --- --}}
                     @elseif(Auth::user()->role == 'pengrajin')
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('pengrajin/dashboard*') ? 'active' : '' }}" 
-                               href="{{ route('pengrajin.dashboard') }}">Dashboard</a>
+                            <a class="nav-link {{ Request::is('pengrajin/dashboard*') ? 'active' : '' }}"
+                                href="{{ route('pengrajin.dashboard') }}">Dashboard</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('pengrajin/katalog*') ? 'active' : '' }}" 
-                               href="{{ route('pengrajin.katalog') }}">Katalog</a>
+                            <a class="nav-link {{ Request::is('pengrajin/katalog*') ? 'active' : '' }}"
+                                href="{{ route('pengrajin.katalog') }}">Katalog</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('pengrajin/pesanan-masuk*') ? 'active' : '' }}" 
-                               href="{{ route('pengrajin.pesanan.masuk') }}">Pesanan Masuk</a>
+                            <a class="nav-link {{ Request::is('pengrajin/pesanan-masuk*') ? 'active' : '' }}"
+                                href="{{ route('pengrajin.pesanan.masuk') }}">Pesanan Masuk</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('pengrajin/proses-pengerjaan*') ? 'active' : '' }}" 
-                               href="{{ route('pengrajin.proses') }}">Proses Pengerjaan</a>
+                            <a class="nav-link {{ Request::is('pengrajin/proses-pengerjaan*') ? 'active' : '' }}"
+                                href="{{ route('pengrajin.proses') }}">Proses Pengerjaan</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('pengrajin/riwayat*') ? 'active' : '' }}" 
-                               href="{{ route('pengrajin.riwayat') }}">Riwayat Pesanan</a>
+                            <a class="nav-link {{ Request::is('pengrajin/riwayat*') ? 'active' : '' }}"
+                                href="{{ route('pengrajin.riwayat') }}">Riwayat Pesanan</a>
                         </li>
 
-                    {{-- --- MENU UNTUK PEMBELI --- --}}
+                        {{-- --- MENU UNTUK PEMBELI --- --}}
                     @elseif(Auth::user()->role == 'pembeli')
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('dashboard*') ? 'active' : '' }}" 
-                               href="{{ route('pembeli.dashboard') }}">Dashboard</a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a class="nav-link {{ Request::is('produk*') || Request::is('katalog*') ? 'active' : '' }}" 
-                               href="{{ route('produk.index') }}">Katalog Produk</a>
+                            <a class="nav-link {{ Request::is('dashboard*') ? 'active' : '' }}"
+                                href="{{ route('pembeli.dashboard') }}">Dashboard</a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('pesanan*') ? 'active' : '' }}" 
-                               href="{{ route('pesanan.index') }}">Riwayat Pesanan</a>
+                            <a class="nav-link {{ Request::is('produk*') || Request::is('katalog*') ? 'active' : '' }}"
+                                href="{{ route('produk.index') }}">Katalog Produk</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::is('pesanan*') ? 'active' : '' }}"
+                                href="{{ route('pesanan.index') }}">Riwayat Pesanan</a>
                         </li>
                     @endif
 
@@ -159,11 +175,10 @@
                             <button type="submit" class="btn-logout shadow-sm">Logout</button>
                         </form>
                     </li>
-
                 @else
                     <li class="nav-item">
-                        <a class="nav-link {{ Request::is('produk*') || Request::is('katalog*') ? 'active' : '' }}" 
-                           href="{{ route('produk.index') }}">Katalog</a>
+                        <a class="nav-link {{ Request::is('produk*') || Request::is('katalog*') ? 'active' : '' }}"
+                            href="{{ route('produk.index') }}">Katalog</a>
                     </li>
                     <li class="nav-item">
                         <a href="{{ route('login') }}" class="btn-logout text-decoration-none">Login</a>

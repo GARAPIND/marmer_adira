@@ -6,6 +6,7 @@ use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\PembeliController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\PengrajinController;
 
 // --- 1. HALAMAN UTAMA & PUBLIK ---
@@ -47,8 +48,9 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::post('/pesanan/{id}/update', [AdminController::class, 'updatePesanan'])->name('pesanan.update');
-        Route::get('/pengrajin', [AdminController::class, 'dataPengrajin'])->name('pengrajin.index');
-        Route::post('/pengrajin', [AdminController::class, 'tambahPengrajin'])->name('pengrajin.store');
+
+        Route::resource('/pengguna', PenggunaController::class);
+
         Route::get('/produk', [AdminController::class, 'manajemenProduk'])->name('produk.index');
         Route::get('/pesanan/baru', [AdminController::class, 'pesananBaru'])->name('pesanan.baru');
 

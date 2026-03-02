@@ -91,6 +91,16 @@
             color: #28a745;
         }
 
+        .badge-pembeli {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+        }
+
+        .badge-pengrajin {
+            background-color: var(--adira-gold-light);
+            color: var(--adira-gold);
+        }
+
         .modal-content-elegant {
             border-radius: 25px;
             border: none;
@@ -165,12 +175,12 @@
                 <div>
                     <h2 class="fw-bold mb-0 text-dark" style="border-left: 5px solid #000; padding-left: 15px;">Manajemen
                         Pengguna</h2>
-                    <p class="text-muted mb-0 small">Kelola data pengrajin dan akses operasional Adira Marmer</p>
+                    <p class="text-muted mb-0 small">Kelola data pengguna dan akses operasional Adira Marmer</p>
                 </div>
             </div>
             <button type="button" class="btn btn-gold px-4 py-2 shadow-sm fw-bold" data-bs-toggle="modal"
                 data-bs-target="#modalTambahPengrajin">
-                <i class="fas fa-user-plus me-2"></i> Tambah Pengrajin
+                <i class="fas fa-user-plus me-2"></i> Tambah Pengguna
             </button>
         </div>
 
@@ -183,12 +193,12 @@
                             <th class="ps-4">Profil Pengguna</th>
                             <th>Alamat Email</th>
                             <th class="text-center">Nomor Telepon</th>
-                            <th class="text-center">Status</th>
+                            <th class="text-center">Role</th>
                             <th class="text-center pe-4">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($pengrajin as $user)
+                        @forelse($user as $user)
                             <tr>
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
@@ -207,25 +217,35 @@
                                     <i class="fab fa-whatsapp text-success me-1"></i> {{ $user->no_telp }}
                                 </td>
                                 <td class="text-center">
-                                    <span class="status-badge-elegant badge-active shadow-sm">
-                                        <i class="fas fa-check-circle me-1"></i> Aktif
-                                    </span>
+                                    @if ($user->role == 'pembeli')
+                                        <span class="status-badge-elegant badge-pembeli shadow-sm">
+                                            <i class="fas fa-shopping-cart me-1"></i> PEMBELI
+                                        </span>
+                                    @elseif($user->role == 'pengrajin')
+                                        <span class="status-badge-elegant badge-pengrajin shadow-sm">
+                                            <i class="fas fa-hammer me-1"></i> PENGRAJIN
+                                        </span>
+                                    @else
+                                        <span class="status-badge-elegant badge-active shadow-sm">
+                                            <i class="fas fa-user me-1"></i> {{ $user->role }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="text-center pe-4">
                                     <div class="d-flex justify-content-center gap-1">
                                         {{-- Tombol Edit --}}
                                         <button class="btn btn-link text-primary p-2" title="Edit Data"
-                                            onclick="editPengrajin({{ json_encode($user) }})">
+                                            onclick="editPengguna({{ json_encode($user) }})">
                                             <i class="fas fa-edit"></i>
                                         </button>
 
                                         {{-- Tombol Hapus --}}
                                         <form id="form-delete-{{ $user->id }}"
-                                            action="{{ route('admin.pengrajin.destroy', $user->id) }}" method="POST"
+                                            action="{{ route('admin.pengguna.destroy', $user->id) }}" method="POST"
                                             class="d-inline">
                                             @csrf @method('DELETE')
                                             <button type="button" class="btn btn-link text-danger p-2"
-                                                title="Hapus Pengrajin"
+                                                title="Hapus Pengguna"
                                                 onclick="confirmDeleteUser({{ $user->id }}, '{{ $user->name }}')">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
@@ -257,12 +277,12 @@
             <div class="modal-content modal-content-elegant shadow-lg">
                 <div class="modal-header modal-header-elegant p-4">
                     <h5 class="modal-title fw-bold" id="modalTitle"><i class="fas fa-user-plus me-2 text-gold"></i> Tambah
-                        Pengrajin Baru</h5>
+                        Pengguna Baru</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4 bg-light">
-                    <form id="formPengrajin" action="{{ route('admin.pengrajin.store') }}" method="POST">
+                    <form id="formPengrajin" action="{{ route('admin.pengguna.store') }}" method="POST">
                         @csrf
                         <div id="method-field"></div>
 
@@ -300,6 +320,21 @@
                             @enderror
                         </div>
 
+                        <div class="mb-3">
+                            <label class="fw-bold small text-muted mb-2 text-uppercase">Role Pengguna</label>
+                            <select name="role" id="role"
+                                class="form-select rounded-3 border-light shadow-sm py-2 @error('role') is-invalid @enderror"
+                                required>
+                                <option value="">-- Pilih Role --</option>
+                                <option value="pembeli" {{ old('role') == 'pembeli' ? 'selected' : '' }}>Pembeli</option>
+                                <option value="pengrajin" {{ old('role') == 'pengrajin' ? 'selected' : '' }}>Pengrajin
+                                </option>
+                            </select>
+                            @error('role')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <div class="mb-4" id="password-group">
                             <label class="fw-bold small text-muted mb-2 text-uppercase">Password Akses</label>
                             <input type="password" name="password" id="password"
@@ -314,7 +349,7 @@
 
                         <div class="d-grid gap-2 pt-2">
                             <button type="submit" class="btn btn-gold py-3 fw-bold shadow">
-                                <i class="fas fa-save me-2"></i> <span id="btn-text">Simpan Data Pengrajin</span>
+                                <i class="fas fa-save me-2"></i> <span id="btn-text">Simpan Data Pengguna</span>
                             </button>
                             <button type="button" class="btn btn-white py-2 fw-bold text-muted border-0"
                                 data-bs-dismiss="modal">Batal</button>
@@ -331,25 +366,29 @@
 
     <script>
         // Membuka modal otomatis jika ada error validasi dari server
-        @if ($errors->any())
-            var myModal = new bootstrap.Modal(document.getElementById('modalTambahPengrajin'));
-            myModal.show();
-        @endif
+        document.addEventListener('DOMContentLoaded', function() {
+            @if ($errors->any())
+                let modalElement = document.getElementById('modalTambahPengrajin');
+                let modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            @endif
+        });
 
         // Fungsi Edit Pengrajin
-        function editPengrajin(user) {
+        function editPengguna(user) {
             document.getElementById('modalTitle').innerHTML =
-                '<i class="fas fa-user-edit me-2 text-gold"></i> Edit Data Pengrajin';
-            document.getElementById('btn-text').innerText = 'Perbarui Data Pengrajin';
+                '<i class="fas fa-user-edit me-2 text-gold"></i> Edit Data Pengguna';
+            document.getElementById('btn-text').innerText = 'Perbarui Data Pengguna';
 
             // Sesuaikan URL action untuk Update
-            document.getElementById('formPengrajin').action = `/admin/pengrajin/update/${user.id}`;
+            document.getElementById('formPengrajin').action = `/admin/pengguna/${user.id}`;
             document.getElementById('method-field').innerHTML = '@method('PUT')';
 
             // Isi field dengan data yang ada
             document.getElementById('name').value = user.name;
             document.getElementById('email').value = user.email;
             document.getElementById('no_telp').value = user.no_telp;
+            document.getElementById('role').value = user.role;
 
             // Penyesuaian Password saat edit agar opsional
             document.getElementById('password').required = false;
@@ -363,7 +402,7 @@
         // Fungsi Konfirmasi Hapus SweetAlert
         function confirmDeleteUser(id, nama) {
             Swal.fire({
-                title: '<h4 class="fw-bold mb-0" style="color: var(--adira-dark)">Hapus Akses Pengrajin?</h4>',
+                title: '<h4 class="fw-bold mb-0" style="color: var(--adira-dark)">Hapus Akses Pengguna?</h4>',
                 html: `Akun <b>${nama}</b> akan dihapus permanen dari sistem Adira Marmer.`,
                 icon: 'warning',
                 showCancelButton: true,
@@ -390,9 +429,9 @@
         // Reset form saat modal ditutup agar kembali ke mode "Tambah"
         document.getElementById('modalTambahPengrajin').addEventListener('hidden.bs.modal', function() {
             document.getElementById('modalTitle').innerHTML =
-                '<i class="fas fa-user-plus me-2 text-gold"></i> Tambah Pengrajin Baru';
-            document.getElementById('btn-text').innerText = 'Simpan Data Pengrajin';
-            document.getElementById('formPengrajin').action = "{{ route('admin.pengrajin.store') }}";
+                '<i class="fas fa-user-plus me-2 text-gold"></i> Tambah Pengguna Baru';
+            document.getElementById('btn-text').innerText = 'Simpan Data Pengguna';
+            document.getElementById('formPengrajin').action = "{{ route('admin.pengguna.store') }}";
             document.getElementById('method-field').innerHTML = '';
             document.getElementById('formPengrajin').reset();
 
@@ -400,6 +439,8 @@
             document.getElementById('password').required = true;
             document.getElementById('password').placeholder = "Minimal 8 karakter";
             document.getElementById('password-info').classList.add('d-none');
+
+            document.getElementById('role').value = '';
 
             // Bersihkan class error validasi
             var inputs = document.querySelectorAll('.is-invalid');
