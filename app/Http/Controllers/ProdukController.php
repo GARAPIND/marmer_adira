@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Produk;
-use App\Models\Bahan; 
-use App\Models\Terminal; 
+use App\Models\Bahan;
+use App\Models\Terminal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -16,11 +16,12 @@ class ProdukController extends Controller
      */
     public function index()
     {
-        $produk = Produk::whereNotNull('gambar')
-                        ->where('nama_produk', '!=', '')
-                        ->latest()
-                        ->get();
-        
+        $produk = Produk::with('bahan_kecil', 'bahan_sedang', 'bahan_besar')
+            ->whereNotNull('gambar')
+            ->where('nama_produk', '!=', '')
+            ->latest()
+            ->get();
+
         return view('produk.index', compact('produk'));
     }
 
@@ -32,14 +33,14 @@ class ProdukController extends Controller
     {
         $listBahan = Bahan::all();
         $listTerminal = Terminal::all();
-        
+
         // Menangkap ID (mencoba produk_id dulu, jika kosong coba id)
-        $idProduk = $request->input('produk_id') ?? $request->input('id'); 
+        $idProduk = $request->input('produk_id') ?? $request->input('id');
         $produkTerpilih = $request->input('produk');
 
         // Cari data lengkap produk berdasarkan ID
         $dataProduk = Produk::find($idProduk);
-        
+
         // Fallback: Jika ID tidak ketemu (mungkin karena ganti database), cari berdasarkan nama
         if (!$dataProduk && $produkTerpilih) {
             $dataProduk = Produk::where('nama_produk', trim($produkTerpilih))->first();
@@ -59,7 +60,7 @@ class ProdukController extends Controller
     public function katalogPengrajin()
     {
         $produk = Produk::where('pengrajin_id', Auth::id())->latest()->get();
-        $bahans = Bahan::all(); 
+        $bahans = Bahan::all();
 
         return view('pengrajin.katalog', compact('produk', 'bahans'));
     }
@@ -75,7 +76,7 @@ class ProdukController extends Controller
             'deskripsi'    => 'nullable|string',
             'ukuran_kecil' => 'required|string',
             'harga_kecil'  => 'required|numeric',
-            'ukuran_sedang'=> 'nullable|string',
+            'ukuran_sedang' => 'nullable|string',
             'harga_sedang' => 'nullable|numeric',
             'ukuran_besar' => 'nullable|string',
             'harga_besar'  => 'nullable|numeric',
@@ -107,7 +108,7 @@ class ProdukController extends Controller
             'nama_produk'  => 'required|string|max:255',
             'ukuran_kecil' => 'required|string',
             'harga_kecil'  => 'required|numeric',
-            'ukuran_sedang'=> 'nullable|string',
+            'ukuran_sedang' => 'nullable|string',
             'harga_sedang' => 'nullable|numeric',
             'ukuran_besar' => 'nullable|string',
             'harga_besar'  => 'nullable|numeric',
@@ -133,7 +134,7 @@ class ProdukController extends Controller
     public function destroy($id)
     {
         $produk = Produk::findOrFail($id);
-        
+
         if ($produk->gambar) {
             Storage::disk('public')->delete($produk->gambar);
         }

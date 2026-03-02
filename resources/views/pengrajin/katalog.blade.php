@@ -109,7 +109,6 @@
             box-shadow: none;
         }
 
-        /* ── Size Card Grid ── */
         .size-card {
             background: #fff;
             border: 1.5px solid #eee;
@@ -143,7 +142,6 @@
             color: #155724;
         }
 
-        /* make modal scrollable only when truly needed */
         .modal-body {
             max-height: 78vh;
             overflow-y: auto;
@@ -289,13 +287,11 @@
                 <form id="formProduk" method="POST" action="{{ route('pengrajin.katalog.simpan') }}"
                     enctype="multipart/form-data">
                     @csrf
-                    {{-- Diubah via JS menjadi PUT saat mode edit --}}
                     <input type="hidden" name="_method" id="formMethod" value="POST">
 
                     <div class="modal-body p-4 bg-white">
                         <div class="row g-4">
 
-                            {{-- ── KOLOM KIRI ── --}}
                             <div class="col-md-4 d-flex flex-column gap-3">
 
                                 <div>
@@ -331,7 +327,6 @@
 
                             </div>
 
-                            {{-- ── KOLOM KANAN: 3 Size Cards ── --}}
                             <div class="col-md-8">
                                 <label class="small fw-bold text-uppercase text-muted mb-3 d-block">
                                     Konfigurasi Ukuran &amp; Harga
@@ -339,7 +334,6 @@
 
                                 <div class="row g-3">
 
-                                    {{-- ── KECIL (Wajib) ── --}}
                                     <div class="col-12 col-lg-4">
                                         <div class="size-card h-100">
                                             <span class="size-label size-label-kecil">
@@ -400,7 +394,6 @@
                                         </div>
                                     </div>
 
-                                    {{-- ── SEDANG (Opsional) ── --}}
                                     <div class="col-12 col-lg-4">
                                         <div class="size-card h-100">
                                             <span class="size-label size-label-sedang">
@@ -460,7 +453,6 @@
                                         </div>
                                     </div>
 
-                                    {{-- ── BESAR (Opsional) ── --}}
                                     <div class="col-12 col-lg-4">
                                         <div class="size-card h-100">
                                             <span class="size-label size-label-besar">
@@ -519,12 +511,10 @@
                                             </div>
                                         </div>
                                     </div>
-
-                                </div>{{-- /row size cards --}}
-                            </div>{{-- /col-md-8 --}}
-
-                        </div>{{-- /row g-4 --}}
-                    </div>{{-- /modal-body --}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="modal-footer border-0 px-4 py-3">
                         <button type="button" class="btn btn-light rounded-pill px-4 fw-bold text-muted"
@@ -551,10 +541,8 @@
         function editProduk(data) {
             document.getElementById('modalTitle').innerText = 'Edit Koleksi Produk';
 
-            // Arahkan ke route update & pakai method PUT
             document.getElementById('formProduk').action = `/pengrajin/katalog/update/${data.id}`;
 
-            // Saat edit, gambar tidak wajib diisi ulang
             document.getElementById('gambar').removeAttribute('required');
 
             document.getElementById('nama_produk').value = data.nama_produk ?? '';
@@ -595,7 +583,6 @@
             });
         }
 
-        // Reset penuh saat modal ditutup
         document.getElementById('modalProduk').addEventListener('hidden.bs.modal', function() {
             document.getElementById('modalTitle').innerText = 'Tambah Koleksi Baru';
             document.getElementById('formProduk').action = "{{ route('pengrajin.katalog.simpan') }}";

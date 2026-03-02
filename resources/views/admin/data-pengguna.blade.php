@@ -1,10 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-    {{-- Library SweetAlert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    {{-- CUSTOM CSS UNTUK ESTETIKA MANAJEMEN PENGGUNA --}}
     <style>
         :root {
             --adira-gold: #C5A47E;
@@ -125,7 +123,6 @@
             font-size: 1.5rem;
         }
 
-        /* Custom Swal Style */
         .swal2-popup {
             border-radius: 25px !important;
             font-family: 'Inter', sans-serif !important;
@@ -139,7 +136,6 @@
             border-radius: 50px !important;
         }
 
-        /* Error Validation Style */
         .is-invalid {
             border-color: #dc3545 !important;
             background-color: #fff8f8 !important;
@@ -152,7 +148,6 @@
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
-        {{-- Notifikasi SweetAlert untuk Session Success --}}
         @if (session('success'))
             <script>
                 Swal.fire({
@@ -166,7 +161,6 @@
             </script>
         @endif
 
-        {{-- HEADER HALAMAN --}}
         <div class="page-header-elegant d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
                 <div class="icon-box-header me-3">
@@ -184,7 +178,6 @@
             </button>
         </div>
 
-        {{-- TABEL DATA PENGGUNA --}}
         <div class="user-card-container overflow-hidden bg-white">
             <div class="table-responsive">
                 <table class="table table-elegant hover align-middle mb-0">
@@ -233,13 +226,11 @@
                                 </td>
                                 <td class="text-center pe-4">
                                     <div class="d-flex justify-content-center gap-1">
-                                        {{-- Tombol Edit --}}
                                         <button class="btn btn-link text-primary p-2" title="Edit Data"
                                             onclick="editPengguna({{ json_encode($user) }})">
                                             <i class="fas fa-edit"></i>
                                         </button>
 
-                                        {{-- Tombol Hapus --}}
                                         <form id="form-delete-{{ $user->id }}"
                                             action="{{ route('admin.pengguna.destroy', $user->id) }}" method="POST"
                                             class="d-inline">
@@ -271,7 +262,6 @@
         </div>
     </div>
 
-    {{-- MODAL TAMBAH/EDIT PENGRAJIN --}}
     <div class="modal fade" id="modalTambahPengrajin" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content modal-content-elegant shadow-lg">
@@ -360,12 +350,10 @@
         </div>
     </div>
 
-    {{-- FontAwesome & Animate.css --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
     <script>
-        // Membuka modal otomatis jika ada error validasi dari server
         document.addEventListener('DOMContentLoaded', function() {
             @if ($errors->any())
                 let modalElement = document.getElementById('modalTambahPengrajin');
@@ -374,23 +362,19 @@
             @endif
         });
 
-        // Fungsi Edit Pengrajin
         function editPengguna(user) {
             document.getElementById('modalTitle').innerHTML =
                 '<i class="fas fa-user-edit me-2 text-gold"></i> Edit Data Pengguna';
             document.getElementById('btn-text').innerText = 'Perbarui Data Pengguna';
 
-            // Sesuaikan URL action untuk Update
             document.getElementById('formPengrajin').action = `/admin/pengguna/${user.id}`;
             document.getElementById('method-field').innerHTML = '@method('PUT')';
 
-            // Isi field dengan data yang ada
             document.getElementById('name').value = user.name;
             document.getElementById('email').value = user.email;
             document.getElementById('no_telp').value = user.no_telp;
             document.getElementById('role').value = user.role;
 
-            // Penyesuaian Password saat edit agar opsional
             document.getElementById('password').required = false;
             document.getElementById('password').placeholder = "Ubah password (opsional)";
             document.getElementById('password-info').classList.remove('d-none');
@@ -399,7 +383,6 @@
             editModal.show();
         }
 
-        // Fungsi Konfirmasi Hapus SweetAlert
         function confirmDeleteUser(id, nama) {
             Swal.fire({
                 title: '<h4 class="fw-bold mb-0" style="color: var(--adira-dark)">Hapus Akses Pengguna?</h4>',
@@ -426,7 +409,6 @@
             });
         }
 
-        // Reset form saat modal ditutup agar kembali ke mode "Tambah"
         document.getElementById('modalTambahPengrajin').addEventListener('hidden.bs.modal', function() {
             document.getElementById('modalTitle').innerHTML =
                 '<i class="fas fa-user-plus me-2 text-gold"></i> Tambah Pengguna Baru';
@@ -435,14 +417,12 @@
             document.getElementById('method-field').innerHTML = '';
             document.getElementById('formPengrajin').reset();
 
-            // Kembalikan status password menjadi required
             document.getElementById('password').required = true;
             document.getElementById('password').placeholder = "Minimal 8 karakter";
             document.getElementById('password-info').classList.add('d-none');
 
             document.getElementById('role').value = '';
 
-            // Bersihkan class error validasi
             var inputs = document.querySelectorAll('.is-invalid');
             inputs.forEach(function(input) {
                 input.classList.remove('is-invalid');
