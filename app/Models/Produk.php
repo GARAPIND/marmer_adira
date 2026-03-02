@@ -16,18 +16,37 @@ class Produk extends Model
         'nama_produk',
         'bahan',
         'deskripsi',
-        'ukuran_kecil', 
+        'ukuran_kecil',
         'harga_kecil',
-        'ukuran_sedang', 
+        'berat_kecil',
+        'bahan_kecil_id',
+        'ukuran_sedang',
         'harga_sedang',
-        'ukuran_besar', 
+        'berat_sedang',
+        'bahan_sedang_id',
+        'ukuran_besar',
         'harga_besar',
+        'berat_besar',
+        'bahan_besar_id',
         'stok',
         'gambar',
-        'pengrajin_id', 
+        'pengrajin_id',
     ];
 
-    public function pengrajin() {
+    public function pengrajin()
+    {
         return $this->belongsTo(User::class, 'pengrajin_id');
+    }
+    public function bahan_kecil()
+    {
+        return $this->belongsTo(Bahan::class, 'bahan_kecil_id');
+    }
+    public function bahan_sedang()
+    {
+        return $this->belongsTo(Bahan::class, 'bahan_sedang_id');
+    }
+    public function bahan_besar()
+    {
+        return $this->belongsTo(Bahan::class, 'bahan_besar_id');
     }
 }
