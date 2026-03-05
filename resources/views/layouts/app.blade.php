@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <title>Adira Marmer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}">
+    </script>
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
@@ -35,7 +37,7 @@
 
         .navbar.scrolled {
             background-color: #ffffff !important;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
             padding: 10px 0;
         }
 
@@ -50,7 +52,7 @@
         .hero-home {
             height: 100vh;
             background:
-                linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
+                linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
                 url('https://images.pexels.com/photos/275484/pexels-photo-275484.jpeg');
             background-size: cover;
             background-position: center;
@@ -101,7 +103,7 @@
 
         .card-produk:hover {
             transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
         }
 
         .card-produk img {
@@ -126,33 +128,34 @@
 
 <body>
 
-{{-- NAVBAR --}}
-@include('components.navbar')
+    {{-- NAVBAR --}}
+    @include('components.navbar')
 
-{{-- CONTENT --}}
-<main>
-    @yield('content')
-</main>
+    {{-- CONTENT --}}
+    <main>
+        @yield('content')
+    </main>
 
-{{-- FOOTER --}}
-<footer class="text-center py-4 mt-5">
-    <p>&copy; {{ date('Y') }} Adira Marmer | Sistem Informasi Pemesanan Produk Marmer</p>
-</footer>
+    {{-- FOOTER --}}
+    <footer class="text-center py-4 mt-5">
+        <p>&copy; {{ date('Y') }} Adira Marmer | Sistem Informasi Pemesanan Produk Marmer</p>
+    </footer>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Navbar Scroll Effect -->
-<script>
-    window.addEventListener('scroll', function () {
-        const navbar = document.querySelector('.navbar');
-        if (window.scrollY > 50) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-    });
-</script>
+    <!-- Navbar Scroll Effect -->
+    <script>
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    </script>
 
 </body>
+
 </html>

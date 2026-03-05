@@ -21,30 +21,31 @@ class Pesanan extends Model
         'gambar_referensi',
         'jumlah',
         'metode_pengambilan',
-    
-        'alamat_pengiriman', 
+        'alamat_pengiriman',
         'biaya_pengiriman',
         'status',
         'total_harga',
+        'midtrans_order_id',
+        'midtrans_transaction_id',
+        'midtrans_payment_type',
+        'status_pembayaran',
+        'tanggal_bayar',
+        'midtrans_status',
+        'midtrans_gross_amount',
+        'midtrans_currency',
+        'midtrans_fraud_status',
     ];
 
-    /**
-     * Relasi ke User (Pembeli)
-     * Satu pesanan dimiliki oleh satu user.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Relasi ke Produk
-     * Satu pesanan berisi satu jenis produk marmer.
-     */
     public function produk(): BelongsTo
     {
         return $this->belongsTo(Produk::class);
     }
+
     public function terminal()
     {
         return $this->belongsTo(Terminal::class);

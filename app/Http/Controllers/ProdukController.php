@@ -50,7 +50,7 @@ class ProdukController extends Controller
         if ($dataProduk && !$produkTerpilih) {
             $produkTerpilih = $dataProduk->nama_produk;
         }
-
+        // dd($listBahan, $listTerminal, $produkTerpilih, $dataProduk);
         return view('pesanan.create', compact('listBahan', 'listTerminal', 'produkTerpilih', 'dataProduk'));
     }
 

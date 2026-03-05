@@ -28,4 +28,10 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed', // Mengenkripsi password secara otomatis
     ];
+
+    // relasi dengan pesanan
+    public function pesanan()
+    {
+        return $this->hasMany(Pesanan::class);
+    }
 }

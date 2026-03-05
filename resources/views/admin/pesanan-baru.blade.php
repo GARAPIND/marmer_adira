@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-{{-- Library Ikon & Animasi --}}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
@@ -75,7 +74,6 @@
 </style>
 
 <div class="container py-5 mt-2 animate__animated animate__fadeIn">
-    {{-- HEADER HALAMAN --}}
     <div class="page-header-elegant d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center">
             <div class="marble-icon-box me-3 shadow-sm">
@@ -102,7 +100,6 @@
         </div>
     @endif
 
-    {{-- TABEL PESANAN --}}
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
         <div class="table-responsive">
             <table class="table table-elegant hover align-middle mb-0">
@@ -112,7 +109,7 @@
                         <th>Nama Pembeli</th>
                         <th>Tanggal Masuk</th>
                         <th>Detail Produk</th>
-                        <th class="text-center pe-4">Aksi</th> {{-- Perbaikan: Jadi Satu Kolom Saja --}}
+                        <th class="text-center pe-4">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -128,7 +125,6 @@
                             <small class="text-muted">Dimensi: {{ $item->ukuran }}</small>
                         </td>
                         <td class="text-center pe-4">
-                            {{-- Tombol Gabungan: Lebih Bersih --}}
                             <button class="btn btn-gold btn-sm px-4 shadow-sm fw-bold" 
                                 onclick="showDetailAdmin({{ json_encode($item) }})">
                                 <i class="fas fa-check-double me-1 text-white"></i> Detail & Validasi
@@ -149,7 +145,6 @@
     </div>
 </div>
 
-{{-- MODAL DETAIL & VERIFIKASI --}}
 <div class="modal fade" id="modalDetailPesanan" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; overflow: hidden;">
@@ -242,16 +237,21 @@
         document.getElementById('md-jumlah').innerText = data.jumlah + ' Pcs';
         document.getElementById('md-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan khusus.';
         
+        document.getElementById('input_harga').value = data.total_harga > 0 ? data.total_harga : '';
+        
         const alamatSection = document.getElementById('md-alamat-section');
         const ongkirGroup = document.getElementById('group-ongkir');
+        const inputOngkir = document.getElementById('input_ongkir');
         
-        if(data.metode_pengambilan === 'dikirim') {
+        if (data.metode_pengambilan === 'dikirim') {
             alamatSection.style.display = 'block';
             document.getElementById('md-alamat').innerText = data.alamat_pengiriman || 'Alamat terminal belum diisi';
             ongkirGroup.style.display = 'block';
+            inputOngkir.value = data.biaya_pengiriman > 0 ? data.biaya_pengiriman : 0;
         } else {
             alamatSection.style.display = 'none';
             ongkirGroup.style.display = 'none';
+            inputOngkir.value = 0;
         }
 
         document.getElementById('formUpdateHarga').action = `/admin/pesanan/${data.id}/update`;

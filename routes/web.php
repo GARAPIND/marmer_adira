@@ -29,8 +29,10 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('auth/google/callback', 'handleGoogleCallback');
 });
 
+Route::post('/midtrans/callback', [PesananController::class, 'midtransCallback'])->name('midtrans.callback');
 // --- 3. KHUSUS USER TERAUTENTIKASI ---
 Route::middleware(['auth'])->group(function () {
+    Route::get('/pesanan/{id}/snap-token', [PesananController::class, 'getSnapToken'])->name('pesanan.snapToken');
 
     // --- A. ROLE PEMBELI ---
     Route::get('/dashboard', [PembeliController::class, 'dashboard'])->name('pembeli.dashboard');
@@ -73,6 +75,9 @@ Route::middleware(['auth'])->group(function () {
 
             // Laporan Tambahan
             Route::get('/pengguna', [AdminController::class, 'laporanPengguna'])->name('pengguna');
+            Route::get('pengguna/pdf', [AdminController::class, 'exportPenggunaPdf'])->name('pengguna.pdf');
+            Route::get('pengguna/excel', [AdminController::class, 'exportPenggunaExcel'])->name('pengguna.excel');
+
             Route::get('/penjualan', [AdminController::class, 'laporanPenjualan'])->name('penjualan');
         });
     });

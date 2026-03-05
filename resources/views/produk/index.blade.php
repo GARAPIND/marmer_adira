@@ -289,12 +289,8 @@
                                 @else
                                     <img src="https://via.placeholder.com/600x800?text=Adira+Stone" alt="No Image">
                                 @endif
-                                <div class="stok-badge {{ ($p->stok ?? 0) < 1 ? 'habis' : '' }}">
-                                    @if (($p->stok ?? 0) < 1)
-                                        <i class="fas fa-times-circle me-1"></i> Habis
-                                    @else
-                                        <i class="fas fa-layer-group me-1"></i> Stok: {{ $p->stok }}
-                                    @endif
+                                <div class="stok-badge">
+                                    <i class="fas fa-check-circle me-1"></i> Tersedia
                                 </div>
                             </div>
 
@@ -391,16 +387,9 @@
                                 </div>
 
                                 <div class="d-grid gap-2 mt-3">
-                                    @if (($p->stok ?? 0) > 0)
-                                        <a href="{{ route('pesanan.create', ['produk_id' => $p->id]) }}"
-                                            class="btn btn-order">
-                                            <i class="fas fa-gem me-2"></i> Mulai Pemesanan
-                                        </a>
-                                    @else
-                                        <span class="btn btn-order disabled-order">
-                                            <i class="fas fa-ban me-2"></i> Stok Habis
-                                        </span>
-                                    @endif
+                                    <a href="{{ route('pesanan.create', ['produk_id' => $p->id]) }}" class="btn btn-order">
+                                        <i class="fas fa-gem me-2"></i> Mulai Pemesanan
+                                    </a>
 
                                     @auth
                                         @if (Auth::user()->role == 'pengrajin')
