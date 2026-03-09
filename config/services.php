@@ -36,9 +36,14 @@ return [
     ],
 
     'google' => [
-    'client_id' => env('GOOGLE_CLIENT_ID'),
-    'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-    'redirect' => env('GOOGLE_REDIRECT_URI'),
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
+    'rajaongkir' => [
+        'key'                  => env('RAJAONGKIR_API_KEY'),
+        'origin_kecamatan_id'  => env('RAJAONGKIR_ORIGIN_KECAMATAN_ID'),
     ],
 
 ];

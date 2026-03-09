@@ -73,7 +73,8 @@ class AdminController extends Controller
             'baru'      => Pesanan::where('status', 'Menunggu Verifikasi Admin')->count(),
             'diproses'  => Pesanan::whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'diekspedisi'])->count(),
             'selesai'   => Pesanan::where('status', 'Selesai')->count(),
-            'total_bayar' => Pesanan::where('status', 'Selesai')
+            // tanpa where baru atau where status_pembayaran paid
+            'total_bayar' => Pesanan::where('status_pembayaran', 'paid')
                 ->selectRaw('SUM(total_harga + COALESCE(biaya_pengiriman, 0)) as total')
                 ->first()->total ?? 0
         ];

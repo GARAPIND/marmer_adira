@@ -21,6 +21,8 @@ class Pesanan extends Model
         'gambar_referensi',
         'jumlah',
         'metode_pengambilan',
+        'jenis_pengiriman',
+        'alamat_pembeli_id',
         'alamat_pengiriman',
         'biaya_pengiriman',
         'status',
@@ -46,8 +48,13 @@ class Pesanan extends Model
         return $this->belongsTo(Produk::class);
     }
 
-    public function terminal()
+    public function terminal(): BelongsTo
     {
         return $this->belongsTo(Terminal::class);
+    }
+
+    public function alamatPembeli(): BelongsTo
+    {
+        return $this->belongsTo(AlamatPembeli::class);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\PembeliController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AlamatPembeliController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\PengrajinController;
 
@@ -44,6 +45,21 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}/status', [PesananController::class, 'updateStatus'])->name('updateStatus');
 
         Route::patch('/{id}/selesai', [PesananController::class, 'selesai'])->name('selesai');
+    });
+    Route::prefix('alamat')->name('alamat.')->group(function () {
+        Route::get('/', [AlamatPembeliController::class, 'index'])->name('index');
+        Route::post('/', [AlamatPembeliController::class, 'store'])->name('store');
+        Route::put('/{id}', [AlamatPembeliController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AlamatPembeliController::class, 'destroy'])->name('destroy');
+        Route::patch('/{id}/utama', [AlamatPembeliController::class, 'setUtama'])->name('utama');
+        Route::get('/list', [AlamatPembeliController::class, 'getList'])->name('list');
+    });
+
+    Route::prefix('ongkir')->name('ongkir.')->group(function () {
+        Route::get('/provinsi', [AlamatPembeliController::class, 'getProvinsi'])->name('provinsi');
+        Route::get('/kota', [AlamatPembeliController::class, 'getKota'])->name('kota');
+        Route::get('/kecamatan', [AlamatPembeliController::class, 'getKecamatan'])->name('kecamatan');
+        Route::post('/hitung', [AlamatPembeliController::class, 'hitungOngkir'])->name('hitung');
     });
 
     // --- B. ROLE ADMIN ---
