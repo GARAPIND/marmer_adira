@@ -7,6 +7,7 @@ use App\Models\Pesanan;
 use App\Models\Bahan; // Pastikan Model Bahan diimport
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -100,6 +101,23 @@ class AdminController extends Controller
             'status'           => $request->status,
         ]);
 
+        return redirect()->back()->with('success', 'Pesanan berhasil diperbarui!');
+    }
+
+    public function selesaiPesanan(Request $request, $id)
+    {
+        $pesanan = Pesanan::findOrFail($id);
+        if ($request->status_selesai == 'paid') {
+            $pesanan->update([
+                'status_pembayaran' => 'paid',
+                'tanggal_bayar' => Carbon::now()
+            ]);
+        } else {
+            $pesanan->update([
+                'status_pembayaran' => 'no_paid',
+                'tanggal_bayar' => null
+            ]);
+        }
         return redirect()->back()->with('success', 'Pesanan berhasil diperbarui!');
     }
 
@@ -290,7 +308,7 @@ class AdminController extends Controller
 
     public function pesananBaru()
     {
-        $pesanan = Pesanan::with('user')->where('status', 'Menunggu Verifikasi Admin')->get();
+        $pesanan = Pesanan::with('user')->orderBy('created_at', 'DESC')->get();
         // dd($pesanan);
         return view('admin.pesanan-baru', compact('pesanan'));
     }

@@ -213,7 +213,7 @@
                                         <div><strong>Ukuran :</strong> {{ $p->ukuran_kecil }}</div>
                                         <div class="text-success"><strong>Harga :</strong> Rp
                                             {{ number_format($p->harga_kecil, 0, ',', '.') }}</div>
-                                        <div><strong>Berat :</strong> {{ $p->berat_kecil ?? '-' }}</div>
+                                        <div><strong>Berat :</strong> {{ $p->berat_kecil ?? '-' }} KG</div>
                                         <div class="text-muted"><strong>Bahan :</strong>
                                             {{ $p->bahan_kecil->nama_bahan ?? '-' }}</div>
                                     @else
@@ -225,7 +225,7 @@
                                         <div><strong>Ukuran :</strong> {{ $p->ukuran_sedang }}</div>
                                         <div class="text-success"><strong>Harga :</strong> Rp
                                             {{ number_format($p->harga_sedang, 0, ',', '.') }}</div>
-                                        <div><strong>Berat :</strong> {{ $p->berat_sedang ?? '-' }}</div>
+                                        <div><strong>Berat :</strong> {{ $p->berat_sedang ?? '-' }} KG</div>
                                         <div class="text-muted"><strong>Bahan :</strong>
                                             {{ $p->bahan_sedang->nama_bahan ?? '-' }}</div>
                                     @else
@@ -237,7 +237,7 @@
                                         <div><strong>Ukuran :</strong> {{ $p->ukuran_besar }}</div>
                                         <div class="text-success"><strong>Harga :</strong> Rp
                                             {{ number_format($p->harga_besar, 0, ',', '.') }}</div>
-                                        <div><strong>Berat :</strong> {{ $p->berat_besar ?? '-' }}</div>
+                                        <div><strong>Berat :</strong> {{ $p->berat_besar ?? '-' }} KG</div>
                                         <div class="text-muted"><strong>Bahan :</strong>
                                             {{ $p->bahan_besar->nama_bahan ?? '-' }}</div>
                                     @else
@@ -353,11 +353,11 @@
 
                                             <div class="row g-2 mb-2">
                                                 <div class="col-6">
-                                                    <label style="font-size:.75rem" class="text-muted">Berat (gr)</label>
+                                                    <label style="font-size:.75rem" class="text-muted">Berat (kg)</label>
                                                     <input type="number" name="berat_kecil" id="berat_kecil"
                                                         value="{{ old('berat_kecil') }}"
                                                         class="form-control form-control-premium @error('berat_kecil') is-invalid @enderror"
-                                                        placeholder="gram" required>
+                                                        placeholder="kilogram" required>
                                                     @error('berat_kecil')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -413,11 +413,11 @@
 
                                             <div class="row g-2 mb-2">
                                                 <div class="col-6">
-                                                    <label style="font-size:.75rem" class="text-muted">Berat (gr)</label>
+                                                    <label style="font-size:.75rem" class="text-muted">Berat (kg)</label>
                                                     <input type="number" name="berat_sedang" id="berat_sedang"
                                                         value="{{ old('berat_sedang') }}"
                                                         class="form-control form-control-premium @error('berat_sedang') is-invalid @enderror"
-                                                        placeholder="gram">
+                                                        placeholder="kilogram">
                                                     @error('berat_sedang')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -472,11 +472,11 @@
 
                                             <div class="row g-2 mb-2">
                                                 <div class="col-6">
-                                                    <label style="font-size:.75rem" class="text-muted">Berat (gr)</label>
+                                                    <label style="font-size:.75rem" class="text-muted">Berat (kg)</label>
                                                     <input type="number" name="berat_besar" id="berat_besar"
                                                         value="{{ old('berat_besar') }}"
                                                         class="form-control form-control-premium @error('berat_besar') is-invalid @enderror"
-                                                        placeholder="gram">
+                                                        placeholder="kilogram">
                                                     @error('berat_besar')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror

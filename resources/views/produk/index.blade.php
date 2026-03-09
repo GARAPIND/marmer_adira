@@ -336,7 +336,9 @@
                                         </div>
                                         <div class="info-row">
                                             <span class="info-label">Berat</span>
-                                            <span class="info-value">{{ $p->berat_kecil ?? '-' }}</span>
+                                            <span class="info-value">
+                                                {{ $p->berat_kecil ? $p->berat_kecil . ' KG' : '-' }}
+                                            </span>
                                         </div>
                                         <div class="info-row">
                                             <span class="info-label">Harga</span>
@@ -356,7 +358,9 @@
                                         </div>
                                         <div class="info-row">
                                             <span class="info-label">Berat</span>
-                                            <span class="info-value">{{ $p->berat_sedang ?? '-' }}</span>
+                                            <span class="info-value">
+                                                {{ $p->berat_sedang ? $p->berat_sedang . ' KG' : '-' }}
+                                            </span>
                                         </div>
                                         <div class="info-row">
                                             <span class="info-label">Harga</span>
@@ -376,7 +380,9 @@
                                         </div>
                                         <div class="info-row">
                                             <span class="info-label">Berat</span>
-                                            <span class="info-value">{{ $p->berat_besar ?? '-' }}</span>
+                                            <span class="info-value">
+                                                {{ $p->berat_besar ? $p->berat_besar . ' KG' : '-' }}
+                                            </span>
                                         </div>
                                         <div class="info-row">
                                             <span class="info-label">Harga</span>

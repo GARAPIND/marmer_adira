@@ -122,7 +122,7 @@
                     <p class="text-muted small mb-0">Pantau status produksi dan rincian biaya pesanan Anda</p>
                 </div>
             </div>
-            <a href="{{ route('pesanan.create') }}" class="btn btn-dark rounded-pill px-4 shadow-sm fw-bold">
+            <a href="{{ route('produk.index') }}" class="btn btn-dark rounded-pill px-4 shadow-sm fw-bold">
                 <i class="fas fa-plus me-2 text-gold"></i> Buat Pesanan Baru
             </a>
         </div>
@@ -280,7 +280,7 @@
                                     <span id="det-harga-produk" class="small fw-bold text-dark"></span>
                                 </div>
                                 <div id="det-ongkir-row" class="d-flex justify-content-between mb-2 text-danger">
-                                    <span class="small">Titip Bus:</span>
+                                    <span class="small">Ongkos Kirim:</span>
                                     <span id="det-ongkir-val" class="small fw-bold"></span>
                                 </div>
                                 <hr class="my-2 border-secondary opacity-25">
@@ -334,10 +334,10 @@
             const ongkirRow = document.getElementById('det-ongkir-row');
             if (data.metode_pengambilan === 'dikirim') {
                 alamatFull.innerText = "Tujuan: " + (data.alamat_pengiriman || '-');
-                ongkirRow.style.display = 'flex';
+                ongkirRow.classList.remove('d-none');
             } else {
                 alamatFull.innerText = "";
-                ongkirRow.style.display = 'none';
+                ongkirRow.classList.add('d-none');
             }
 
             const labelStatus = document.getElementById('det-label-status');
@@ -387,7 +387,7 @@
                     .status_pembayaran === 'no_paid') {
                     labelStatus.innerHTML = `
                             <div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
-                                <i class="fas fa-exclamation-circle me-1"></i> Pesanan diverifikasi. Lakukan pembayaran ongkir bus.
+                                <i class="fas fa-exclamation-circle me-1"></i> Pesanan diverifikasi. Lakukan pembayaran.
                             </div>
                             <button class="btn btn-warning w-100 rounded-pill fw-bold shadow-sm py-2 text-dark" onclick="bayarSekarang(${data.id})">
                                 <i class="fas fa-credit-card me-2"></i> Bayar Sekarang

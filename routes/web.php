@@ -66,6 +66,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::post('/pesanan/{id}/update', [AdminController::class, 'updatePesanan'])->name('pesanan.update');
+        Route::post('/pesanan/{id}/selesai', [AdminController::class, 'selesaiPesanan'])->name('pesanan.selesai');
 
         Route::resource('/pengguna', PenggunaController::class);
 

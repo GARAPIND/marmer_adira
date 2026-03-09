@@ -155,6 +155,7 @@
                                                 data-pembeli="{{ $item->user->name ?? 'Pembeli' }}"
                                                 data-produk="{{ $item->nama_produk }}" data-ukuran="{{ $item->ukuran }}"
                                                 data-bahan="{{ $item->jenis_marmer }}"
+                                                data-status_pembayaran="{{ $item->status_pembayaran }}"
                                                 data-catatan="{{ $item->catatan_khusus }}"
                                                 data-gambar="{{ $item->gambar_referensi ? asset('storage/' . $item->gambar_referensi) : '' }}"
                                                 data-action="{{ route('pengrajin.update.status', $item->id) }}">
@@ -222,6 +223,13 @@
                         </div>
                     </div>
 
+                    <div class="info-group text-center">
+                        <span class="info-label">Status Pembayaran</span>
+                        <p class="info-value">
+                            <span id="detail-status-pembayaran" class="badge bg-secondary px-3 py-2">-</span>
+                        </p>
+                    </div>
+
                     <form id="form-mulai" method="POST" action="">
                         @csrf
                         @method('PATCH')
@@ -262,6 +270,17 @@
                 document.getElementById('detail-catatan').innerText = (catatan && catatan.trim() !== "") ?
                     `"${catatan}"` : '"Tidak ada catatan kustomisasi."';
                 document.getElementById('form-mulai').action = this.getAttribute('data-action');
+
+                const statusPembayaran = this.getAttribute('data-status_pembayaran');
+                const statusElement = document.getElementById('detail-status-pembayaran');
+
+                if (statusPembayaran === 'paid') {
+                    statusElement.innerText = 'Lunas';
+                    statusElement.className = 'badge bg-success px-3 py-2';
+                } else {
+                    statusElement.innerText = 'Belum Dibayar';
+                    statusElement.className = 'badge bg-danger px-3 py-2';
+                }
             });
         });
     </script>

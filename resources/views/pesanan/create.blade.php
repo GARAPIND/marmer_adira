@@ -352,10 +352,10 @@
                                         <div class="shipping-box-highlight">
                                             <label class="label-aesthetic mb-3">Jenis Pengiriman</label>
                                             <div class="jenis-kirim-tabs d-flex gap-2 mb-4">
-                                                <button type="button" class="btn btn-outline-secondary flex-fill"
+                                                {{-- <button type="button" class="btn btn-outline-secondary flex-fill"
                                                     id="tab_bus" onclick="pilihJenisPengiriman('bus')">
                                                     <i class="fa-solid fa-bus me-2"></i>Via Bus
-                                                </button>
+                                                </button> --}}
                                                 <button type="button" class="btn btn-outline-secondary flex-fill"
                                                     id="tab_cargo" onclick="pilihJenisPengiriman('cargo')">
                                                     <i class="fa-solid fa-truck me-2"></i>Cargo
@@ -654,7 +654,7 @@
                     el.classList.add('selected');
                     ongkirGlobal = cost;
                     document.getElementById('label_ongkir').innerText = 'Rp ' + cost.toLocaleString(
-                    'id-ID');
+                        'id-ID');
                     refreshGrandTotal();
                 };
                 container.appendChild(el);
