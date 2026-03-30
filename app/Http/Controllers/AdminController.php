@@ -8,6 +8,7 @@ use App\Models\Bahan; // Pastikan Model Bahan diimport
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -251,9 +252,27 @@ class AdminController extends Controller
             }
         }, 'Laporan-Pengguna-Adira.csv');
     }
-    public function laporanPenjualan()
+    public function laporanPenjualan(Request $request)
     {
-        return view('admin.laporan-penjualan', ['stats' => []]);
+        $tgl_mulai = $request->tgl_mulai;
+        $tgl_akhir = $request->tgl_akhir;
+
+        $query = Pesanan::where('status', 'Selesai');
+
+        if ($tgl_mulai && $tgl_akhir) {
+            $query->whereBetween('created_at', [
+                Carbon::parse($tgl_mulai)->startOfDay(),
+                Carbon::parse($tgl_akhir)->endOfDay()
+            ]);
+        }
+
+        $data['jumlah_produk_terjual'] = (clone $query)->sum('jumlah');
+        $data['total_nilai_penjualan'] = (clone $query)->sum(DB::raw('total_harga + biaya_pengiriman'));
+        $data['transaksi_berhasil'] = (clone $query)->count();
+        $data['tgl_mulai'] = $tgl_mulai;
+        $data['tgl_akhir'] = $tgl_akhir;
+
+        return view('admin.laporan-penjualan', compact('data'));
     }
 
     // ==========================================
