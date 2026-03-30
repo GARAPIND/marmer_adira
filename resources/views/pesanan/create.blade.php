@@ -268,18 +268,21 @@
                                                 @if (isset($dataProduk))
                                                     @if ($dataProduk->ukuran_kecil)
                                                         <option value="{{ $dataProduk->ukuran_kecil }}"
+                                                            data-bahan="{{ $dataProduk->bahan_kecil->nama_bahan ?? '' }}"
                                                             data-harga="{{ $dataProduk->harga_kecil }}"
                                                             data-berat="{{ $dataProduk->berat_kecil ?? 0 }}">
                                                             {{ $dataProduk->ukuran_kecil }}</option>
                                                     @endif
                                                     @if ($dataProduk->ukuran_sedang)
                                                         <option value="{{ $dataProduk->ukuran_sedang }}"
+                                                            data-bahan="{{ $dataProduk->bahan_sedang->nama_bahan }}"
                                                             data-harga="{{ $dataProduk->harga_sedang }}"
                                                             data-berat="{{ $dataProduk->berat_sedang ?? 0 }}">
                                                             {{ $dataProduk->ukuran_sedang }}</option>
                                                     @endif
                                                     @if ($dataProduk->ukuran_besar)
                                                         <option value="{{ $dataProduk->ukuran_besar }}"
+                                                            data-bahan="{{ $dataProduk->bahan_besar->nama_bahan }}"
                                                             data-harga="{{ $dataProduk->harga_besar }}"
                                                             data-berat="{{ $dataProduk->berat_besar ?? 0 }}">
                                                             {{ $dataProduk->ukuran_besar }}</option>
@@ -304,13 +307,9 @@
 
                                     <div class="mb-4">
                                         <label class="label-aesthetic">Jenis Bahan Marmer</label>
-                                        <select name="jenis_marmer" id="jenis_marmer" class="form-select input-aesthetic"
-                                            required>
-                                            <option value="" disabled selected>-- Pilih Material --</option>
-                                            @foreach ($listBahan as $bahan)
-                                                <option value="{{ $bahan->nama_bahan }}">{{ $bahan->nama_bahan }}</option>
-                                            @endforeach
-                                        </select>
+                                        <input type="text" name="jenis_marmer" id="jenis_marmer"
+                                            class="form-control input-aesthetic"
+                                            placeholder="Otomatis terisi saat ukuran dipilih" readonly>
                                     </div>
                                 </div>
 
@@ -532,10 +531,12 @@
         function updateHarga() {
             const sel = document.getElementById('ukuran');
             const opt = sel.options[sel.selectedIndex];
+            const bahanId = (opt && opt.getAttribute('data-bahan')) ? opt.getAttribute('data-bahan') : null;
             const hargaSatuan = (opt && opt.getAttribute('data-harga')) ? parseInt(opt.getAttribute('data-harga')) : 0;
             beratSatuanGlobal = (opt && opt.getAttribute('data-berat')) ? parseFloat(opt.getAttribute('data-berat')) : 0;
             const qty = parseInt(document.getElementById('input_qty').value) || 1;
 
+            document.getElementById('jenis_marmer').value = bahanId;
             const wrapperBerat = document.getElementById('wrapper_berat_satuan');
             if (beratSatuanGlobal > 0 && opt && !opt.disabled) {
                 document.getElementById('display_berat_satuan').value = beratSatuanGlobal + ' kg';

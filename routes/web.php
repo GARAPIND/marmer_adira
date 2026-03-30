@@ -14,7 +14,8 @@ use App\Http\Controllers\PengrajinController;
 Route::get('/', function () {
     return view('home');
 })->name('home');
-Route::get('/katalog', [ProdukController::class, 'index'])->name('produk.index');
+Route::get('/katalog', [ProdukController::class, 'header'])->name('produk.index');
+Route::get('/detail-katalog/{slug}', [ProdukController::class, 'index'])->name('produk.detail');
 Route::get('/produk/{id}', [ProdukController::class, 'show'])->name('produk.show');
 
 // --- 2. AUTHENTICATION ---

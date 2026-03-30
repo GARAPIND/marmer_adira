@@ -12,11 +12,38 @@ use Illuminate\Support\Facades\Auth;
 
 class ProdukController extends Controller
 {
-    public function index()
+    public function header()
     {
         $produk = Produk::with('bahan_kecil', 'bahan_sedang', 'bahan_besar')
             ->whereNotNull('gambar')
             ->where('nama_produk', '!=', '')
+            ->latest()
+            ->get()
+            ->groupBy('nama_produk')
+            ->map(function ($items) {
+
+                $bahan = $items->flatMap(function ($item) {
+                    return [
+                        optional($item->bahan_kecil)->nama_bahan,
+                        optional($item->bahan_sedang)->nama_bahan,
+                        optional($item->bahan_besar)->nama_bahan,
+                    ];
+                })->filter()->unique()->values()->toArray();
+                return [
+                    'nama_produk' => $items->first()->nama_produk,
+                    'gambar'      => $items->pluck('gambar')->toArray(),
+                    'bahan'       => $bahan,
+                ];
+            })
+            ->values();
+
+        return view('produk.header', compact('produk'));
+    }
+    public function index($slug)
+    {
+        $produk = Produk::with('bahan_kecil', 'bahan_sedang', 'bahan_besar')
+            ->whereNotNull('gambar')
+            ->where('nama_produk', $slug)
             ->latest()
             ->get();
 
@@ -32,7 +59,7 @@ class ProdukController extends Controller
         $idProduk       = $request->input('produk_id') ?? $request->input('id');
         $produkTerpilih = $request->input('produk');
 
-        $dataProduk = Produk::find($idProduk);
+        $dataProduk = Produk::with('bahan_kecil', 'bahan_sedang', 'bahan_besar')->find($idProduk);
 
         if (!$dataProduk && $produkTerpilih) {
             $dataProduk = Produk::where('nama_produk', trim($produkTerpilih))->first();

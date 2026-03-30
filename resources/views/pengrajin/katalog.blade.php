@@ -322,7 +322,7 @@
                                     @error('gambar')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                    <small class="text-muted">Format: JPG/PNG · Maks 2 MB</small>
+                                    <small class="text-muted">Format: JPG/PNG · Maks 2 MB (Disarankan rasio 1:1)</small>
                                 </div>
 
                             </div>
