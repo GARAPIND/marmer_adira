@@ -64,13 +64,20 @@
         }
 
         .product-img-wrapper {
-            min-height: 380px;
-            overflow: hidden;
             position: relative;
+            width: 100%;
+            padding-top: 100%;
+            /* 1:1 ratio */
+            overflow: hidden;
             background: #f4f4f4;
+            min-height: unset;
+            /* hapus min-height lama */
         }
 
         .product-img-wrapper img {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -248,6 +255,26 @@
             color: #bbb;
             letter-spacing: 0.5px;
         }
+
+        @media (max-width: 576px) {
+            .card-product-premium h4 {
+                font-size: 0.85rem;
+            }
+
+            .size-tab {
+                font-size: 0.58rem;
+                padding: 6px 2px;
+            }
+
+            .info-row {
+                font-size: 0.72rem;
+            }
+
+            .btn-order {
+                font-size: 0.62rem;
+                padding: 10px;
+            }
+        }
     </style>
 
     <div class="container py-5 mt-5">
@@ -283,7 +310,7 @@
                     <div class="card card-product-premium h-100">
                         <div class="row g-0 h-100">
 
-                            <div class="col-md-5 product-img-wrapper">
+                            <div class="col-5 col-sm-4 product-img-wrapper">
                                 @if ($p->gambar)
                                     <img src="{{ asset('storage/' . $p->gambar) }}" alt="{{ $p->nama_produk }}">
                                 @else
@@ -294,7 +321,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-7 p-4 d-flex flex-column justify-content-between">
+                            <div class="col-12 col-sm-12 p-3 d-flex flex-column justify-content-between">
                                 <div>
                                     <h4 class="fw-bold mb-1"
                                         style="font-family: 'Playfair Display', serif; text-transform: uppercase; font-size: 1.05rem;">
