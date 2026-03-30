@@ -162,6 +162,14 @@
                                             @elseif($item->status == 'Ditolak')
                                                 <span
                                                     class="badge badge-status-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">{{ $item->status }}</span>
+                                            @elseif($item->status == 'Diverifikasi')
+                                                <div>
+                                                    <span
+                                                        class="badge badge-status-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
+                                                        Telah Diverifikasi
+                                                    </span>
+                                                    <div class="text-danger small"><b>Menunggu Pembayaran</b></div>
+                                                </div>
                                             @else
                                                 <span
                                                     class="badge badge-status-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ $item->status }}</span>
