@@ -108,7 +108,7 @@
                 </form>
 
                 @if ($data['tgl_mulai'] && $data['tgl_akhir'])
-                    <div class="mt-3">
+                    <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
                         <span class="badge rounded-pill px-3 py-2"
                             style="background-color: #fff3cd; color: #856404; font-size: 0.85rem;">
                             <i class="fas fa-calendar-check me-1"></i>
@@ -117,13 +117,23 @@
                             —
                             {{ \Carbon\Carbon::parse($data['tgl_akhir'])->translatedFormat('d F Y') }}
                         </span>
+                        <span class="badge rounded-pill px-3 py-2"
+                            style="background-color: #d1e7dd; color: #0a3622; font-size: 0.85rem;">
+                            <i class="fas fa-check-circle me-1"></i>
+                            Data diambil dari transaksi yang sudah selesai
+                        </span>
                     </div>
                 @else
-                    <div class="mt-3">
+                    <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
                         <span class="badge rounded-pill px-3 py-2"
                             style="background-color: #e2f0fb; color: #0c5460; font-size: 0.85rem;">
                             <i class="fas fa-info-circle me-1"></i>
                             Menampilkan semua data (tanpa filter tanggal)
+                        </span>
+                        <span class="badge rounded-pill px-3 py-2"
+                            style="background-color: #d1e7dd; color: #0a3622; font-size: 0.85rem;">
+                            <i class="fas fa-check-circle me-1"></i>
+                            Data diambil dari transaksi yang sudah selesai
                         </span>
                     </div>
                 @endif
