@@ -162,6 +162,14 @@
                                             @elseif($item->status == 'Ditolak')
                                                 <span
                                                     class="badge badge-status-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">{{ $item->status }}</span>
+                                            @elseif($item->status == 'Diverifikasi' && $item->status_pembayaran == 'paid')
+                                                <div>
+                                                    <span
+                                                        class="badge badge-status-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                                                        Telah Diverifikasi
+                                                    </span>
+                                                    <div class="text-success small"><b>Sudah Dibayar</b></div>
+                                                </div>
                                             @elseif($item->status == 'Diverifikasi')
                                                 <div>
                                                     <span
@@ -335,8 +343,9 @@
             document.getElementById('det-ukuran').innerText = data.ukuran;
             document.getElementById('det-jumlah').innerText = data.jumlah + ' Pcs';
             document.getElementById('det-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan tambahan.';
-            document.getElementById('det-metode').innerText = data.metode_pengambilan === 'dikirim' ? 'Dikirim (Via Bus)' :
-                'Ambil Dirumah';
+            document.getElementById('det-metode').innerText = data.metode_pengambilan === 'dikirim' ?
+                ('Dikirim (' + (data.jenis_pengiriman ? data.jenis_pengiriman.toUpperCase() : 'Pengiriman') + ')') :
+                'Ambil di Rumah';
 
             const alamatFull = document.getElementById('det-alamat-full');
             const ongkirRow = document.getElementById('det-ongkir-row');
@@ -391,11 +400,10 @@
                         <i class="fas fa-box-open me-2"></i> Konfirmasi Barang Diterima
                     </button>
                 `;
-                } else if (data.status === 'Diverifikasi' && data.metode_pengambilan === 'dikirim' && data
-                    .status_pembayaran === 'no_paid') {
+                } else if (data.status === 'Diverifikasi' && data.status_pembayaran === 'no_paid') {
                     labelStatus.innerHTML = `
                             <div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
-                                <i class="fas fa-exclamation-circle me-1"></i> Pesanan diverifikasi. Lakukan pembayaran.
+                                <i class="fas fa-exclamation-circle me-1"></i> Pesanan diverifikasi. Lakukan pembayaran lewat payment gateway.
                             </div>
                             <button class="btn btn-warning w-100 rounded-pill fw-bold shadow-sm py-2 text-dark" onclick="bayarSekarang(${data.id})">
                                 <i class="fas fa-credit-card me-2"></i> Bayar Sekarang
@@ -487,14 +495,26 @@
                     Swal.close();
                     snap.pay(data.snap_token, {
                         onSuccess: function(result) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Pembayaran Berhasil!',
-                                text: 'Terima kasih, pesanan Anda sedang diproses.',
-                                timer: 2500,
-                                showConfirmButton: false
-                            });
-                            setTimeout(() => location.reload(), 2600);
+                            fetch(`/pesanan/${pesananId}/payment-success`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    },
+                                    body: JSON.stringify(result)
+                                })
+                                .finally(() => {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Pembayaran Berhasil!',
+                                        text: 'Status pembayaran telah diperbarui.',
+                                        timer: 2500,
+                                        showConfirmButton: false
+                                    });
+                                    setTimeout(() => location.reload(), 2600);
+                                });
                         },
                         onPending: function(result) {
                             Swal.fire({

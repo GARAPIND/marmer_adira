@@ -186,6 +186,14 @@
                                                 <span
                                                     class="badge badge-status-custom bg-info bg-opacity-10 text-info border border-info border-opacity-25">Sedang
                                                     Diproses</span>
+                                            @elseif($item->status == 'Diverifikasi' && $item->status_pembayaran == 'paid')
+                                                <div>
+                                                    <span
+                                                        class="badge badge-status-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                                                        Telah Diverifikasi
+                                                    </span>
+                                                    <div class="text-success small"><b>Sudah Dibayar</b></div>
+                                                </div>
                                             @elseif($item->status == 'Diverifikasi')
                                                 <div>
                                                     <span

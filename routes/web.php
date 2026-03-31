@@ -35,6 +35,7 @@ Route::post('/midtrans/callback', [PesananController::class, 'midtransCallback']
 // --- 3. KHUSUS USER TERAUTENTIKASI ---
 Route::middleware(['auth'])->group(function () {
     Route::get('/pesanan/{id}/snap-token', [PesananController::class, 'getSnapToken'])->name('pesanan.snapToken');
+    Route::post('/pesanan/{id}/payment-success', [PesananController::class, 'paymentSuccess'])->name('pesanan.paymentSuccess');
 
     // --- A. ROLE PEMBELI ---
     Route::get('/dashboard', [PembeliController::class, 'dashboard'])->name('pembeli.dashboard');
