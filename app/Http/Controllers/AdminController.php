@@ -100,6 +100,7 @@ class AdminController extends Controller
             'biaya_pengiriman' => $request->biaya_pengiriman,
             'alamat_pengiriman' => $rincianOngkir,
             'status'           => $request->status,
+            'alasan_penolakan' => $request->alasan_penolakan
         ]);
 
         return redirect()->back()->with('success', 'Pesanan berhasil diperbarui!');

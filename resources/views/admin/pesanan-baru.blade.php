@@ -276,6 +276,12 @@
                                         </select>
                                     </div>
 
+                                    <div class="mb-3 d-none" id="form_alasan">
+                                        <label class="form-label small fw-bold text-danger">Alasan Penolakan</label>
+                                        <textarea name="alasan_penolakan" id="input_alasan" class="form-control border-danger shadow-sm" rows="3"
+                                            placeholder="Masukkan alasan penolakan..."></textarea>
+                                    </div>
+
                                     <div class="mb-4" id="form_confirmation">
                                         <label class="form-label small fw-bold">Konfirmasi Pesanan</label>
                                         <select name="status_selesai" class="form-select border-dark shadow-sm">
@@ -305,6 +311,28 @@
     </div>
 
     <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const statusSelect = document.querySelector('select[name="status"]');
+            const alasanForm = document.getElementById('form_alasan');
+            const inputAlasan = document.getElementById('input_alasan');
+
+            function toggleAlasan() {
+                if (statusSelect.value === 'Ditolak') {
+                    alasanForm.classList.remove('d-none');
+                    inputAlasan.setAttribute('required', 'required');
+                } else {
+                    alasanForm.classList.add('d-none');
+                    inputAlasan.removeAttribute('required');
+                    inputAlasan.value = '';
+                }
+            }
+
+            statusSelect.addEventListener('change', toggleAlasan);
+
+            // trigger awal saat modal dibuka
+            toggleAlasan();
+        });
+
         function showDetailAdmin(data) {
             const modal = new bootstrap.Modal(document.getElementById('modalDetailPesanan'));
 
@@ -340,6 +368,15 @@
 
             const isVerify = data.status === 'Menunggu Verifikasi Admin';
             const isDone = data.status === 'Selesai' && data.status_pembayaran === 'no_paid';
+
+            const statusSelect = document.querySelector('select[name="status"]');
+            const alasanForm = document.getElementById('form_alasan');
+            const inputAlasan = document.getElementById('input_alasan');
+
+            statusSelect.value = 'Diverifikasi';
+            alasanForm.classList.add('d-none');
+            inputAlasan.value = '';
+            inputAlasan.removeAttribute('required');
 
             if (isVerify) formUpdate.action = `/admin/pesanan/${data.id}/update`;
             if (isDone) formUpdate.action = `/admin/pesanan/${data.id}/selesai`;
