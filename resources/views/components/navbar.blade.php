@@ -122,8 +122,8 @@
                                         Keuangan</a></li>
                                 <li><a class="dropdown-item" href="{{ route('admin.laporan.pengguna') }}">Laporan
                                         Pengguna</a></li>
-                                <li><a class="dropdown-item" href="{{ route('admin.laporan.penjualan') }}">Laporan
-                                        Penjualan</a></li>
+                                {{-- <li><a class="dropdown-item" href="{{ route('admin.laporan.penjualan') }}">Laporan
+                                        Penjualan</a></li> --}}
                             </ul>
                         </li>
 
