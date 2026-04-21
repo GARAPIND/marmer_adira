@@ -47,15 +47,13 @@ class AdminController extends Controller
                 ->selectRaw('SUM(total_harga + COALESCE(biaya_pengiriman, 0)) as total')
                 ->first()->total ?? 0,
 
-            'total_dp'         => (clone $query)->whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan'])
-                ->selectRaw('SUM(total_harga + COALESCE(biaya_pengiriman, 0)) * 0.3 as total')
+            'total_produk_terjual' => (clone $query)->whereNotIn('status', ['Ditolak'])
+                ->selectRaw('SUM(jumlah) as total')
                 ->first()->total ?? 0,
 
-            'total_pelunasan'  => (clone $query)->where('status', 'Selesai')
-                ->selectRaw('SUM(total_harga + COALESCE(biaya_pengiriman, 0)) * 0.7 as total')
+            'transaksi_berhasil'  => (clone $query)->where('status', 'Selesai')
+                ->selectRaw('COUNT(*) as total')
                 ->first()->total ?? 0,
-
-            'jumlah_transaksi' => $transaksi->count(),
         ];
 
         return [
