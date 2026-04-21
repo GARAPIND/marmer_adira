@@ -152,8 +152,12 @@
                             <th class="ps-4">ID Pesanan</th>
                             <th>Nama Pembeli</th>
                             <th>Tanggal Update</th>
-                            <th>Jenis</th>
-                            <th>Nominal</th>
+                            <th>Produk</th>
+                            <th>Qty</th>
+                            <th>Subtotal</th>
+                            <th>Ongkir</th>
+                            <th>Total Bayar</th>
+                            <th>Metode</th>
                             <th class="pe-4 text-center">Status</th>
                         </tr>
                     </thead>
@@ -164,15 +168,25 @@
                                 </td>
                                 <td class="fw-semibold">{{ $item->user->name }}</td>
                                 <td class="text-muted small">{{ $item->updated_at->format('d M Y') }}</td>
+                                <td>{{ $item->nama_produk }}</td>
+                                <td class="fw-bold">{{ $item->jumlah }}</td>
+                                <td class="fw-bold">Rp
+                                    {{ number_format($item->total_harga, 0, ',', '.') }}
+                                </td>
+                                <td class="fw-bold">Rp
+                                    {{ number_format($item->biaya_pengiriman, 0, ',', '.') }}
+                                </td>
+                                <td class="fw-bold">Rp
+                                    {{ number_format($item->total_harga + ($item->biaya_pengiriman ?? 0), 0, ',', '.') }}
+                                </td>
                                 <td>
-                                    @if ($item->status == 'Diverifikasi')
-                                        <span class="badge bg-light text-warning border border-warning px-3">DP (30%)</span>
-                                    @else
-                                        <span
-                                            class="badge bg-light text-success border border-success px-3">Pelunasan</span>
+                                    @if ($item->metode_pengambilan === 'dikirim')
+                                        <span class="badge bg-light text-primary border border-primary px-3">Dikirim</span>
+                                    @elseif ($item->metode_pengambilan === 'dirumah')
+                                        <span class="badge bg-light text-success border border-success px-3">Ambil di
+                                            rumah</span>
                                     @endif
                                 </td>
-                                <td class="fw-bold">Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
                                 <td class="text-center pe-4">
                                     <span
                                         class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2 fw-bold">

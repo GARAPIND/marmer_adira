@@ -177,20 +177,34 @@ class AdminController extends Controller
     public function exportKeuanganExcel(Request $request)
     {
         $data = $this->getKeuanganData($request->tgl_mulai, $request->tgl_akhir);
+
         return response()->streamDownload(function () use ($data) {
-            echo "ID Pesanan,Nama Pembeli,Tanggal Bayar,Jenis,Nominal,Status\n";
+
+            echo "ID Pesanan,Nama Pembeli,Tanggal Update,Produk,Qty,Subtotal,Ongkir,Total Bayar,Metode,Status\n";
+
             foreach ($data['transaksi'] as $item) {
-                $jenis = in_array($item->status, ['Diverifikasi', 'Diproses', 'Dikerjakan']) ? 'DP (30%)' : 'Pelunasan';
+
+                $metode = $item->metode_pengambilan === 'dikirim'
+                    ? 'Dikirim'
+                    : 'Ambil di rumah';
+
+                $subtotal = $item->total_harga;
+                $ongkir = $item->biaya_pengiriman ?? 0;
+                $total = $subtotal + $ongkir;
+
                 echo "ORD-" . str_pad($item->id, 3, '0', STR_PAD_LEFT) . ",";
-                echo $item->user->name . ",";
+                echo '"' . $item->user->name . '",'; // biar aman kalau ada koma
                 echo $item->updated_at->format('d M Y') . ",";
-                echo $jenis . ",";
-                echo ($item->total_harga + $item->biaya_pengiriman) . ",";
+                echo '"' . $item->nama_produk . '",';
+                echo $item->jumlah . ",";
+                echo $subtotal . ",";
+                echo $ongkir . ",";
+                echo $total . ",";
+                echo $metode . ",";
                 echo "Lunas\n";
             }
         }, 'Laporan-Keuangan-Adira.csv');
     }
-
     private function getPenggunaQuery(Request $request)
     {
         $query = User::whereNotIn('role', ['admin'])

@@ -57,21 +57,58 @@
             <tr style="background-color: #2c3e50; color: white;">
                 <th>ID Pesanan</th>
                 <th>Nama Pembeli</th>
-                <th>Tanggal Bayar</th>
-                <th>Jenis</th>
-                <th>Nominal</th>
+                <th>Tanggal Update</th>
+                <th>Produk</th>
+                <th>Qty</th>
+                <th>Subtotal</th>
+                <th>Ongkir</th>
+                <th>Total Bayar</th>
+                <th>Metode</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($transaksi as $item)
+            @forelse ($transaksi as $item)
                 <tr>
-                    <td class="text-center">ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
+                    <td class="text-center">
+                        ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}
+                    </td>
                     <td>{{ $item->user->name }}</td>
                     <td>{{ $item->updated_at->format('d M Y') }}</td>
-                    <td>{{ $item->status == 'Diverifikasi' ? 'DP (30%)' : 'Pelunasan' }}</td>
-                    <td>Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
+                    <td>{{ $item->nama_produk }}</td>
+                    <td class="text-center">{{ $item->jumlah }}</td>
+
+                    <td>
+                        Rp {{ number_format($item->total_harga, 0, ',', '.') }}
+                    </td>
+
+                    <td>
+                        Rp {{ number_format($item->biaya_pengiriman ?? 0, 0, ',', '.') }}
+                    </td>
+
+                    <td>
+                        Rp {{ number_format($item->total_harga + ($item->biaya_pengiriman ?? 0), 0, ',', '.') }}
+                    </td>
+
+                    <td class="text-center">
+                        @if ($item->metode_pengambilan === 'dikirim')
+                            Dikirim
+                        @elseif ($item->metode_pengambilan === 'dirumah')
+                            Ambil di rumah
+                        @endif
+                    </td>
+
+                    <td class="text-center">
+                        Lunas
+                    </td>
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td colspan="10" class="text-center">
+                        Tidak ada data transaksi
+                    </td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
 </body>
