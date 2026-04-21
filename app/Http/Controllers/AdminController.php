@@ -28,7 +28,7 @@ class AdminController extends Controller
             'diverifikasi'  => (clone $query)->whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan'])->count(),
             'diproses'      => (clone $query)->whereIn('status', ['Diproses', 'Dikerjakan'])->count(),
             'selesai'       => (clone $query)->where('status', 'Selesai')->count(),
-            'dibatalkan'    => (clone $query)->where('status', 'Dibatalkan')->count(),
+            'ditolak'       => (clone $query)->where('status', 'Ditolak')->count(),
         ];
     }
 
@@ -149,7 +149,7 @@ class AdminController extends Controller
             echo "Pesanan Diverifikasi," . $stats['diverifikasi'] . "\n";
             echo "Pesanan Diproses," . $stats['diproses'] . "\n";
             echo "Pesanan Selesai," . $stats['selesai'] . "\n";
-            echo "Pesanan Dibatalkan," . $stats['dibatalkan'] . "\n";
+            echo "Pesanan Ditolak," . $stats['ditolak'] . "\n";
         }, 'Laporan-Pesanan.csv');
     }
 

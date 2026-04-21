@@ -1,13 +1,28 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Laporan Pesanan Adira Marmer</title>
     <style>
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid black; padding: 10px; text-align: center; }
-        .header { text-align: center; margin-bottom: 20px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
+
 <body>
     <div class="header">
         <h2>Laporan Statistik Pesanan</h2>
@@ -20,7 +35,7 @@
                 <th>Diverifikasi</th>
                 <th>Diproses</th>
                 <th>Selesai</th>
-                <th>Dibatalkan</th>
+                <th>Ditolak</th>
             </tr>
         </thead>
         <tbody>
@@ -29,9 +44,10 @@
                 <td>{{ $stats['diverifikasi'] }}</td>
                 <td>{{ $stats['diproses'] }}</td>
                 <td>{{ $stats['selesai'] }}</td>
-                <td>{{ $stats['dibatalkan'] }}</td>
+                <td>{{ $stats['ditolak'] }}</td>
             </tr>
         </tbody>
     </table>
 </body>
+
 </html>
