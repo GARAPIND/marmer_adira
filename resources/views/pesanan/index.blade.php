@@ -370,8 +370,8 @@
             alasanContainer.innerHTML = '';
 
             if (data.status == 'Menunggu Verifikasi Admin') {
-                document.getElementById('det-harga-produk').innerText = "Menunggu...";
-                document.getElementById('det-ongkir-val').innerText = "-";
+                document.getElementById('det-harga-produk').innerText = formatter.format(data.total_harga);
+                document.getElementById('det-ongkir-val').innerText = formatter.format(data.biaya_pengiriman || 0)
                 document.getElementById('det-total').innerText = "Verifikasi Admin";
 
                 // Tambahkan Tombol Batal di Sidebar juga agar informatif
