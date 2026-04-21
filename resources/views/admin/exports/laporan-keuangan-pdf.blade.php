@@ -98,9 +98,15 @@
                         @endif
                     </td>
 
-                    <td class="text-center">
-                        Lunas
-                    </td>
+                    @if ($item->status_pembayaran == 'paid')
+                        <td class="text-center">
+                            Lunas
+                        </td>
+                    @else
+                        <td class="text-center">
+                            Belum dibayar
+                        </td>
+                    @endif
                 </tr>
             @empty
                 <tr>

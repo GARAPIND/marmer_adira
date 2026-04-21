@@ -188,10 +188,17 @@
                                     @endif
                                 </td>
                                 <td class="text-center pe-4">
-                                    <span
-                                        class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2 fw-bold">
-                                        <i class="fas fa-check-circle me-1"></i> Lunas
-                                    </span>
+                                    @if ($item->status_pembayaran === 'paid')
+                                        <span
+                                            class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2 fw-bold">
+                                            <i class="fas fa-check-circle me-1"></i> Lunas
+                                        </span>
+                                    @else
+                                        <span
+                                            class="badge rounded-pill bg-danger bg-opacity-10 text-danger px-3 py-2 fw-bold">
+                                            <i class="fas fa-close me-1"></i> Belum dibayar
+                                        </span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

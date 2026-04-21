@@ -43,7 +43,7 @@ class AdminController extends Controller
 
         // REVISI: Perhitungan Keuangan sekarang menjumlahkan total_harga + biaya_pengiriman
         $stats = [
-            'total_pendapatan' => (clone $query)->where('status', 'Selesai')
+            'total_pendapatan' => (clone $query)->where('status_pembayaran', 'paid')
                 ->selectRaw('SUM(total_harga + COALESCE(biaya_pengiriman, 0)) as total')
                 ->first()->total ?? 0,
 
@@ -201,7 +201,8 @@ class AdminController extends Controller
                 echo $ongkir . ",";
                 echo $total . ",";
                 echo $metode . ",";
-                echo "Lunas\n";
+                $status = $item->status_pembayaran === 'paid' ? 'Lunas' : 'Belum Lunas';
+                echo $status . "\n";
             }
         }, 'Laporan-Keuangan-Adira.csv');
     }
