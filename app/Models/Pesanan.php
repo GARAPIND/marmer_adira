@@ -44,6 +44,7 @@ class Pesanan extends Model
         'midtrans_gross_amount',
         'midtrans_currency',
         'midtrans_fraud_status',
+        'midtrans_payload',
     ];
 
     protected $casts = [

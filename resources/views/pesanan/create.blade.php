@@ -597,7 +597,11 @@
             const metode = document.getElementById('metode_pengambilan').value;
             document.getElementById('section_pengiriman').style.display = metode === 'dikirim' ? 'block' : 'none';
             ongkirGlobal = 0;
-            document.getElementById('jenis_pengiriman_hidden').value = '';
+            if (metode === 'dikirim') {
+                pilihJenisPengiriman('cargo');
+            } else {
+                document.getElementById('jenis_pengiriman_hidden').value = '';
+            }
             refreshGrandTotal();
         }
 
@@ -718,7 +722,7 @@
 
         window.onload = function() {
             updateHarga();
-            pilihJenisPengiriman('cargo');
+            toggleMetode();
             @if ($listAlamat->isNotEmpty())
                 const utama = document.querySelector('.alamat-card-select.selected');
                 if (utama) {

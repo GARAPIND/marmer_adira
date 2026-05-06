@@ -374,6 +374,32 @@
             font-family: 'Cormorant Garamond', serif;
             font-size: 1.1rem;
         }
+
+        .custom-card {
+            border: 1px dashed var(--gold);
+            background: linear-gradient(145deg, #fffdf8, #fff);
+        }
+
+        .custom-card .card-info {
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .custom-point {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.72rem;
+            color: var(--dark);
+            margin-bottom: 6px;
+        }
+
+        .custom-point i {
+            color: var(--gold);
+            font-size: 0.65rem;
+        }
     </style>
 
     <div class="container py-3 mt-2">
@@ -385,6 +411,40 @@
         </div>
 
         <div class="product-grid">
+            <div class="product-card custom-card visible">
+                <div class="card-info">
+                    <div>
+                        <h3 class="product-name">Produk Custom</h3>
+                        <div class="product-divider"></div>
+
+                        <p class="mat-label">Anda Tentukan Sendiri</p>
+                        <div class="mb-3">
+                            <div class="custom-point"><i class="fas fa-check-circle"></i> Nama produk custom</div>
+                            <div class="custom-point"><i class="fas fa-check-circle"></i> Ukuran / dimensi sesuai kebutuhan</div>
+                            <div class="custom-point"><i class="fas fa-check-circle"></i> Pilihan bahan marmer</div>
+                            <div class="custom-point"><i class="fas fa-check-circle"></i> Catatan detail & referensi gambar</div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer-row">
+                        <span class="img-count">
+                            <i class="fas fa-wand-magic-sparkles"></i>
+                            Form request custom
+                        </span>
+                        @auth
+                            <a href="{{ route('pesanan.create') }}" class="detail-btn">Buat Custom <i class="fas fa-arrow-right"></i></a>
+                        @else
+                            <a href="{{ route('login') }}" class="detail-btn">Login untuk Pesan <i class="fas fa-arrow-right"></i></a>
+                        @endauth
+                    </div>
+                </div>
+                @auth
+                    <a href="{{ route('pesanan.create') }}" class="card-overlay-link" aria-label="Buat produk custom"></a>
+                @else
+                    <a href="{{ route('login') }}" class="card-overlay-link" aria-label="Login untuk produk custom"></a>
+                @endauth
+            </div>
+
             @forelse($produk as $item)
                 @php
                     $images = $item['gambar'];

@@ -238,6 +238,13 @@
                                     <p id="md-catatan" class="p-2 border rounded bg-light small fst-italic mb-0"></p>
                                 </div>
 
+                                <div class="mb-3">
+                                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Gambar Referensi
+                                        Custom</label>
+                                    <div id="md-gambar-container"
+                                        class="text-center border rounded bg-light p-2 shadow-sm"></div>
+                                </div>
+
                                 <div id="md-alamat-section" class="alert alert-info border-0 shadow-sm py-2 mb-0"
                                     style="display:none;">
                                     <i class="fas fa-truck-moving me-2"></i>
@@ -352,6 +359,14 @@
             document.getElementById('md-ukuran').innerText = data.ukuran;
             document.getElementById('md-jumlah').innerText = data.jumlah + ' Pcs';
             document.getElementById('md-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan khusus.';
+            const gambarContainer = document.getElementById('md-gambar-container');
+            if (data.gambar_referensi) {
+                gambarContainer.innerHTML =
+                    `<a href="/storage/${data.gambar_referensi}" target="_blank"><img src="/storage/${data.gambar_referensi}" class="img-fluid rounded-3" style="max-height: 220px; cursor: zoom-in;"></a>`;
+            } else {
+                gambarContainer.innerHTML =
+                    '<p class="text-muted small mb-0 py-3">Tidak ada gambar referensi custom.</p>';
+            }
 
             document.getElementById('input_harga').value = data.total_harga > 0 ? data.total_harga : '';
             document.getElementById('input_berat_satuan').value = data.berat_satuan > 0 ? data.berat_satuan : '';

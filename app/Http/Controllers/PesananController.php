@@ -11,9 +11,40 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class PesananController extends Controller
 {
+    private function appendMidtransPayload(Pesanan $pesanan, array $payload, string $source): ?string
+    {
+        if (!Schema::hasColumn('pesanan', 'midtrans_payload')) {
+            return null;
+        }
+
+        $existing = [];
+        if (!empty($pesanan->midtrans_payload)) {
+            $decoded = json_decode($pesanan->midtrans_payload, true);
+            if (is_array($decoded)) {
+                $existing = $decoded;
+            }
+        }
+
+        if (!isset($existing['history']) || !is_array($existing['history'])) {
+            $existing['history'] = [];
+        }
+
+        $entry = [
+            'source' => $source,
+            'received_at' => now()->toDateTimeString(),
+            'payload' => $payload,
+        ];
+
+        $existing['history'][] = $entry;
+        $existing['latest'] = $entry;
+
+        return json_encode($existing, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
     private function resolveMidtransBank(array $payload): ?string
     {
         if (!empty($payload['va_numbers'][0]['bank'])) {
@@ -60,7 +91,12 @@ class PesananController extends Controller
         return $pesanan->status_pembayaran === 'dp' ? 'lunas' : 'dp';
     }
 
-    private function updatePaymentStatus(Pesanan $pesanan, array $payload, string $paymentStep = 'lunas'): string
+    private function updatePaymentStatus(
+        Pesanan $pesanan,
+        array $payload,
+        string $paymentStep = 'lunas',
+        string $source = 'unknown'
+    ): string
     {
         $transactionStatus = $payload['transaction_status'] ?? null;
         $fraudStatus       = $payload['fraud_status'] ?? null;
@@ -83,7 +119,7 @@ class PesananController extends Controller
             $jumlahDibayar += (int) ($payload['gross_amount'] ?? 0);
         }
 
-        $pesanan->update([
+        $updateData = [
             'midtrans_transaction_id' => $payload['transaction_id'] ?? $pesanan->midtrans_transaction_id,
             'midtrans_payment_type'   => $payload['payment_type'] ?? $pesanan->midtrans_payment_type,
             'midtrans_bank'           => $bank,
@@ -96,7 +132,14 @@ class PesananController extends Controller
             'jumlah_dibayar'          => $jumlahDibayar,
             'tanggal_bayar'           => $tanggalBayar,
             'tanggal_lunas'           => $tanggalLunas,
-        ]);
+        ];
+
+        $payloadJson = $this->appendMidtransPayload($pesanan, $payload, $source);
+        if ($payloadJson !== null) {
+            $updateData['midtrans_payload'] = $payloadJson;
+        }
+
+        $pesanan->update($updateData);
 
         return $statusPembayaran;
     }
@@ -132,22 +175,35 @@ class PesananController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'nama_produk'        => 'required|string|max:255',
             'ukuran'             => 'required',
             'jenis_marmer'       => 'required',
             'jumlah'             => 'required|integer|min:1',
             'berat_satuan'       => 'nullable|numeric|min:0',
-            'metode_pengambilan' => 'required',
-            'jenis_pengiriman'   => 'required_if:metode_pengambilan,dikirim',
-            'terminal_id'        => 'required_if:jenis_pengiriman,bus',
-            'alamat_manual'      => 'required_if:terminal_id,lainnya',
-            'alamat_pembeli_id'  => 'required_if:jenis_pengiriman,cargo',
-            'courier'            => 'required_if:jenis_pengiriman,cargo',
+            'metode_pengambilan' => 'required|in:dirumah,dikirim',
             'gambar_referensi'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'total_harga'        => 'required',
-            'biaya_pengiriman'   => 'required',
-        ]);
+            'total_harga'        => 'nullable|numeric|min:0',
+            'biaya_pengiriman'   => 'nullable|numeric|min:0',
+        ];
+
+        if ($request->metode_pengambilan === 'dikirim') {
+            $rules['jenis_pengiriman'] = 'required|in:bus,cargo';
+
+            if ($request->jenis_pengiriman === 'bus') {
+                $rules['terminal_id'] = 'required';
+                if ($request->terminal_id === 'lainnya') {
+                    $rules['alamat_manual'] = 'required|string|max:255';
+                }
+            }
+
+            if ($request->jenis_pengiriman === 'cargo') {
+                $rules['alamat_pembeli_id'] = 'required|integer';
+                $rules['courier'] = 'required|string|max:50';
+            }
+        }
+
+        $request->validate($rules);
 
         $alamatFinal = 'Ambil di Tempat (Tulungagung)';
         $alamatPembeliId = null;
@@ -179,27 +235,38 @@ class PesananController extends Controller
             $pathGambar = $request->file('gambar_referensi')->store('pesanan_custom', 'public');
         }
 
-        Pesanan::create([
+        $payload = [
             'user_id'            => Auth::id(),
-            'is_custom'          => !$request->filled('produk_id'),
             'nama_produk'        => $request->nama_produk,
             'ukuran'             => $request->ukuran,
             'jenis_marmer'       => $request->jenis_marmer,
             'catatan_khusus'     => $request->catatan_khusus,
             'gambar_referensi'   => $pathGambar,
             'jumlah'             => $request->jumlah,
-            'berat_satuan'       => (float) ($request->berat_satuan ?? 0),
-            'total_berat'        => (float) ($request->berat_satuan ?? 0) * (int) $request->jumlah,
             'metode_pengambilan' => $request->metode_pengambilan,
             'jenis_pengiriman'   => $jenisPengiriman,
             'alamat_pembeli_id'  => $alamatPembeliId,
             'alamat_pengiriman'  => $alamatFinal,
-            'biaya_pengiriman'   => $request->biaya_pengiriman,
-            'total_harga'        => $request->total_harga,
+            'biaya_pengiriman'   => (int) ($request->biaya_pengiriman ?? 0),
+            'total_harga'        => (int) ($request->total_harga ?? 0),
             'status'             => 'Menunggu Verifikasi Admin',
             'status_pembayaran'  => 'no_paid',
-            'jumlah_dibayar'     => 0,
-        ]);
+        ];
+
+        if (Schema::hasColumn('pesanan', 'is_custom')) {
+            $payload['is_custom'] = !$request->filled('produk_id');
+        }
+        if (Schema::hasColumn('pesanan', 'berat_satuan')) {
+            $payload['berat_satuan'] = (float) ($request->berat_satuan ?? 0);
+        }
+        if (Schema::hasColumn('pesanan', 'total_berat')) {
+            $payload['total_berat'] = (float) ($request->berat_satuan ?? 0) * (int) $request->jumlah;
+        }
+        if (Schema::hasColumn('pesanan', 'jumlah_dibayar')) {
+            $payload['jumlah_dibayar'] = 0;
+        }
+
+        Pesanan::create($payload);
 
         return redirect()->route('pesanan.index')->with('success', 'Pesanan berhasil diajukan!');
     }
@@ -278,10 +345,23 @@ class PesananController extends Controller
         ];
 
         $snapToken = \Midtrans\Snap::getSnapToken($params);
-        $pesanan->update([
+        $updateData = [
             'midtrans_order_id' => $orderId,
             'jenis_pembayaran' => $paymentStep,
-        ]);
+        ];
+
+        $snapPayloadJson = $this->appendMidtransPayload($pesanan, [
+            'order_id' => $orderId,
+            'payment_step' => $paymentStep,
+            'request_params' => $params,
+            'snap_token' => $snapToken,
+        ], 'snap_token');
+
+        if ($snapPayloadJson !== null) {
+            $updateData['midtrans_payload'] = $snapPayloadJson;
+        }
+
+        $pesanan->update($updateData);
 
         return response()->json(['snap_token' => $snapToken]);
     }
@@ -309,7 +389,7 @@ class PesananController extends Controller
         }
 
         $paymentStep = $this->resolvePaymentStep($pesanan, $request->input('custom_field1'));
-        $statusPembayaran = $this->updatePaymentStatus($pesanan, $request->all(), $paymentStep);
+        $statusPembayaran = $this->updatePaymentStatus($pesanan, $request->all(), $paymentStep, 'payment_success');
 
         return response()->json([
             'message' => 'Pembayaran berhasil disinkronkan',
@@ -349,7 +429,7 @@ class PesananController extends Controller
                 $pesanan,
                 str_contains(($payload['order_id'] ?? ''), '-DP-') ? 'dp' : 'lunas'
             );
-            $statusPembayaran = $this->updatePaymentStatus($pesanan, $payload, $paymentStep);
+            $statusPembayaran = $this->updatePaymentStatus($pesanan, $payload, $paymentStep, 'callback');
 
             return response()->json([
                 'message' => 'OK',
