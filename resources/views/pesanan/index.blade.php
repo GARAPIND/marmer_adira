@@ -535,8 +535,17 @@
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
-                .then(res => res.json())
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.message || 'Gagal membuat transaksi pembayaran.');
+                    }
+                    return data;
+                })
                 .then(data => {
+                    if (!data.snap_token) {
+                        throw new Error(data.message || 'Snap token tidak tersedia.');
+                    }
                     Swal.close();
                     snap.pay(data.snap_token, {
                         onSuccess: function(result) {
@@ -588,11 +597,11 @@
                         }
                     });
                 })
-                .catch(() => {
+                .catch((err) => {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Gagal menghubungi server. Coba lagi.'
+                        text: err?.message || 'Gagal menghubungi server. Coba lagi.'
                     });
                 });
         }

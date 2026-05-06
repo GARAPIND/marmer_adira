@@ -47,16 +47,38 @@ class PesananController extends Controller
 
     private function resolveMidtransBank(array $payload): ?string
     {
+        $paymentType = strtolower((string) ($payload['payment_type'] ?? ''));
+
+        if ($paymentType === 'echannel') {
+            return 'MANDIRI BILL';
+        }
+
         if (!empty($payload['va_numbers'][0]['bank'])) {
-            return strtoupper($payload['va_numbers'][0]['bank']);
+            return strtoupper($payload['va_numbers'][0]['bank']) . ' BILL';
         }
 
         if (!empty($payload['bank'])) {
-            return strtoupper($payload['bank']);
+            return strtoupper($payload['bank']) . ' BILL';
         }
 
         if (!empty($payload['permata_va_number'])) {
-            return 'PERMATA';
+            return 'PERMATA BILL';
+        }
+
+        if (!empty($payload['bri_va_number'])) {
+            return 'BRI BILL';
+        }
+
+        if (!empty($payload['bni_va_number'])) {
+            return 'BNI BILL';
+        }
+
+        if (!empty($payload['bca_va_number'])) {
+            return 'BCA BILL';
+        }
+
+        if (!empty($payload['store'])) {
+            return strtoupper((string) $payload['store']);
         }
 
         return null;
@@ -309,10 +331,6 @@ class PesananController extends Controller
             return response()->json(['message' => 'DP sudah dibayarkan'], 422);
         }
 
-        if ($paymentStep === 'lunas' && $pesanan->status_pembayaran === 'no_paid') {
-            return response()->json(['message' => 'Silakan bayar DP 50% terlebih dahulu'], 422);
-        }
-
         \Midtrans\Config::$serverKey    = config('midtrans.server_key');
         \Midtrans\Config::$isProduction = config('midtrans.is_production');
         \Midtrans\Config::$isSanitized  = true;
@@ -320,6 +338,9 @@ class PesananController extends Controller
 
         $orderId    = 'ORD-' . $pesanan->id . '-' . strtoupper($paymentStep) . '-' . time();
         $totalAkhir = $this->calculatePaymentAmount($pesanan, $paymentStep);
+        if ($totalAkhir <= 0) {
+            return response()->json(['message' => 'Total pembayaran belum valid. Hubungi admin untuk konfirmasi harga.'], 422);
+        }
         $itemDetails = [
             [
                 'id'       => 'PRODUK-' . $pesanan->id,
