@@ -23,10 +23,7 @@
         <strong>Transaksi Berhasil:</strong> {{ $stats['transaksi_berhasil'] }}<br>
         <strong>Belum Bayar:</strong> {{ $stats['status_belum_bayar'] }} |
         <strong>DP 50%:</strong> {{ $stats['status_dp_50'] }} |
-        <strong>Lunas:</strong> {{ $stats['status_lunas'] }}<br>
-        <strong>Metode BRI:</strong> {{ $stats['metode_bri'] }} |
-        <strong>Metode BCA:</strong> {{ $stats['metode_bca'] }} |
-        <strong>Metode Mandiri:</strong> {{ $stats['metode_mandiri'] }}
+        <strong>Lunas:</strong> {{ $stats['status_lunas'] }}
     </div>
 
     <table>

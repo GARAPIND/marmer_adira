@@ -94,7 +94,13 @@ class PesananController extends Controller
         }
 
         if ($paymentStep === 'lunas' && $pesanan->status_pembayaran === 'dp') {
-            return max($totalTagihan - (int) $pesanan->jumlah_dibayar, 0);
+            $sisa = $totalTagihan - (int) $pesanan->jumlah_dibayar;
+            if ($sisa > 0) {
+                return $sisa;
+            }
+
+            // Fallback untuk data lama yang jumlah_dibayar-nya sempat dobel karena callback berulang.
+            return max($totalTagihan - $nominalDp, 0);
         }
 
         return $totalTagihan;
@@ -127,19 +133,31 @@ class PesananController extends Controller
         $tanggalLunas      = $pesanan->tanggal_lunas;
         $jumlahDibayar     = (int) $pesanan->jumlah_dibayar;
         $bank              = $this->resolveMidtransBank($payload) ?? $pesanan->midtrans_bank;
+        $totalTagihan      = (int) $pesanan->total_harga + (int) ($pesanan->biaya_pengiriman ?? 0);
+        $incomingTxId      = (string) ($payload['transaction_id'] ?? '');
+        $existingTxId      = (string) ($pesanan->midtrans_transaction_id ?? '');
+        $isDuplicateTx     = $incomingTxId !== '' && $incomingTxId === $existingTxId;
 
         if (($transactionStatus === 'capture' && $fraudStatus === 'accept') || $transactionStatus === 'settlement') {
             if ($paymentStep === 'dp') {
                 $statusPembayaran = 'dp';
                 $tanggalBayar     = $payload['transaction_time'] ?? now();
+
+                if (!$isDuplicateTx) {
+                    $jumlahDibayar = max($jumlahDibayar, (int) ($payload['gross_amount'] ?? 0));
+                }
             } else {
                 $statusPembayaran = 'paid';
                 $tanggalLunas     = $payload['transaction_time'] ?? now();
                 $tanggalBayar     = $tanggalBayar ?? $tanggalLunas;
-            }
 
-            $jumlahDibayar += (int) ($payload['gross_amount'] ?? 0);
+                if (!$isDuplicateTx) {
+                    $jumlahDibayar += (int) ($payload['gross_amount'] ?? 0);
+                }
+            }
         }
+
+        $jumlahDibayar = min($jumlahDibayar, max($totalTagihan, 0));
 
         $updateData = [
             'midtrans_transaction_id' => $payload['transaction_id'] ?? $pesanan->midtrans_transaction_id,

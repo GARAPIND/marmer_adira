@@ -91,27 +91,6 @@
             </div>
         </div>
 
-        <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="card card-stat p-3">
-                    <small class="text-muted">Metode BRI</small>
-                    <h5 class="fw-bold mb-0">{{ $stats['metode_bri'] }}</h5>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card card-stat p-3">
-                    <small class="text-muted">Metode BCA</small>
-                    <h5 class="fw-bold mb-0">{{ $stats['metode_bca'] }}</h5>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card card-stat p-3">
-                    <small class="text-muted">Metode Mandiri</small>
-                    <h5 class="fw-bold mb-0">{{ $stats['metode_mandiri'] }}</h5>
-                </div>
-            </div>
-        </div>
-
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
             <div class="table-responsive">
                 <table class="table table-elegant align-middle mb-0">
