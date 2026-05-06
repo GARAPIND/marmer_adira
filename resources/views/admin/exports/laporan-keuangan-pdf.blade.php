@@ -14,7 +14,7 @@
 <body>
     <div class="header">
         <h2>LAPORAN KEUANGAN ADIRA MARMER</h2>
-        <p>Ringkasan Status Pembayaran dan Metode Bayar</p>
+        <p>Ringkasan Status Pembayaran, Riwayat DP, dan Metode Bayar</p>
     </div>
 
     <div class="summary-box">
@@ -33,6 +33,8 @@
                 <th>Nama Pembeli</th>
                 <th>Metode</th>
                 <th>Status Bayar</th>
+                <th>Riwayat</th>
+                <th>Bayar Pertama</th>
                 <th>Waktu Lunas</th>
                 <th>Nominal Dibayar</th>
             </tr>
@@ -42,9 +44,11 @@
                 <tr>
                     <td class="text-center">ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
                     <td>{{ $item->user->name }}</td>
-                    <td>{{ strtoupper($item->midtrans_bank ?? $item->midtrans_payment_type ?? '-') }}</td>
+                    <td>{{ $item->payment_summary['metode_terakhir'] }}</td>
                     <td>{{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar') }}</td>
-                    <td>{{ $item->tanggal_lunas ? $item->tanggal_lunas->format('d M Y H:i') : '-' }}</td>
+                    <td>{{ $item->payment_summary['status_label'] }}</td>
+                    <td>{{ $item->payment_summary['waktu_bayar_pertama'] ? \Carbon\Carbon::parse($item->payment_summary['waktu_bayar_pertama'])->format('d M Y H:i') : '-' }}</td>
+                    <td>{{ $item->payment_summary['waktu_lunas'] ? \Carbon\Carbon::parse($item->payment_summary['waktu_lunas'])->format('d M Y H:i') : '-' }}</td>
                     <td>Rp {{ number_format($item->jumlah_dibayar ?? 0, 0, ',', '.') }}</td>
                 </tr>
             @endforeach

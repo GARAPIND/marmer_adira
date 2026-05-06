@@ -28,7 +28,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2 class="fw-bold mb-0">Laporan Keuangan</h2>
-                <p class="text-muted small mb-0">Status pembayaran, metode bayar, dan waktu lunas</p>
+                <p class="text-muted small mb-0">Status pembayaran, riwayat DP, metode bayar, dan waktu transaksi</p>
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ route('admin.laporan.keuangan.pdf', request()->query()) }}"
@@ -99,8 +99,9 @@
                             <th class="ps-4">ID</th>
                             <th>Pembeli</th>
                             <th>Metode Pembayaran</th>
-                            <th>Jenis</th>
                             <th>Status</th>
+                            <th>Riwayat Bayar</th>
+                            <th>Bayar Pertama</th>
                             <th>Waktu Lunas</th>
                             <th class="text-end pe-4">Total Dibayar</th>
                         </tr>
@@ -110,17 +111,24 @@
                             <tr>
                                 <td class="ps-4 fw-bold text-primary">ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
                                 <td>{{ $item->user->name }}</td>
-                                <td>{{ strtoupper($item->midtrans_bank ?? $item->midtrans_payment_type ?? '-') }}</td>
-                                <td>{{ $item->jenis_pembayaran === 'dp' ? 'DP' : 'Lunas' }}</td>
+                                <td>{{ $item->payment_summary['metode_terakhir'] }}</td>
                                 <td>
                                     {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar') }}
                                 </td>
-                                <td>{{ $item->tanggal_lunas ? $item->tanggal_lunas->format('d M Y H:i') : '-' }}</td>
+                                <td>
+                                    <div class="fw-semibold">{{ $item->payment_summary['status_label'] }}</div>
+                                    <div class="small text-muted">
+                                        DP: {{ $item->payment_summary['pernah_dp'] ? 'Ya' : 'Tidak' }}
+                                        | Pelunasan: {{ $item->payment_summary['sudah_lunas'] ? 'Ya' : 'Belum' }}
+                                    </div>
+                                </td>
+                                <td>{{ $item->payment_summary['waktu_bayar_pertama'] ? \Carbon\Carbon::parse($item->payment_summary['waktu_bayar_pertama'])->format('d M Y H:i') : '-' }}</td>
+                                <td>{{ $item->payment_summary['waktu_lunas'] ? \Carbon\Carbon::parse($item->payment_summary['waktu_lunas'])->format('d M Y H:i') : '-' }}</td>
                                 <td class="text-end pe-4">Rp {{ number_format($item->jumlah_dibayar ?? 0, 0, ',', '.') }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">Belum ada data transaksi.</td>
+                                <td colspan="8" class="text-center py-4 text-muted">Belum ada data transaksi.</td>
                             </tr>
                         @endforelse
                     </tbody>

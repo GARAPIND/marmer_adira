@@ -199,22 +199,52 @@ class PesananController extends Controller
     {
         $totalTagihan = (int) $pesanan->total_harga + (int) ($pesanan->biaya_pengiriman ?? 0);
         $nominalDp = (int) ceil($totalTagihan * 0.5);
+        $totalSudahDibayar = $this->resolvePaidAmount($pesanan);
 
         if ($paymentStep === 'dp') {
             return $nominalDp;
         }
 
-        if ($paymentStep === 'lunas' && $pesanan->status_pembayaran === 'dp') {
-            $sisa = $totalTagihan - (int) $pesanan->jumlah_dibayar;
+        if ($paymentStep === 'lunas') {
+            $sisa = $totalTagihan - $totalSudahDibayar;
             if ($sisa > 0) {
                 return $sisa;
             }
 
-            // Fallback untuk data lama yang jumlah_dibayar-nya sempat dobel karena callback berulang.
+            // Fallback untuk data lama yang belum punya riwayat pembayaran lengkap.
+            if ($pesanan->status_pembayaran === 'dp') {
+                $sisaDariField = $totalTagihan - (int) $pesanan->jumlah_dibayar;
+                if ($sisaDariField > 0) {
+                    return $sisaDariField;
+                }
+            }
+
             return max($totalTagihan - $nominalDp, 0);
         }
 
         return $totalTagihan;
+    }
+
+    private function resolvePaidAmount(Pesanan $pesanan): int
+    {
+        $paidFromHistory = 0;
+
+        if ($pesanan->relationLoaded('paymentHistories')) {
+            $paidFromHistory = (int) $pesanan->paymentHistories
+                ->whereIn('event_type', ['paid_dp', 'paid_lunas'])
+                ->sum(fn ($item) => (int) ($item->nominal ?? 0));
+        } else {
+            $paidFromHistory = (int) PesananPaymentHistory::query()
+                ->where('pesanan_id', $pesanan->id)
+                ->whereIn('event_type', ['paid_dp', 'paid_lunas'])
+                ->sum('nominal');
+        }
+
+        if ($paidFromHistory > 0) {
+            return $paidFromHistory;
+        }
+
+        return max((int) ($pesanan->jumlah_dibayar ?? 0), 0);
     }
 
     private function resolvePaymentStep(Pesanan $pesanan, ?string $paymentStep): string

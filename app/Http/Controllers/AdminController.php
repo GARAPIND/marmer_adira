@@ -16,6 +16,34 @@ class AdminController extends Controller
     // 1. FUNGSI PEMBANTU (HELPERS)
     // ==========================================
 
+    private function buildPaymentSummary(Pesanan $pesanan): array
+    {
+        $histories = $pesanan->paymentHistories ?? collect();
+        $paidDp = $histories->firstWhere('event_type', 'paid_dp');
+        $paidLunas = $histories->firstWhere('event_type', 'paid_lunas');
+        $paidEvents = $histories->whereIn('event_type', ['paid_dp', 'paid_lunas'])->sortBy('event_time')->values();
+
+        $pernahDp = $paidDp !== null;
+        $sudahLunas = $pesanan->status_pembayaran === 'paid' || $paidLunas !== null;
+        $waktuBayarPertama = $paidEvents->first()->event_time ?? $pesanan->tanggal_bayar;
+        $waktuLunas = $paidLunas->event_time ?? $pesanan->tanggal_lunas;
+        $metodeTerakhir = $paidEvents->last()->payment_method
+            ?? $pesanan->midtrans_bank
+            ?? $pesanan->midtrans_payment_type
+            ?? '-';
+
+        return [
+            'pernah_dp' => $pernahDp,
+            'sudah_lunas' => $sudahLunas,
+            'status_label' => $sudahLunas ? ($pernahDp ? 'DP lalu Lunas' : 'Lunas Langsung') : ($pernahDp ? 'Baru DP' : 'Belum Bayar'),
+            'dp_nominal' => (int) ($paidDp->nominal ?? 0),
+            'lunas_nominal' => (int) ($paidLunas->nominal ?? 0),
+            'waktu_bayar_pertama' => $waktuBayarPertama,
+            'waktu_lunas' => $waktuLunas,
+            'metode_terakhir' => strtoupper((string) $metodeTerakhir),
+        ];
+    }
+
     private function getPesananStats($tgl_mulai = null, $tgl_akhir = null)
     {
         $query = Pesanan::query();
@@ -34,12 +62,15 @@ class AdminController extends Controller
 
     private function getKeuanganData($tgl_mulai = null, $tgl_akhir = null)
     {
-        $query = Pesanan::with('user');
+        $query = Pesanan::with(['user', 'paymentHistories']);
         if ($tgl_mulai && $tgl_akhir) {
             $query->whereBetween('created_at', [$tgl_mulai . " 00:00:00", $tgl_akhir . " 23:59:59"]);
         }
 
-        $transaksi = (clone $query)->orderByDesc('created_at')->get();
+        $transaksi = (clone $query)->orderByDesc('created_at')->get()->map(function ($item) {
+            $item->payment_summary = $this->buildPaymentSummary($item);
+            return $item;
+        });
         $totalTagihan = fn($item) => (int) $item->total_harga + (int) ($item->biaya_pengiriman ?? 0);
         $transaksiBerhasil = $transaksi->whereIn('status_pembayaran', ['dp', 'paid']);
 
@@ -193,14 +224,18 @@ class AdminController extends Controller
         $data = $this->getKeuanganData($request->tgl_mulai, $request->tgl_akhir);
 
         return response()->streamDownload(function () use ($data) {
-            echo "ID Pesanan,Nama Pembeli,Metode Pembayaran,Status Pembayaran,Tanggal Lunas,Nominal Dibayar\n";
+            echo "ID Pesanan,Nama Pembeli,Metode Pembayaran,Status Pembayaran,Riwayat Pembayaran,Pernah DP,Sudah Lunas,Waktu Bayar Pertama,Waktu Lunas,Nominal Dibayar\n";
             foreach ($data['transaksi'] as $item) {
-                $metodeBayar = $item->midtrans_bank ?: strtoupper((string) ($item->midtrans_payment_type ?? '-'));
+                $summary = $item->payment_summary;
                 echo "ORD-" . str_pad($item->id, 3, '0', STR_PAD_LEFT) . ",";
                 echo $item->user->name . ",";
-                echo $metodeBayar . ",";
+                echo $summary['metode_terakhir'] . ",";
                 echo ($item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar')) . ",";
-                echo ($item->tanggal_lunas ? Carbon::parse($item->tanggal_lunas)->format('d M Y H:i') : '-') . ",";
+                echo $summary['status_label'] . ",";
+                echo ($summary['pernah_dp'] ? 'Ya' : 'Tidak') . ",";
+                echo ($summary['sudah_lunas'] ? 'Ya' : 'Belum') . ",";
+                echo ($summary['waktu_bayar_pertama'] ? Carbon::parse($summary['waktu_bayar_pertama'])->format('d M Y H:i') : '-') . ",";
+                echo ($summary['waktu_lunas'] ? Carbon::parse($summary['waktu_lunas'])->format('d M Y H:i') : '-') . ",";
                 echo ((int) ($item->jumlah_dibayar ?? 0)) . "\n";
             }
         }, 'Laporan-Keuangan-Adira.csv');
