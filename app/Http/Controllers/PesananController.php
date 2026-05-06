@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pesanan;
+use App\Models\PesananPaymentHistory;
 use App\Models\Produk;
 use App\Models\Bahan;
 use App\Models\Terminal;
@@ -15,6 +16,61 @@ use Illuminate\Support\Facades\Schema;
 
 class PesananController extends Controller
 {
+    private function inferPaymentStepFromPayload(array $payload): string
+    {
+        $customField = strtolower((string) ($payload['custom_field1'] ?? ''));
+        if (in_array($customField, ['dp', 'lunas'], true)) {
+            return $customField;
+        }
+
+        $orderId = strtoupper((string) ($payload['order_id'] ?? ''));
+        if (str_contains($orderId, '-DP-')) {
+            return 'dp';
+        }
+
+        return 'lunas';
+    }
+
+    private function buildPaymentEvent(array $payload, string $source): ?array
+    {
+        if ($source === 'snap_token') {
+            $paymentStep = strtolower((string) ($payload['payment_step'] ?? 'lunas')) === 'dp' ? 'dp' : 'lunas';
+            return [
+                'event_type' => $paymentStep === 'dp' ? 'init_dp' : 'init_lunas',
+                'payment_step' => $paymentStep,
+                'source' => $source,
+                'order_id' => $payload['order_id'] ?? null,
+                'transaction_id' => null,
+                'payment_method' => null,
+                'nominal' => (int) ($payload['request_params']['transaction_details']['gross_amount'] ?? 0),
+                'currency' => 'IDR',
+                'event_time' => now()->toDateTimeString(),
+                'status' => 'initiated',
+            ];
+        }
+
+        $transactionStatus = $payload['transaction_status'] ?? null;
+        $fraudStatus = $payload['fraud_status'] ?? null;
+        $isSuccess = (($transactionStatus === 'capture' && $fraudStatus === 'accept') || $transactionStatus === 'settlement');
+        if (!$isSuccess) {
+            return null;
+        }
+
+        $step = $this->inferPaymentStepFromPayload($payload);
+        return [
+            'event_type' => $step === 'dp' ? 'paid_dp' : 'paid_lunas',
+            'payment_step' => $step,
+            'source' => $source,
+            'order_id' => $payload['order_id'] ?? null,
+            'transaction_id' => $payload['transaction_id'] ?? null,
+            'payment_method' => $this->resolveMidtransBank($payload) ?? strtoupper((string) ($payload['payment_type'] ?? '-')),
+            'nominal' => (int) ($payload['gross_amount'] ?? 0),
+            'currency' => $payload['currency'] ?? 'IDR',
+            'event_time' => $payload['transaction_time'] ?? now()->toDateTimeString(),
+            'status' => 'success',
+        ];
+    }
+
     private function appendMidtransPayload(Pesanan $pesanan, array $payload, string $source): ?string
     {
         if (!Schema::hasColumn('pesanan', 'midtrans_payload')) {
@@ -23,14 +79,21 @@ class PesananController extends Controller
 
         $existing = [];
         if (!empty($pesanan->midtrans_payload)) {
-            $decoded = json_decode($pesanan->midtrans_payload, true);
-            if (is_array($decoded)) {
-                $existing = $decoded;
+            if (is_array($pesanan->midtrans_payload)) {
+                $existing = $pesanan->midtrans_payload;
+            } else {
+                $decoded = json_decode($pesanan->midtrans_payload, true);
+                if (is_array($decoded)) {
+                    $existing = $decoded;
+                }
             }
         }
 
         if (!isset($existing['history']) || !is_array($existing['history'])) {
             $existing['history'] = [];
+        }
+        if (!isset($existing['payment_events']) || !is_array($existing['payment_events'])) {
+            $existing['payment_events'] = [];
         }
 
         $entry = [
@@ -42,7 +105,55 @@ class PesananController extends Controller
         $existing['history'][] = $entry;
         $existing['latest'] = $entry;
 
+        $paymentEvent = $this->buildPaymentEvent($payload, $source);
+        if ($paymentEvent !== null) {
+            $eventKey = ($paymentEvent['transaction_id'] ?? 'NO-TX') . '|' . ($paymentEvent['event_type'] ?? '-') . '|' . ($paymentEvent['source'] ?? '-');
+            $exists = collect($existing['payment_events'])->contains(function ($event) use ($eventKey) {
+                $key = ($event['transaction_id'] ?? 'NO-TX') . '|' . ($event['event_type'] ?? '-') . '|' . ($event['source'] ?? '-');
+                return $key === $eventKey;
+            });
+            if (!$exists) {
+                $existing['payment_events'][] = $paymentEvent;
+            }
+        }
+
         return json_encode($existing, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    private function syncPaymentHistory(Pesanan $pesanan, array $payload, string $source): void
+    {
+        $paymentEvent = $this->buildPaymentEvent($payload, $source);
+        if ($paymentEvent === null) {
+            return;
+        }
+
+        $reference = (string) ($paymentEvent['transaction_id'] ?? '');
+        if ($reference === '') {
+            $reference = (string) ($paymentEvent['order_id'] ?? '');
+        }
+        if ($reference === '') {
+            $reference = md5(json_encode($paymentEvent));
+        }
+
+        PesananPaymentHistory::updateOrCreate(
+            [
+                'pesanan_id' => $pesanan->id,
+                'event_type' => $paymentEvent['event_type'],
+                'event_reference' => $reference,
+            ],
+            [
+                'payment_step' => $paymentEvent['payment_step'] ?? null,
+                'source' => $paymentEvent['source'] ?? $source,
+                'status' => $paymentEvent['status'] ?? null,
+                'order_id' => $paymentEvent['order_id'] ?? null,
+                'transaction_id' => $paymentEvent['transaction_id'] ?? null,
+                'payment_method' => $paymentEvent['payment_method'] ?? null,
+                'nominal' => (int) ($paymentEvent['nominal'] ?? 0),
+                'currency' => $paymentEvent['currency'] ?? 'IDR',
+                'event_time' => $paymentEvent['event_time'] ?? now(),
+                'payload' => $payload,
+            ]
+        );
     }
 
     private function resolveMidtransBank(array $payload): ?string
@@ -180,13 +291,17 @@ class PesananController extends Controller
         }
 
         $pesanan->update($updateData);
+        $this->syncPaymentHistory($pesanan->fresh(), $payload, $source);
 
         return $statusPembayaran;
     }
 
     public function index()
     {
-        $pesanan = Pesanan::where('user_id', Auth::id())->latest()->get();
+        $pesanan = Pesanan::with('paymentHistories')
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->get();
         return view('pesanan.index', compact('pesanan'));
     }
 
@@ -401,6 +516,11 @@ class PesananController extends Controller
         }
 
         $pesanan->update($updateData);
+        $this->syncPaymentHistory($pesanan->fresh(), [
+            'order_id' => $orderId,
+            'payment_step' => $paymentStep,
+            'request_params' => $params,
+        ], 'snap_token');
 
         return response()->json(['snap_token' => $snapToken]);
     }

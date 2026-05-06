@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pesanan extends Model
 {
@@ -53,6 +54,7 @@ class Pesanan extends Model
         'total_berat' => 'float',
         'tanggal_bayar' => 'datetime',
         'tanggal_lunas' => 'datetime',
+        'midtrans_payload' => 'array',
     ];
 
     public function user(): BelongsTo
@@ -73,5 +75,10 @@ class Pesanan extends Model
     public function alamatPembeli(): BelongsTo
     {
         return $this->belongsTo(AlamatPembeli::class);
+    }
+
+    public function paymentHistories(): HasMany
+    {
+        return $this->hasMany(PesananPaymentHistory::class)->orderBy('event_time');
     }
 }

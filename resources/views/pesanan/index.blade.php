@@ -326,10 +326,25 @@
                                     <span class="small text-muted">Status Pembayaran:</span>
                                     <span id="det-status-bayar" class="small fw-bold text-dark">-</span>
                                 </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="small text-muted">Waktu Bayar Pertama:</span>
+                                    <span id="det-waktu-bayar" class="small fw-bold text-dark">-</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="small text-muted">Waktu Pelunasan:</span>
+                                    <span id="det-waktu-lunas" class="small fw-bold text-dark">-</span>
+                                </div>
 
                                 <div id="det-label-status" class="mt-3"></div>
 
                                 <div id="det-alasan-penolakan" class="mt-2"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold text-uppercase d-block mb-2">Riwayat Pembayaran</label>
+                                <div id="det-payment-history" class="p-2 bg-light rounded-3 small text-muted">
+                                    Belum ada riwayat pembayaran.
+                                </div>
                             </div>
 
                             <div class="alert alert-secondary border-0 py-2 small d-flex align-items-center rounded-3">
@@ -384,6 +399,9 @@
             const labelStatus = document.getElementById('det-label-status');
             const metodeBayar = document.getElementById('det-metode-bayar');
             const statusBayar = document.getElementById('det-status-bayar');
+            const waktuBayar = document.getElementById('det-waktu-bayar');
+            const waktuLunas = document.getElementById('det-waktu-lunas');
+            const paymentHistory = document.getElementById('det-payment-history');
             const formatter = new Intl.NumberFormat('id-ID', {
                 style: 'currency',
                 currency: 'IDR',
@@ -392,8 +410,50 @@
 
             metodeBayar.innerText = (data.midtrans_bank || data.midtrans_payment_type || '-').toString().toUpperCase();
             statusBayar.innerText = data.status_pembayaran === 'paid' ? 'Lunas' : (data.status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar');
+            waktuBayar.innerText = data.tanggal_bayar ? new Date(data.tanggal_bayar).toLocaleString('id-ID') : '-';
+            waktuLunas.innerText = data.tanggal_lunas ? new Date(data.tanggal_lunas).toLocaleString('id-ID') : '-';
             const alasanContainer = document.getElementById('det-alasan-penolakan');
             alasanContainer.innerHTML = '';
+
+            let events = Array.isArray(data.payment_histories) ? data.payment_histories : [];
+            try {
+                if (!events.length) {
+                    const payloadObj = typeof data.midtrans_payload === 'string' ? JSON.parse(data.midtrans_payload) : data.midtrans_payload;
+                    events = Array.isArray(payloadObj?.payment_events) ? payloadObj.payment_events : [];
+                }
+            } catch (e) {
+                if (!Array.isArray(events)) {
+                    events = [];
+                }
+            }
+
+            if (events.length) {
+                const sorted = [...events].sort((a, b) => new Date(a.event_time) - new Date(b.event_time));
+                paymentHistory.innerHTML = sorted.map((ev) => {
+                    const jenis = ev.event_type === 'paid_dp' ? 'Dibayar DP' :
+                        (ev.event_type === 'paid_lunas' ? 'Dibayar Lunas' :
+                        (ev.event_type === 'init_dp' ? 'Inisiasi DP' : 'Inisiasi Lunas'));
+                    const waktu = ev.event_time ? new Date(ev.event_time).toLocaleString('id-ID') : '-';
+                    const nominal = formatter.format(parseInt(ev.nominal || 0));
+                    const metode = (ev.payment_method || '-').toString().toUpperCase();
+                    const txid = ev.transaction_id || '-';
+                    const orderId = ev.order_id || '-';
+                    const sumber = (ev.source || '-').toString().replaceAll('_', ' ');
+                    const statusEvent = ev.status || '-';
+                    return `<div class="border-bottom pb-2 mb-2">
+                        <div class="fw-bold text-dark">${jenis}</div>
+                        <div>Waktu: ${waktu}</div>
+                        <div>Nominal: ${nominal}</div>
+                        <div>Metode: ${metode}</div>
+                        <div>Order ID: ${orderId}</div>
+                        <div>Transaction ID: ${txid}</div>
+                        <div>Status Event: ${statusEvent}</div>
+                        <div>Sumber: ${sumber}</div>
+                    </div>`;
+                }).join('');
+            } else {
+                paymentHistory.innerHTML = 'Belum ada riwayat pembayaran.';
+            }
 
             if (data.status == 'Menunggu Verifikasi Admin') {
                 document.getElementById('det-harga-produk').innerText = formatter.format(data.total_harga);
