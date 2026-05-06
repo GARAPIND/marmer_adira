@@ -46,7 +46,7 @@
                     <td class="text-center">ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
                     <td>{{ $item->user->name }}</td>
                     <td>{{ strtoupper($item->midtrans_bank ?? $item->midtrans_payment_type ?? '-') }}</td>
-                    <td>{{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'DP 50%' : 'Belum Bayar') }}</td>
+                    <td>{{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar') }}</td>
                     <td>{{ $item->tanggal_lunas ? $item->tanggal_lunas->format('d M Y H:i') : '-' }}</td>
                     <td>Rp {{ number_format($item->jumlah_dibayar ?? 0, 0, ',', '.') }}</td>
                 </tr>

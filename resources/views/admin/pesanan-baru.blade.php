@@ -174,7 +174,7 @@
                                         <br>
                                         <span
                                             class="badge badge-pill-custom {{ $currentPaymentClass }} bg-opacity-10 border border-opacity-25 mt-1">
-                                            {{ $item->status_pembayaran == 'paid' ? 'Lunas' : 'DP 50%' }}
+                                            {{ $item->status_pembayaran == 'paid' ? 'Lunas' : 'Dibayar DP' }}
                                         </span>
                                     @endif
                                 </td>

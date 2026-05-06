@@ -170,6 +170,14 @@
                                                     </span>
                                                     <div class="text-success small"><b>Sudah Dibayar</b></div>
                                                 </div>
+                                            @elseif($item->status == 'Diverifikasi' && $item->status_pembayaran == 'dp')
+                                                <div>
+                                                    <span
+                                                        class="badge badge-status-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">
+                                                        Telah Diverifikasi
+                                                    </span>
+                                                    <div class="text-warning small"><b>Dibayar DP</b></div>
+                                                </div>
                                             @elseif($item->status == 'Diverifikasi')
                                                 <div>
                                                     <span
@@ -183,7 +191,7 @@
                                                  class="badge badge-status-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ $item->status }}</span>
                                          @endif
                                             <div class="small mt-1 text-muted">
-                                                {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'DP 50%' : 'Belum Bayar') }}
+                                                {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar') }}
                                                 @if ($item->midtrans_bank || $item->midtrans_payment_type)
                                                     &middot; {{ strtoupper($item->midtrans_bank ?? $item->midtrans_payment_type) }}
                                                 @endif
@@ -383,7 +391,7 @@
             });
 
             metodeBayar.innerText = (data.midtrans_bank || data.midtrans_payment_type || '-').toString().toUpperCase();
-            statusBayar.innerText = data.status_pembayaran === 'paid' ? 'Lunas' : (data.status_pembayaran === 'dp' ? 'DP 50%' : 'Belum Bayar');
+            statusBayar.innerText = data.status_pembayaran === 'paid' ? 'Lunas' : (data.status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar');
             const alasanContainer = document.getElementById('det-alasan-penolakan');
             alasanContainer.innerHTML = '';
 

@@ -192,7 +192,15 @@
                                                         class="badge badge-status-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25">
                                                         Telah Diverifikasi
                                                     </span>
-                                                    <div class="text-success small"><b>Sudah Dibayar</b></div>
+                                                    <div class="text-success small"><b>Lunas</b></div>
+                                                </div>
+                                            @elseif($item->status == 'Diverifikasi' && $item->status_pembayaran == 'dp')
+                                                <div>
+                                                    <span
+                                                        class="badge badge-status-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">
+                                                        Telah Diverifikasi
+                                                    </span>
+                                                    <div class="text-warning small"><b>Dibayar DP</b></div>
                                                 </div>
                                             @elseif($item->status == 'Diverifikasi')
                                                 <div>
@@ -200,7 +208,7 @@
                                                         class="badge badge-status-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
                                                         Telah Diverifikasi
                                                     </span>
-                                                    <div class="text-danger small"><b>Menunggu Pembayaran</b></div>
+                                                    <div class="text-danger small"><b>Belum Bayar</b></div>
                                                 </div>
                                             @else
                                                 <span

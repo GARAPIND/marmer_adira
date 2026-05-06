@@ -293,15 +293,38 @@
                                 </div>
                             </div>
 
-                            <input type="hidden" name="total_harga" id="input_harga_hidden">
-                            <input type="hidden" name="biaya_pengiriman" id="input_ongkir_hidden">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Harga Produk (Rp)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text border-dark bg-dark text-white">Rp</span>
+                                    <input type="number" name="total_harga" id="input_harga"
+                                        class="form-control border-dark" placeholder="0" required min="1">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Berat Satuan (kg)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text border-dark bg-dark text-white">kg</span>
+                                    <input type="number" name="berat_satuan" id="input_berat_satuan"
+                                        class="form-control border-dark" placeholder="0" min="0" step="0.01">
+                                </div>
+                            </div>
+
+                            <div class="mb-3 d-none" id="group_ongkir_input">
+                                <label class="form-label small fw-bold text-danger">Ongkos Kirim (Rp)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text border-danger bg-danger text-white">Rp</span>
+                                    <input type="number" name="biaya_pengiriman" id="input_ongkir"
+                                        class="form-control border-danger" value="0" min="0">
+                                </div>
+                            </div>
 
                             <div class="mt-3" id="form_verifikasi">
                                 <label class="form-label small fw-bold text-uppercase"><i class="fas fa-tasks me-1"></i>
                                     Update Status Pesanan</label>
                                 <select name="status" id="select_status"
                                     class="form-select border-dark shadow-sm rounded-3">
-                                    <option value="Menunggu Verifikasi Admin">Menunggu Verifikasi</option>
                                     <option value="Diverifikasi">Diverifikasi</option>
                                     <option value="Ditolak">Ditolak</option>
                                 </select>
@@ -362,14 +385,20 @@
             // Alamat & Ongkir Row
             const alamatSection = document.getElementById('md-alamat-section');
             const ongkirRow = document.getElementById('display_ongkir_row');
+            const ongkirInputGroup = document.getElementById('group_ongkir_input');
+            const inputHarga = document.getElementById('input_harga');
+            const inputOngkir = document.getElementById('input_ongkir');
+            const inputBerat = document.getElementById('input_berat_satuan');
 
             if (data.metode_pengambilan === 'dikirim') {
                 alamatSection.style.display = 'block';
                 document.getElementById('md-alamat-text').innerText = data.alamat_pengiriman;
                 ongkirRow.classList.remove('d-none');
+                ongkirInputGroup.classList.remove('d-none');
             } else {
                 alamatSection.style.display = 'none';
                 ongkirRow.classList.add('d-none');
+                ongkirInputGroup.classList.add('d-none');
             }
 
             // Rincian Harga
@@ -380,18 +409,12 @@
             document.getElementById('display_ongkir_admin').innerText = formatter.format(hrgOngkir);
             document.getElementById('display_total_seluruh').innerText = formatter.format(hrgProduk + hrgOngkir);
 
-            // Isi Hidden Input
-            document.getElementById('input_harga_hidden').value = hrgProduk;
-            document.getElementById('input_ongkir_hidden').value = hrgOngkir;
+            inputHarga.value = hrgProduk > 0 ? hrgProduk : '';
+            inputOngkir.value = hrgOngkir > 0 ? hrgOngkir : 0;
+            inputBerat.value = (parseFloat(data.berat_satuan || 0) > 0) ? parseFloat(data.berat_satuan) : '';
 
-            // Set Nilai Select (Handle logic jika status di DB diluar 3 pilihan ini)
             const statusSelect = document.getElementById('select_status');
-            if (data.status === 'Diverifikasi' || data.status === 'Ditolak' || data.status ===
-                'Menunggu Verifikasi Admin') {
-                statusSelect.value = data.status;
-            } else {
-                statusSelect.value = 'Menunggu Verifikasi Admin';
-            }
+            statusSelect.value = data.status === 'Ditolak' ? 'Ditolak' : 'Diverifikasi';
 
             const alasanForm = document.getElementById('form_alasan');
 
@@ -413,9 +436,15 @@
             if (data.status === 'Menunggu Verifikasi Admin') {
                 verificationForm.classList.remove('d-none');
                 submitButton.classList.remove('d-none');
+                inputHarga.readOnly = false;
+                inputOngkir.readOnly = false;
+                inputBerat.readOnly = false;
             } else {
                 verificationForm.classList.add('d-none');
                 submitButton.classList.add('d-none');
+                inputHarga.readOnly = true;
+                inputOngkir.readOnly = true;
+                inputBerat.readOnly = true;
             }
         }
     </script>

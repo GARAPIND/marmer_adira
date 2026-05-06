@@ -134,7 +134,7 @@
                                 <td>{{ strtoupper($item->midtrans_bank ?? $item->midtrans_payment_type ?? '-') }}</td>
                                 <td>{{ $item->jenis_pembayaran === 'dp' ? 'DP' : 'Lunas' }}</td>
                                 <td>
-                                    {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar 50%' : 'Belum Bayar') }}
+                                    {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar') }}
                                 </td>
                                 <td>{{ $item->tanggal_lunas ? $item->tanggal_lunas->format('d M Y H:i') : '-' }}</td>
                                 <td class="text-end pe-4">Rp {{ number_format($item->jumlah_dibayar ?? 0, 0, ',', '.') }}</td>

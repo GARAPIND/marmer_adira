@@ -199,7 +199,7 @@ class AdminController extends Controller
                 echo "ORD-" . str_pad($item->id, 3, '0', STR_PAD_LEFT) . ",";
                 echo $item->user->name . ",";
                 echo $metodeBayar . ",";
-                echo ($item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'DP 50%' : 'Belum Bayar')) . ",";
+                echo ($item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar')) . ",";
                 echo ($item->tanggal_lunas ? Carbon::parse($item->tanggal_lunas)->format('d M Y H:i') : '-') . ",";
                 echo ((int) ($item->jumlah_dibayar ?? 0)) . "\n";
             }
