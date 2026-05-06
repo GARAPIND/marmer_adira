@@ -100,6 +100,7 @@
                             <th>Pembeli</th>
                             <th>Metode Pembayaran</th>
                             <th>Status</th>
+                            <th>Total Harga</th>
                             <th>Tanggal DP</th>
                             <th>Waktu Lunas</th>
                             <th class="text-end pe-4">Total Dibayar</th>
@@ -114,13 +115,14 @@
                                 <td>
                                     {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar') }}
                                 </td>
+                                <td>Rp {{ number_format((int) $item->total_harga + (int) ($item->biaya_pengiriman ?? 0), 0, ',', '.') }}</td>
                                 <td>{{ $item->payment_summary['waktu_dp'] ? \Carbon\Carbon::parse($item->payment_summary['waktu_dp'])->format('d M Y H:i') : '-' }}</td>
                                 <td>{{ $item->payment_summary['waktu_lunas'] ? \Carbon\Carbon::parse($item->payment_summary['waktu_lunas'])->format('d M Y H:i') : '-' }}</td>
                                 <td class="text-end pe-4">Rp {{ number_format($item->payment_summary['total_dibayar'] ?? 0, 0, ',', '.') }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">Belum ada data transaksi.</td>
+                                <td colspan="8" class="text-center py-4 text-muted">Belum ada data transaksi.</td>
                             </tr>
                         @endforelse
                     </tbody>

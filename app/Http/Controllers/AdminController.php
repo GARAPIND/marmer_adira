@@ -230,13 +230,15 @@ class AdminController extends Controller
         $data = $this->getKeuanganData($request->tgl_mulai, $request->tgl_akhir);
 
         return response()->streamDownload(function () use ($data) {
-            echo "ID Pesanan,Nama Pembeli,Metode Pembayaran,Status Pembayaran,Tanggal DP,Tanggal Lunas,Nominal Dibayar\n";
+            echo "ID Pesanan,Nama Pembeli,Metode Pembayaran,Status Pembayaran,Total Harga,Tanggal DP,Tanggal Lunas,Nominal Dibayar\n";
             foreach ($data['transaksi'] as $item) {
                 $summary = $item->payment_summary;
+                $totalHarga = (int) $item->total_harga + (int) ($item->biaya_pengiriman ?? 0);
                 echo "ORD-" . str_pad($item->id, 3, '0', STR_PAD_LEFT) . ",";
                 echo $item->user->name . ",";
                 echo $summary['metode_terakhir'] . ",";
                 echo ($item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar')) . ",";
+                echo $totalHarga . ",";
                 echo ($summary['waktu_dp'] ? Carbon::parse($summary['waktu_dp'])->format('d M Y H:i') : '-') . ",";
                 echo ($summary['waktu_lunas'] ? Carbon::parse($summary['waktu_lunas'])->format('d M Y H:i') : '-') . ",";
                 echo ((int) ($summary['total_dibayar'] ?? 0)) . "\n";

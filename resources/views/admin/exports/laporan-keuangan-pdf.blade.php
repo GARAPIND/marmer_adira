@@ -33,6 +33,7 @@
                 <th>Nama Pembeli</th>
                 <th>Metode</th>
                 <th>Status Bayar</th>
+                <th>Total Harga</th>
                 <th>Tanggal DP</th>
                 <th>Waktu Lunas</th>
                 <th>Nominal Dibayar</th>
@@ -45,6 +46,7 @@
                     <td>{{ $item->user->name }}</td>
                     <td>{{ $item->payment_summary['metode_terakhir'] }}</td>
                     <td>{{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar') }}</td>
+                    <td>Rp {{ number_format((int) $item->total_harga + (int) ($item->biaya_pengiriman ?? 0), 0, ',', '.') }}</td>
                     <td>{{ $item->payment_summary['waktu_dp'] ? \Carbon\Carbon::parse($item->payment_summary['waktu_dp'])->format('d M Y H:i') : '-' }}</td>
                     <td>{{ $item->payment_summary['waktu_lunas'] ? \Carbon\Carbon::parse($item->payment_summary['waktu_lunas'])->format('d M Y H:i') : '-' }}</td>
                     <td>Rp {{ number_format($item->payment_summary['total_dibayar'] ?? 0, 0, ',', '.') }}</td>

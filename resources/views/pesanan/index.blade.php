@@ -428,29 +428,35 @@
             }
 
             if (events.length) {
-                const sorted = [...events].sort((a, b) => new Date(a.event_time) - new Date(b.event_time));
-                paymentHistory.innerHTML = sorted.map((ev) => {
-                    const jenis = ev.event_type === 'paid_dp' ? 'Dibayar DP' :
-                        (ev.event_type === 'paid_lunas' ? 'Dibayar Lunas' :
-                        (ev.event_type === 'init_dp' ? 'Inisiasi DP' : 'Inisiasi Lunas'));
-                    const waktu = ev.event_time ? new Date(ev.event_time).toLocaleString('id-ID') : '-';
-                    const nominal = formatter.format(parseInt(ev.nominal || 0));
-                    const metode = (ev.payment_method || '-').toString().toUpperCase();
-                    const txid = ev.transaction_id || '-';
-                    const orderId = ev.order_id || '-';
-                    const sumber = (ev.source || '-').toString().replaceAll('_', ' ');
-                    const statusEvent = ev.status || '-';
-                    return `<div class="border-bottom pb-2 mb-2">
-                        <div class="fw-bold text-dark">${jenis}</div>
-                        <div>Waktu: ${waktu}</div>
-                        <div>Nominal: ${nominal}</div>
-                        <div>Metode: ${metode}</div>
-                        <div>Order ID: ${orderId}</div>
-                        <div>Transaction ID: ${txid}</div>
-                        <div>Status Event: ${statusEvent}</div>
-                        <div>Sumber: ${sumber}</div>
-                    </div>`;
-                }).join('');
+                const sorted = [...events]
+                    .filter((ev) => ['paid_dp', 'paid_lunas'].includes(ev.event_type))
+                    .sort((a, b) => new Date(a.event_time) - new Date(b.event_time));
+
+                if (!sorted.length) {
+                    paymentHistory.innerHTML = 'Belum ada riwayat pembayaran.';
+                } else {
+                    paymentHistory.innerHTML = sorted.map((ev) => {
+                        const jenis = ev.event_type === 'paid_dp' ? 'Dibayar DP' :
+                            'Dibayar Lunas';
+                        const waktu = ev.event_time ? new Date(ev.event_time).toLocaleString('id-ID') : '-';
+                        const nominal = formatter.format(parseInt(ev.nominal || 0));
+                        const metode = (ev.payment_method || '-').toString().toUpperCase();
+                        const txid = ev.transaction_id || '-';
+                        const orderId = ev.order_id || '-';
+                        const sumber = (ev.source || '-').toString().replaceAll('_', ' ');
+                        const statusEvent = ev.status || '-';
+                        return `<div class="border-bottom pb-2 mb-2">
+                            <div class="fw-bold text-dark">${jenis}</div>
+                            <div>Waktu: ${waktu}</div>
+                            <div>Nominal: ${nominal}</div>
+                            <div>Metode: ${metode}</div>
+                            <div>Order ID: ${orderId}</div>
+                            <div>Transaction ID: ${txid}</div>
+                            <div>Status Event: ${statusEvent}</div>
+                            <div>Sumber: ${sumber}</div>
+                        </div>`;
+                    }).join('');
+                }
             } else {
                 paymentHistory.innerHTML = 'Belum ada riwayat pembayaran.';
             }
