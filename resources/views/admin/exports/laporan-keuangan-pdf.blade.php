@@ -18,6 +18,7 @@
     </div>
 
     <div class="summary-box">
+        <strong>Total Pendapatan:</strong> Rp {{ number_format($stats['total_pendapatan'], 0, ',', '.') }}<br>
         <strong>Total Produk Terjual:</strong> {{ $stats['total_produk_terjual'] }}<br>
         <strong>Transaksi Berhasil:</strong> {{ $stats['transaksi_berhasil'] }}<br>
         <strong>Belum Bayar:</strong> {{ $stats['status_belum_bayar'] }} |

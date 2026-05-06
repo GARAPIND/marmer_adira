@@ -28,6 +28,7 @@ class Pesanan extends Model
         'alamat_pembeli_id',
         'alamat_pengiriman',
         'biaya_pengiriman',
+        'alasan_penolakan',
         'status',
         'total_harga',
         'midtrans_order_id',

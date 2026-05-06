@@ -320,6 +320,8 @@
                                 </div>
 
                                 <div id="det-label-status" class="mt-3"></div>
+
+                                <div id="det-alasan-penolakan" class="mt-2"></div>
                             </div>
 
                             <div class="alert alert-secondary border-0 py-2 small d-flex align-items-center rounded-3">
@@ -382,10 +384,12 @@
 
             metodeBayar.innerText = (data.midtrans_bank || data.midtrans_payment_type || '-').toString().toUpperCase();
             statusBayar.innerText = data.status_pembayaran === 'paid' ? 'Lunas' : (data.status_pembayaran === 'dp' ? 'DP 50%' : 'Belum Bayar');
+            const alasanContainer = document.getElementById('det-alasan-penolakan');
+            alasanContainer.innerHTML = '';
 
             if (data.status == 'Menunggu Verifikasi Admin') {
-                document.getElementById('det-harga-produk').innerText = "Menunggu...";
-                document.getElementById('det-ongkir-val').innerText = "-";
+                document.getElementById('det-harga-produk').innerText = formatter.format(data.total_harga);
+                document.getElementById('det-ongkir-val').innerText = formatter.format(data.biaya_pengiriman || 0)
                 document.getElementById('det-total').innerText = "Verifikasi Admin";
 
                 // Tambahkan Tombol Batal di Sidebar juga agar informatif
@@ -407,6 +411,14 @@
                 if (data.status === 'Ditolak') {
                     labelStatus.innerHTML =
                         '<span class="badge w-100 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 py-2"><i class="fas fa-times-circle me-1"></i> Pesanan Ditolak</span>';
+
+                    alasanContainer.innerHTML = `
+                        <div class="alert alert-danger border-0 small mt-2 py-2" style="border-radius:12px;">
+                            <i class="fas fa-exclamation-circle me-1"></i>
+                            <b>Alasan Penolakan:</b><br>
+                            ${data.alasan_penolakan || '-'}
+                        </div>
+                    `;
                 } else if (data.status === 'Selesai') {
                     labelStatus.innerHTML =
                         '<span class="badge w-100 bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2"><i class="fas fa-check-circle me-1"></i> Pesanan Selesai</span>';

@@ -306,6 +306,14 @@
                                     <option value="Ditolak">Ditolak</option>
                                 </select>
                             </div>
+
+                            <div class="mt-3 d-none" id="form_alasan">
+                                <label class="form-label small fw-bold text-uppercase text-danger">
+                                    <i class="fas fa-exclamation-circle me-1"></i> Alasan Penolakan
+                                </label>
+                                <textarea name="alasan_penolakan" id="input_alasan" class="form-control border-danger shadow-sm rounded-3"
+                                    rows="3" placeholder="Masukkan alasan kenapa pesanan ditolak..."></textarea>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-0 p-4 pt-0" id="modal-footer-admin">
@@ -336,6 +344,11 @@
             document.getElementById('md-produk').innerText = data.nama_produk;
             document.getElementById('md-info').innerText = data.ukuran + ' | Qty: ' + data.jumlah;
             document.getElementById('md-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan tambahan.';
+
+            document.getElementById('input_alasan').value = data.alasan_penolakan || '';
+            setTimeout(() => {
+                toggleAlasan();
+            }, 100);
 
             // Gambar Referensi
             const gambarContainer = document.getElementById('md-gambar-container');
@@ -379,6 +392,18 @@
             } else {
                 statusSelect.value = 'Menunggu Verifikasi Admin';
             }
+
+            const alasanForm = document.getElementById('form_alasan');
+
+            function toggleAlasan() {
+                if (statusSelect.value === 'Ditolak') {
+                    alasanForm.classList.remove('d-none');
+                } else {
+                    alasanForm.classList.add('d-none');
+                }
+            }
+
+            statusSelect.addEventListener('change', toggleAlasan);
 
             document.getElementById('formUpdatePesanan').action = `/admin/pesanan/${data.id}/update`;
             modal.show();
