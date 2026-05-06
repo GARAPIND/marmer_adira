@@ -208,7 +208,7 @@
                 <div class="col-lg-3 col-md-6 reveal">
                     <h5 class="footer-title">Navigasi</h5>
                     <a href="{{ route('produk.index') }}" class="footer-link">Katalog Produk</a>
-                    <a href="#about" class="footer-link">Tentang Kami</a>
+                    <a href="{{ route('tentang.kami') }}" class="footer-link">Tentang Kami</a>
                     <a href="#" class="footer-link">Hubungi Kami</a>
                     <a href="#" class="footer-link">Kebijakan Layanan</a>
                 </div>
@@ -227,7 +227,7 @@
                     <div class="d-flex justify-content-lg-end">
                         <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
                         <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+                        <a href="https://wa.me/6285894626729" target="_blank" class="social-icon"><i class="fab fa-whatsapp"></i></a>
                     </div>
                 </div>
             </div>

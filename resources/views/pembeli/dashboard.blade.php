@@ -224,26 +224,10 @@
                 </div>
             </div>
 
-            {{-- AKSI CEPAT --}}
             <div class="col-lg-4">
                 <h5 class="fw-bold mb-3 d-flex align-items-center">
-                    <i class="fas fa-bolt me-2 text-gold"></i> Aksi Cepat
+                    <i class="fab fa-whatsapp me-2 text-gold"></i> Bantuan Cepat
                 </h5>
-                <div class="d-grid gap-3">
-                    <a href="{{ route('produk.index') }}" class="card p-3 quick-link-card shadow-sm">
-                        <div class="d-flex align-items-center">
-                            <div class="marble-icon-box me-3" style="width: 45px; height: 45px; font-size: 1.2rem;">
-                                <i class="fas fa-th-large"></i>
-                            </div>
-                            <div>
-                                <span class="fw-bold d-block text-dark">Katalog Produk</span>
-                                <small class="text-muted">Lihat koleksi marmer premium</small>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-
-                {{-- WA CONSULTATION --}}
                 <div class="card mt-4 border-0 rounded-4 shadow-lg" style="background: var(--adira-dark);">
                     <div class="card-body p-4 text-center">
                         <div class="marble-icon-box mx-auto mb-3" style="background: rgba(255,255,255,0.1); color: white;">
@@ -251,7 +235,7 @@
                         </div>
                         <h6 class="fw-bold text-white">Butuh Konsultasi?</h6>
                         <p class="small text-white-50">Tanyakan detail bahan & harga khusus langsung ke pengrajin kami.</p>
-                        <a href="https://wa.me/your-number" class="btn btn-gold w-100 py-2 shadow-sm">Chat Admin
+                        <a href="https://wa.me/6285894626729" target="_blank" class="btn btn-gold w-100 py-2 shadow-sm">Chat Admin
                             Sekarang</a>
                     </div>
                 </div>

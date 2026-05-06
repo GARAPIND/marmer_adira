@@ -157,6 +157,7 @@
 
                                         $paymentClass = [
                                             'paid' => 'bg-success text-success',
+                                            'dp' => 'bg-warning text-warning',
                                             'no_paid' => 'bg-danger text-danger',
                                         ];
 
@@ -169,11 +170,11 @@
                                         {{ $item->status == 'Menunggu Verifikasi Admin' ? 'Menunggu Verifikasi' : $item->status }}
                                     </span>
 
-                                    @if ($item->status == 'Selesai')
+                                    @if (in_array($item->status_pembayaran, ['dp', 'paid']))
                                         <br>
                                         <span
                                             class="badge badge-pill-custom {{ $currentPaymentClass }} bg-opacity-10 border border-opacity-25 mt-1">
-                                            {{ $item->status_pembayaran == 'paid' ? 'Sudah Dibayar' : 'Belum Dibayar' }}
+                                            {{ $item->status_pembayaran == 'paid' ? 'Lunas' : 'DP 50%' }}
                                         </span>
                                     @endif
                                 </td>
@@ -250,12 +251,21 @@
                                     <h6 class="fw-bold text-dark mb-3"><i class="fas fa-calculator me-2 text-gold"></i>
                                         Rincian</h6>
 
+                                     <div class="mb-3">
+                                         <label class="form-label small fw-bold">Harga Produk (Rp)</label>
+                                         <div class="input-group">
+                                             <span class="input-group-text border-dark bg-dark text-white">Rp</span>
+                                             <input type="number" name="total_harga" id="input_harga"
+                                                 class="form-control border-dark" placeholder="0" required min="1">
+                                         </div>
+                                     </div>
+
                                     <div class="mb-3">
-                                        <label class="form-label small fw-bold">Harga Produk (Rp)</label>
+                                        <label class="form-label small fw-bold">Berat Satuan (kg)</label>
                                         <div class="input-group">
-                                            <span class="input-group-text border-dark bg-dark text-white">Rp</span>
-                                            <input type="number" name="total_harga" id="input_harga"
-                                                class="form-control border-dark" placeholder="0" required min="1">
+                                            <span class="input-group-text border-dark bg-dark text-white">kg</span>
+                                            <input type="number" name="berat_satuan" id="input_berat_satuan"
+                                                class="form-control border-dark" placeholder="0" min="0" step="0.01">
                                         </div>
                                     </div>
 
@@ -316,6 +326,7 @@
             document.getElementById('md-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan khusus.';
 
             document.getElementById('input_harga').value = data.total_harga > 0 ? data.total_harga : '';
+            document.getElementById('input_berat_satuan').value = data.berat_satuan > 0 ? data.berat_satuan : '';
 
             const alamatSection = document.getElementById('md-alamat-section');
             const ongkirGroup = document.getElementById('group-ongkir');
@@ -350,6 +361,7 @@
 
             inputHarga.readOnly = !isVerify;
             inputOngkir.readOnly = !isVerify;
+            document.getElementById('input_berat_satuan').readOnly = !isVerify;
 
             modal.show();
         }

@@ -5,22 +5,27 @@
     <style>
         body { font-family: sans-serif; font-size: 12px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: left; }
         .text-center { text-align: center; }
         .header { text-align: center; margin-bottom: 20px; }
-        .summary-box { background: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .summary-box { background: #f9f9f9; padding: 15px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
     <div class="header">
         <h2>LAPORAN KEUANGAN ADIRA MARMER</h2>
-        <p>Ringkasan Transaksi Pembayaran Produk Marmer</p>
+        <p>Ringkasan Status Pembayaran dan Metode Bayar</p>
     </div>
 
     <div class="summary-box">
-        <strong>Total Pendapatan:</strong> Rp {{ number_format($stats['total_pendapatan'], 0, ',', '.') }}<br>
-        <strong>Total DP Masuk:</strong> Rp {{ number_format($stats['total_dp'], 0, ',', '.') }}<br>
-        <strong>Jumlah Transaksi:</strong> {{ $stats['jumlah_transaksi'] }}
+        <strong>Total Produk Terjual:</strong> {{ $stats['total_produk_terjual'] }}<br>
+        <strong>Transaksi Berhasil:</strong> {{ $stats['transaksi_berhasil'] }}<br>
+        <strong>Belum Bayar:</strong> {{ $stats['status_belum_bayar'] }} |
+        <strong>DP 50%:</strong> {{ $stats['status_dp_50'] }} |
+        <strong>Lunas:</strong> {{ $stats['status_lunas'] }}<br>
+        <strong>Metode BRI:</strong> {{ $stats['metode_bri'] }} |
+        <strong>Metode BCA:</strong> {{ $stats['metode_bca'] }} |
+        <strong>Metode Mandiri:</strong> {{ $stats['metode_mandiri'] }}
     </div>
 
     <table>
@@ -28,20 +33,22 @@
             <tr style="background-color: #2c3e50; color: white;">
                 <th>ID Pesanan</th>
                 <th>Nama Pembeli</th>
-                <th>Tanggal Bayar</th>
-                <th>Jenis</th>
-                <th>Nominal</th>
+                <th>Metode</th>
+                <th>Status Bayar</th>
+                <th>Waktu Lunas</th>
+                <th>Nominal Dibayar</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($transaksi as $item)
-            <tr>
-                <td class="text-center">ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
-                <td>{{ $item->user->name }}</td>
-                <td>{{ $item->updated_at->format('d M Y') }}</td>
-                <td>{{ $item->status == 'Diverifikasi' ? 'DP (30%)' : 'Pelunasan' }}</td>
-                <td>Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
-            </tr>
+            @foreach ($transaksi as $item)
+                <tr>
+                    <td class="text-center">ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
+                    <td>{{ $item->user->name }}</td>
+                    <td>{{ strtoupper($item->midtrans_bank ?? $item->midtrans_payment_type ?? '-') }}</td>
+                    <td>{{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'DP 50%' : 'Belum Bayar') }}</td>
+                    <td>{{ $item->tanggal_lunas ? $item->tanggal_lunas->format('d M Y H:i') : '-' }}</td>
+                    <td>Rp {{ number_format($item->jumlah_dibayar ?? 0, 0, ',', '.') }}</td>
+                </tr>
             @endforeach
         </tbody>
     </table>

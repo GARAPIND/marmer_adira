@@ -14,6 +14,9 @@ use App\Http\Controllers\PengrajinController;
 Route::get('/', function () {
     return view('home');
 })->name('home');
+Route::get('/tentang-kami', function () {
+    return view('tentang-kami');
+})->name('tentang.kami');
 Route::get('/katalog', [ProdukController::class, 'header'])->name('produk.index');
 Route::get('/detail-katalog/{slug}', [ProdukController::class, 'index'])->name('produk.detail');
 Route::get('/produk/{id}', [ProdukController::class, 'show'])->name('produk.show');

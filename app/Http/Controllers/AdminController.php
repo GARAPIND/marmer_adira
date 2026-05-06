@@ -36,26 +36,26 @@ class AdminController extends Controller
     {
         $query = Pesanan::with('user');
         if ($tgl_mulai && $tgl_akhir) {
-            $query->whereBetween('updated_at', [$tgl_mulai . " 00:00:00", $tgl_akhir . " 23:59:59"]);
+            $query->whereBetween('created_at', [$tgl_mulai . " 00:00:00", $tgl_akhir . " 23:59:59"]);
         }
 
-        $transaksi = (clone $query)->whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Selesai'])->get();
+        $transaksi = (clone $query)->orderByDesc('created_at')->get();
+        $totalTagihan = fn($item) => (int) $item->total_harga + (int) ($item->biaya_pengiriman ?? 0);
+        $transaksiBerhasil = $transaksi->whereIn('status_pembayaran', ['dp', 'paid']);
 
-        // REVISI: Perhitungan Keuangan sekarang menjumlahkan total_harga + biaya_pengiriman
         $stats = [
-            'total_pendapatan' => (clone $query)->where('status', 'Selesai')
-                ->selectRaw('SUM(total_harga + COALESCE(biaya_pengiriman, 0)) as total')
-                ->first()->total ?? 0,
-
-            'total_dp'         => (clone $query)->whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan'])
-                ->selectRaw('SUM(total_harga + COALESCE(biaya_pengiriman, 0)) * 0.3 as total')
-                ->first()->total ?? 0,
-
-            'total_pelunasan'  => (clone $query)->where('status', 'Selesai')
-                ->selectRaw('SUM(total_harga + COALESCE(biaya_pengiriman, 0)) * 0.7 as total')
-                ->first()->total ?? 0,
-
+            'total_pendapatan' => $transaksi->sum(fn($item) => (int) ($item->jumlah_dibayar ?? 0)),
+            'total_dp'         => $transaksi->where('status_pembayaran', 'dp')->sum(fn($item) => (int) ($item->jumlah_dibayar ?? 0)),
+            'total_pelunasan'  => $transaksi->where('status_pembayaran', 'paid')->sum(fn($item) => max($totalTagihan($item) - (int) ((int) ceil($totalTagihan($item) * 0.5)), 0)),
             'jumlah_transaksi' => $transaksi->count(),
+            'total_produk_terjual' => $transaksi->where('status_pembayaran', 'paid')->sum('jumlah'),
+            'transaksi_berhasil' => $transaksiBerhasil->count(),
+            'status_lunas' => $transaksi->where('status_pembayaran', 'paid')->count(),
+            'status_dp_50' => $transaksi->where('status_pembayaran', 'dp')->count(),
+            'status_belum_bayar' => $transaksi->where('status_pembayaran', 'no_paid')->count(),
+            'metode_bri' => $transaksiBerhasil->where('midtrans_bank', 'BRI')->count(),
+            'metode_bca' => $transaksiBerhasil->where('midtrans_bank', 'BCA')->count(),
+            'metode_mandiri' => $transaksiBerhasil->where('midtrans_bank', 'MANDIRI')->count(),
         ];
 
         return [
@@ -88,6 +88,12 @@ class AdminController extends Controller
     public function updatePesanan(Request $request, $id)
     {
         $pesanan = Pesanan::findOrFail($id);
+        $request->validate([
+            'total_harga' => 'required|numeric|min:0',
+            'biaya_pengiriman' => 'nullable|numeric|min:0',
+            'berat_satuan' => 'nullable|numeric|min:0',
+            'status' => 'required|string',
+        ]);
 
         // Pastikan admin mengisi rincian pengiriman jika metode pengirimannya via bus
         $rincianOngkir = $pesanan->alamat_pengiriman; // default tetap yang lama
@@ -95,9 +101,13 @@ class AdminController extends Controller
             $rincianOngkir = "Kirim via Bus (Perhitungan: " . ($request->jarak_final ?? 0) . " KM x Rp " . number_format($request->tarif_final ?? 0, 0, ',', '.') . "/KM)";
         }
 
+        $beratSatuan = (float) ($request->berat_satuan ?? $pesanan->berat_satuan ?? 0);
+
         $pesanan->update([
             'total_harga'      => $request->total_harga,
-            'biaya_pengiriman' => $request->biaya_pengiriman,
+            'biaya_pengiriman' => $request->biaya_pengiriman ?? 0,
+            'berat_satuan'     => $beratSatuan,
+            'total_berat'      => $beratSatuan * (int) $pesanan->jumlah,
             'alamat_pengiriman' => $rincianOngkir,
             'status'           => $request->status,
         ]);
@@ -111,12 +121,14 @@ class AdminController extends Controller
         if ($request->status_selesai == 'paid') {
             $pesanan->update([
                 'status_pembayaran' => 'paid',
-                'tanggal_bayar' => Carbon::now()
+                'tanggal_bayar' => $pesanan->tanggal_bayar ?? Carbon::now(),
+                'tanggal_lunas' => Carbon::now()
             ]);
         } else {
             $pesanan->update([
                 'status_pembayaran' => 'no_paid',
-                'tanggal_bayar' => null
+                'tanggal_bayar' => null,
+                'tanggal_lunas' => null
             ]);
         }
         return redirect()->back()->with('success', 'Pesanan berhasil diperbarui!');
@@ -179,15 +191,15 @@ class AdminController extends Controller
     {
         $data = $this->getKeuanganData($request->tgl_mulai, $request->tgl_akhir);
         return response()->streamDownload(function () use ($data) {
-            echo "ID Pesanan,Nama Pembeli,Tanggal Bayar,Jenis,Nominal,Status\n";
+            echo "ID Pesanan,Nama Pembeli,Metode Pembayaran,Status Pembayaran,Tanggal Lunas,Nominal Dibayar\n";
             foreach ($data['transaksi'] as $item) {
-                $jenis = in_array($item->status, ['Diverifikasi', 'Diproses', 'Dikerjakan']) ? 'DP (30%)' : 'Pelunasan';
+                $metodeBayar = $item->midtrans_bank ?: strtoupper((string) ($item->midtrans_payment_type ?? '-'));
                 echo "ORD-" . str_pad($item->id, 3, '0', STR_PAD_LEFT) . ",";
                 echo $item->user->name . ",";
-                echo $item->updated_at->format('d M Y') . ",";
-                echo $jenis . ",";
-                echo ($item->total_harga + $item->biaya_pengiriman) . ",";
-                echo "Lunas\n";
+                echo $metodeBayar . ",";
+                echo ($item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'DP 50%' : 'Belum Bayar')) . ",";
+                echo ($item->tanggal_lunas ? Carbon::parse($item->tanggal_lunas)->format('d M Y H:i') : '-') . ",";
+                echo ((int) ($item->jumlah_dibayar ?? 0)) . "\n";
             }
         }, 'Laporan-Keuangan-Adira.csv');
     }
@@ -257,10 +269,10 @@ class AdminController extends Controller
         $tgl_mulai = $request->tgl_mulai;
         $tgl_akhir = $request->tgl_akhir;
 
-        $query = Pesanan::where('status', 'Selesai');
+        $query = Pesanan::where('status_pembayaran', 'paid');
 
         if ($tgl_mulai && $tgl_akhir) {
-            $query->whereBetween('created_at', [
+            $query->whereBetween('tanggal_lunas', [
                 Carbon::parse($tgl_mulai)->startOfDay(),
                 Carbon::parse($tgl_akhir)->endOfDay()
             ]);

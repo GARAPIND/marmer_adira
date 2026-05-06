@@ -1,184 +1,152 @@
 @extends('layouts.app')
 
 @section('content')
-<style>
-    :root {
-        --adira-gold: #C5A47E;
-        --adira-dark: #2c3e50;
-    }
-    .text-gold { color: var(--adira-gold) !important; }
-    
-    .page-header-elegant {
-        background: white;
-        padding: 2rem;
-        border-radius: 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        margin-bottom: 2rem;
-    }
+    <style>
+        :root {
+            --adira-gold: #C5A47E;
+            --adira-dark: #2c3e50;
+        }
 
-    .marble-icon-box {
-        width: 60px;
-        height: 60px;
-        background: rgba(197, 164, 126, 0.15);
-        border-radius: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--adira-gold);
-        font-size: 1.8rem;
-    }
+        .card-stat {
+            border: none;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
 
-    .card-stat {
-        border: none;
-        border-radius: 20px;
-        background: white;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-        transition: transform 0.3s ease;
-    }
-    .card-stat:hover { transform: translateY(-5px); }
+        .table-elegant thead th {
+            background-color: var(--adira-dark);
+            color: white;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            border: none;
+        }
+    </style>
 
-    .table-elegant thead th {
-        background-color: var(--adira-dark);
-        color: white;
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 1px;
-        padding: 1.2rem;
-        border: none;
-    }
-
-    .btn-gold {
-        background-color: var(--adira-gold);
-        color: white;
-        border: none;
-        font-weight: 600;
-        border-radius: 50px;
-    }
-    .btn-gold:hover { background-color: #b08d44; color: white; }
-</style>
-
-<div class="container py-5 mt-2 animate__animated animate__fadeIn">
-    {{-- HEADER --}}
-    <div class="page-header-elegant d-flex align-items-center">
-        <div class="marble-icon-box me-3 shadow-sm">
-            <i class="fas fa-wallet"></i>
+    <div class="container py-5 mt-2">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-0">Laporan Keuangan</h2>
+                <p class="text-muted small mb-0">Status pembayaran, metode bayar, dan waktu lunas</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.laporan.keuangan.pdf', request()->query()) }}"
+                    class="btn btn-outline-dark rounded-pill px-4 fw-bold">Export PDF</a>
+                <a href="{{ route('admin.laporan.keuangan.excel', request()->query()) }}"
+                    class="btn btn-outline-dark rounded-pill px-4 fw-bold">Export Excel</a>
+            </div>
         </div>
-        <div>
-            <h2 class="fw-bold mb-0 text-dark" style="border-left: 5px solid #000; padding-left: 15px;">Laporan Keuangan</h2>
-            <p class="text-muted small mb-0">Pantau arus kas, uang muka, dan pelunasan pesanan</p>
-        </div>
-    </div>
 
-    {{-- FILTER --}}
-    <div class="card border-0 shadow-sm rounded-4 mb-5">
-        <div class="card-body p-4">
-            <form action="" method="GET">
-                <div class="row align-items-end g-3">
-                    <div class="col-md-4">
-                        <label class="fw-bold small mb-2">Tanggal Mulai:</label>
-                        <input type="date" name="tgl_mulai" value="{{ request('tgl_mulai') }}" class="form-control shadow-none border-light bg-light">
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body">
+                <form method="GET">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="small fw-bold">Tanggal Mulai</label>
+                            <input type="date" name="tgl_mulai" class="form-control" value="{{ request('tgl_mulai') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small fw-bold">Tanggal Akhir</label>
+                            <input type="date" name="tgl_akhir" class="form-control" value="{{ request('tgl_akhir') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-dark w-100">Tampilkan</button>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="fw-bold small mb-2">Tanggal Akhir:</label>
-                        <input type="date" name="tgl_akhir" value="{{ request('tgl_akhir') }}" class="form-control shadow-none border-light bg-light">
-                    </div>
-                    <div class="col-md-4">
-                        <button type="submit" class="btn btn-gold w-100 py-2 shadow-sm">
-                            <i class="fas fa-search me-2"></i> Tampilkan Data
-                        </button>
-                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card card-stat p-3">
+                    <small class="text-muted">Total Produk Terjual</small>
+                    <h4 class="fw-bold mb-0">{{ $stats['total_produk_terjual'] }}</h4>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- STATS CARDS --}}
-    <div class="row g-4 mb-5 text-center">
-        <div class="col-md-3">
-            <div class="card card-stat p-4 border-start border-4 border-primary">
-                <p class="text-muted small fw-bold text-uppercase mb-1">Total Pendapatan</p>
-                <h4 class="fw-extrabold text-dark">Rp {{ number_format($stats['total_pendapatan'], 0, ',', '.') }}</h4>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-stat p-3">
+                    <small class="text-muted">Transaksi Berhasil</small>
+                    <h4 class="fw-bold mb-0">{{ $stats['transaksi_berhasil'] }}</h4>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card card-stat p-3">
+                    <small class="text-muted">Belum Bayar</small>
+                    <h4 class="fw-bold mb-0">{{ $stats['status_belum_bayar'] }}</h4>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card card-stat p-3">
+                    <small class="text-muted">DP 50%</small>
+                    <h4 class="fw-bold mb-0">{{ $stats['status_dp_50'] }}</h4>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card card-stat p-3">
+                    <small class="text-muted">Lunas</small>
+                    <h4 class="fw-bold mb-0">{{ $stats['status_lunas'] }}</h4>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card card-stat p-4 border-start border-4 border-warning">
-                <p class="text-muted small fw-bold text-uppercase mb-1">Total DP Masuk</p>
-                <h4 class="fw-extrabold text-dark">Rp {{ number_format($stats['total_dp'], 0, ',', '.') }}</h4>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card card-stat p-3">
+                    <small class="text-muted">Metode BRI</small>
+                    <h5 class="fw-bold mb-0">{{ $stats['metode_bri'] }}</h5>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-stat p-3">
+                    <small class="text-muted">Metode BCA</small>
+                    <h5 class="fw-bold mb-0">{{ $stats['metode_bca'] }}</h5>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-stat p-3">
+                    <small class="text-muted">Metode Mandiri</small>
+                    <h5 class="fw-bold mb-0">{{ $stats['metode_mandiri'] }}</h5>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card card-stat p-4 border-start border-4 border-success">
-                <p class="text-muted small fw-bold text-uppercase mb-1">Total Pelunasan</p>
-                <h4 class="fw-extrabold text-dark">Rp {{ number_format($stats['total_pelunasan'], 0, ',', '.') }}</h4>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card card-stat p-4 border-start border-4 border-info">
-                <p class="text-muted small fw-bold text-uppercase mb-1">Jumlah Transaksi</p>
-                <h4 class="fw-extrabold text-dark">{{ $stats['jumlah_transaksi'] }}</h4>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-elegant align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">ID</th>
+                            <th>Pembeli</th>
+                            <th>Metode Pembayaran</th>
+                            <th>Jenis</th>
+                            <th>Status</th>
+                            <th>Waktu Lunas</th>
+                            <th class="text-end pe-4">Total Dibayar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($transaksi as $item)
+                            <tr>
+                                <td class="ps-4 fw-bold text-primary">ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
+                                <td>{{ $item->user->name }}</td>
+                                <td>{{ strtoupper($item->midtrans_bank ?? $item->midtrans_payment_type ?? '-') }}</td>
+                                <td>{{ $item->jenis_pembayaran === 'dp' ? 'DP' : 'Lunas' }}</td>
+                                <td>
+                                    {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar 50%' : 'Belum Bayar') }}
+                                </td>
+                                <td>{{ $item->tanggal_lunas ? $item->tanggal_lunas->format('d M Y H:i') : '-' }}</td>
+                                <td class="text-end pe-4">Rp {{ number_format($item->jumlah_dibayar ?? 0, 0, ',', '.') }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">Belum ada data transaksi.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-
-    {{-- TABEL RINCIAN --}}
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold m-0"><i class="fas fa-list-ul me-2 text-gold"></i>Rincian Transaksi</h5>
-        <div class="gap-2 d-flex">
-            {{-- Tombol disamakan dengan Laporan Pesanan: Teks "Export PDF" dan gaya 'btn-outline-dark' --}}
-            <a href="{{ route('admin.laporan.keuangan.pdf', request()->query()) }}" class="btn btn-outline-dark px-4 shadow-sm fw-bold rounded-pill">
-                <i class="fas fa-file-pdf text-danger me-2"></i> Export PDF
-            </a>
-            
-            <a href="{{ route('admin.laporan.keuangan.excel', request()->query()) }}" class="btn btn-outline-dark px-4 shadow-sm fw-bold rounded-pill">
-                <i class="fas fa-file-excel text-success me-2"></i> Export Excel
-            </a>
-    </div>
-</div>
-
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-        <div class="table-responsive">
-            <table class="table table-elegant hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th class="ps-4">ID Pesanan</th>
-                        <th>Nama Pembeli</th>
-                        <th>Tanggal Update</th>
-                        <th>Jenis</th>
-                        <th>Nominal</th>
-                        <th class="pe-4 text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($transaksi as $item)
-                    <tr>
-                        <td class="ps-4 fw-bold text-primary">ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
-                        <td class="fw-semibold">{{ $item->user->name }}</td>
-                        <td class="text-muted small">{{ $item->updated_at->format('d M Y') }}</td>
-                        <td>
-                            @if($item->status == 'Diverifikasi')
-                                <span class="badge bg-light text-warning border border-warning px-3">DP (30%)</span>
-                            @else
-                                <span class="badge bg-light text-success border border-success px-3">Pelunasan</span>
-                            @endif
-                        </td>
-                        <td class="fw-bold">Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
-                        <td class="text-center pe-4">
-                            <span class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2 fw-bold">
-                                <i class="fas fa-check-circle me-1"></i> Lunas
-                            </span>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="text-center py-5 text-muted italic">Belum ada data transaksi untuk periode ini.</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 @endsection

@@ -120,7 +120,7 @@
                         <span class="badge rounded-pill px-3 py-2"
                             style="background-color: #d1e7dd; color: #0a3622; font-size: 0.85rem;">
                             <i class="fas fa-check-circle me-1"></i>
-                            Data diambil dari transaksi yang sudah selesai
+                            Data diambil dari transaksi yang sudah lunas
                         </span>
                     </div>
                 @else
@@ -133,7 +133,7 @@
                         <span class="badge rounded-pill px-3 py-2"
                             style="background-color: #d1e7dd; color: #0a3622; font-size: 0.85rem;">
                             <i class="fas fa-check-circle me-1"></i>
-                            Data diambil dari transaksi yang sudah selesai
+                            Data diambil dari transaksi yang sudah lunas
                         </span>
                     </div>
                 @endif

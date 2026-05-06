@@ -14,27 +14,88 @@ use Illuminate\Support\Facades\Log;
 
 class PesananController extends Controller
 {
-    private function updatePaymentStatus(Pesanan $pesanan, array $payload): string
+    private function resolveMidtransBank(array $payload): ?string
+    {
+        if (!empty($payload['va_numbers'][0]['bank'])) {
+            return strtoupper($payload['va_numbers'][0]['bank']);
+        }
+
+        if (!empty($payload['bank'])) {
+            return strtoupper($payload['bank']);
+        }
+
+        if (!empty($payload['permata_va_number'])) {
+            return 'PERMATA';
+        }
+
+        return null;
+    }
+
+    private function calculatePaymentAmount(Pesanan $pesanan, string $paymentStep): int
+    {
+        $totalTagihan = (int) $pesanan->total_harga + (int) ($pesanan->biaya_pengiriman ?? 0);
+        $nominalDp = (int) ceil($totalTagihan * 0.5);
+
+        if ($paymentStep === 'dp') {
+            return $nominalDp;
+        }
+
+        if ($paymentStep === 'lunas' && $pesanan->status_pembayaran === 'dp') {
+            return max($totalTagihan - (int) $pesanan->jumlah_dibayar, 0);
+        }
+
+        return $totalTagihan;
+    }
+
+    private function resolvePaymentStep(Pesanan $pesanan, ?string $paymentStep): string
+    {
+        if (in_array($paymentStep, ['dp', 'lunas'], true)) {
+            return $paymentStep;
+        }
+
+        if (in_array($pesanan->jenis_pembayaran, ['dp', 'lunas'], true)) {
+            return $pesanan->jenis_pembayaran;
+        }
+
+        return $pesanan->status_pembayaran === 'dp' ? 'lunas' : 'dp';
+    }
+
+    private function updatePaymentStatus(Pesanan $pesanan, array $payload, string $paymentStep = 'lunas'): string
     {
         $transactionStatus = $payload['transaction_status'] ?? null;
         $fraudStatus       = $payload['fraud_status'] ?? null;
-        $statusPembayaran  = 'no_paid';
-        $tanggalBayar      = null;
+        $statusPembayaran  = $pesanan->status_pembayaran ?? 'no_paid';
+        $tanggalBayar      = $pesanan->tanggal_bayar;
+        $tanggalLunas      = $pesanan->tanggal_lunas;
+        $jumlahDibayar     = (int) $pesanan->jumlah_dibayar;
+        $bank              = $this->resolveMidtransBank($payload) ?? $pesanan->midtrans_bank;
 
         if (($transactionStatus === 'capture' && $fraudStatus === 'accept') || $transactionStatus === 'settlement') {
-            $statusPembayaran = 'paid';
-            $tanggalBayar     = $payload['transaction_time'] ?? now();
+            if ($paymentStep === 'dp') {
+                $statusPembayaran = 'dp';
+                $tanggalBayar     = $payload['transaction_time'] ?? now();
+            } else {
+                $statusPembayaran = 'paid';
+                $tanggalLunas     = $payload['transaction_time'] ?? now();
+                $tanggalBayar     = $tanggalBayar ?? $tanggalLunas;
+            }
+
+            $jumlahDibayar += (int) ($payload['gross_amount'] ?? 0);
         }
 
         $pesanan->update([
             'midtrans_transaction_id' => $payload['transaction_id'] ?? $pesanan->midtrans_transaction_id,
             'midtrans_payment_type'   => $payload['payment_type'] ?? $pesanan->midtrans_payment_type,
+            'midtrans_bank'           => $bank,
             'midtrans_status'         => $transactionStatus,
             'midtrans_gross_amount'   => $payload['gross_amount'] ?? $pesanan->midtrans_gross_amount,
             'midtrans_currency'       => $payload['currency'] ?? $pesanan->midtrans_currency ?? 'IDR',
             'midtrans_fraud_status'   => $fraudStatus,
             'status_pembayaran'       => $statusPembayaran,
+            'jenis_pembayaran'        => $paymentStep,
+            'jumlah_dibayar'          => $jumlahDibayar,
             'tanggal_bayar'           => $tanggalBayar,
+            'tanggal_lunas'           => $tanggalLunas,
         ]);
 
         return $statusPembayaran;
@@ -76,6 +137,7 @@ class PesananController extends Controller
             'ukuran'             => 'required',
             'jenis_marmer'       => 'required',
             'jumlah'             => 'required|integer|min:1',
+            'berat_satuan'       => 'nullable|numeric|min:0',
             'metode_pengambilan' => 'required',
             'jenis_pengiriman'   => 'required_if:metode_pengambilan,dikirim',
             'terminal_id'        => 'required_if:jenis_pengiriman,bus',
@@ -119,12 +181,15 @@ class PesananController extends Controller
 
         Pesanan::create([
             'user_id'            => Auth::id(),
+            'is_custom'          => !$request->filled('produk_id'),
             'nama_produk'        => $request->nama_produk,
             'ukuran'             => $request->ukuran,
             'jenis_marmer'       => $request->jenis_marmer,
             'catatan_khusus'     => $request->catatan_khusus,
             'gambar_referensi'   => $pathGambar,
             'jumlah'             => $request->jumlah,
+            'berat_satuan'       => (float) ($request->berat_satuan ?? 0),
+            'total_berat'        => (float) ($request->berat_satuan ?? 0) * (int) $request->jumlah,
             'metode_pengambilan' => $request->metode_pengambilan,
             'jenis_pengiriman'   => $jenisPengiriman,
             'alamat_pembeli_id'  => $alamatPembeliId,
@@ -133,6 +198,7 @@ class PesananController extends Controller
             'total_harga'        => $request->total_harga,
             'status'             => 'Menunggu Verifikasi Admin',
             'status_pembayaran'  => 'no_paid',
+            'jumlah_dibayar'     => 0,
         ]);
 
         return redirect()->route('pesanan.index')->with('success', 'Pesanan berhasil diajukan!');
@@ -158,31 +224,45 @@ class PesananController extends Controller
     public function getSnapToken($id)
     {
         $pesanan = Pesanan::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $paymentStep = request()->query('payment_step', 'lunas');
+
+        if (!in_array($paymentStep, ['dp', 'lunas'], true)) {
+            return response()->json(['message' => 'Metode pembayaran tidak valid'], 422);
+        }
+
+        if ($pesanan->status !== 'Diverifikasi') {
+            return response()->json(['message' => 'Pesanan belum siap dibayar'], 422);
+        }
+
+        if ($pesanan->status_pembayaran === 'paid') {
+            return response()->json(['message' => 'Pesanan sudah lunas'], 422);
+        }
+
+        if ($paymentStep === 'dp' && $pesanan->status_pembayaran !== 'no_paid') {
+            return response()->json(['message' => 'DP sudah dibayarkan'], 422);
+        }
+
+        if ($paymentStep === 'lunas' && $pesanan->status_pembayaran === 'no_paid') {
+            return response()->json(['message' => 'Silakan bayar DP 50% terlebih dahulu'], 422);
+        }
 
         \Midtrans\Config::$serverKey    = config('midtrans.server_key');
         \Midtrans\Config::$isProduction = config('midtrans.is_production');
         \Midtrans\Config::$isSanitized  = true;
         \Midtrans\Config::$is3ds        = true;
 
-        $orderId    = 'ORD-' . $pesanan->id . '-' . time();
-        $totalAkhir = (int) $pesanan->total_harga + (int) ($pesanan->biaya_pengiriman ?? 0);
+        $orderId    = 'ORD-' . $pesanan->id . '-' . strtoupper($paymentStep) . '-' . time();
+        $totalAkhir = $this->calculatePaymentAmount($pesanan, $paymentStep);
         $itemDetails = [
             [
                 'id'       => 'PRODUK-' . $pesanan->id,
-                'price'    => (int) $pesanan->total_harga,
+                'price'    => $totalAkhir,
                 'quantity' => 1,
-                'name'     => $pesanan->nama_produk,
+                'name'     => $paymentStep === 'dp'
+                    ? ('DP 50% - ' . $pesanan->nama_produk)
+                    : ('Pelunasan - ' . $pesanan->nama_produk),
             ],
         ];
-
-        if ((int) ($pesanan->biaya_pengiriman ?? 0) > 0) {
-            $itemDetails[] = [
-                'id'       => 'ONGKIR-' . $pesanan->id,
-                'price'    => (int) $pesanan->biaya_pengiriman,
-                'quantity' => 1,
-                'name'     => 'Biaya Pengiriman',
-            ];
-        }
 
         $params = [
             'transaction_details' => [
@@ -194,10 +274,14 @@ class PesananController extends Controller
                 'email'      => $pesanan->user->email,
             ],
             'item_details' => $itemDetails,
+            'custom_field1' => $paymentStep,
         ];
 
         $snapToken = \Midtrans\Snap::getSnapToken($params);
-        $pesanan->update(['midtrans_order_id' => $orderId]);
+        $pesanan->update([
+            'midtrans_order_id' => $orderId,
+            'jenis_pembayaran' => $paymentStep,
+        ]);
 
         return response()->json(['snap_token' => $snapToken]);
     }
@@ -211,21 +295,26 @@ class PesananController extends Controller
             'transaction_status' => 'required|string',
             'transaction_id'     => 'nullable|string',
             'payment_type'       => 'nullable|string',
+            'bank'               => 'nullable|string',
+            'va_numbers'         => 'nullable|array',
             'gross_amount'       => 'nullable',
             'currency'           => 'nullable|string',
             'fraud_status'       => 'nullable|string',
             'transaction_time'   => 'nullable',
+            'custom_field1'      => 'nullable|string',
         ]);
 
         if ($pesanan->midtrans_order_id !== $request->order_id) {
             return response()->json(['message' => 'Order ID tidak cocok'], 422);
         }
 
-        $statusPembayaran = $this->updatePaymentStatus($pesanan, $request->all());
+        $paymentStep = $this->resolvePaymentStep($pesanan, $request->input('custom_field1'));
+        $statusPembayaran = $this->updatePaymentStatus($pesanan, $request->all(), $paymentStep);
 
         return response()->json([
             'message' => 'Pembayaran berhasil disinkronkan',
             'status_pembayaran' => $statusPembayaran,
+            'payment_step' => $paymentStep,
         ]);
     }
 
@@ -256,9 +345,17 @@ class PesananController extends Controller
         }
 
         try {
-            $statusPembayaran = $this->updatePaymentStatus($pesanan, $payload);
+            $paymentStep = $this->resolvePaymentStep(
+                $pesanan,
+                str_contains(($payload['order_id'] ?? ''), '-DP-') ? 'dp' : 'lunas'
+            );
+            $statusPembayaran = $this->updatePaymentStatus($pesanan, $payload, $paymentStep);
 
-            return response()->json(['message' => 'OK', 'status_pembayaran' => $statusPembayaran]);
+            return response()->json([
+                'message' => 'OK',
+                'status_pembayaran' => $statusPembayaran,
+                'payment_step' => $paymentStep,
+            ]);
         } catch (\Exception $e) {
             Log::error('Midtrans exception', ['message' => $e->getMessage()]);
             return response()->json(['message' => 'Exception: ' . $e->getMessage()], 500);

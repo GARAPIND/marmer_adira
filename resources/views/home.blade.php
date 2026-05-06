@@ -155,7 +155,7 @@
 
             <div class="d-flex justify-content-center gap-4 animate__animated animate__fadeInUp animate__delay-3s">
                 <a href="{{ route('produk.index') }}" class="btn btn-gold-premium">Katalog Produk</a>
-                <a href="#about" class="btn btn-outline-soft">Tentang Kami</a>
+                <a href="{{ route('tentang.kami') }}" class="btn btn-outline-soft">Tentang Kami</a>
             </div>
         </div>
     </header>

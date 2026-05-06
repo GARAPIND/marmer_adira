@@ -228,8 +228,10 @@
                         <form action="{{ route('pesanan.store') }}" method="POST" enctype="multipart/form-data"
                             id="orderForm">
                             @csrf
+                            <input type="hidden" name="produk_id" value="{{ $dataProduk->id ?? '' }}">
                             <input type="hidden" name="total_harga" id="total_harga_hidden" value="0">
                             <input type="hidden" name="biaya_pengiriman" id="biaya_pengiriman_hidden" value="0">
+                            <input type="hidden" name="berat_satuan" id="berat_satuan_hidden" value="0">
                             <input type="hidden" name="jenis_pengiriman" id="jenis_pengiriman_hidden" value="">
                             <input type="hidden" name="alamat_pembeli_id" id="alamat_pembeli_id_hidden" value="">
                             <input type="hidden" name="courier" id="courier_hidden" value="">
@@ -257,15 +259,16 @@
 
                                     <div class="mb-4">
                                         <label class="label-aesthetic">Pilih Ukuran / Dimensi</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-white border-end-0 text-muted rounded-start-4">
-                                                <i class="fa-solid fa-maximize"></i>
-                                            </span>
-                                            <select name="ukuran" id="ukuran"
-                                                class="form-select input-aesthetic border-start-0" onchange="updateHarga()"
-                                                required>
-                                                <option value="" disabled selected>-- Pilih Ukuran --</option>
-                                                @if (isset($dataProduk))
+                                        @if (isset($dataProduk) && $dataProduk)
+                                            <div class="input-group">
+                                                <span
+                                                    class="input-group-text bg-white border-end-0 text-muted rounded-start-4">
+                                                    <i class="fa-solid fa-maximize"></i>
+                                                </span>
+                                                <select name="ukuran" id="ukuran"
+                                                    class="form-select input-aesthetic border-start-0"
+                                                    onchange="updateHarga()" required>
+                                                    <option value="" disabled selected>-- Pilih Ukuran --</option>
                                                     @if ($dataProduk->ukuran_kecil)
                                                         <option value="{{ $dataProduk->ukuran_kecil }}"
                                                             data-bahan="{{ $dataProduk->bahan_kecil->nama_bahan ?? '' }}"
@@ -275,23 +278,27 @@
                                                     @endif
                                                     @if ($dataProduk->ukuran_sedang)
                                                         <option value="{{ $dataProduk->ukuran_sedang }}"
-                                                            data-bahan="{{ $dataProduk->bahan_sedang->nama_bahan }}"
+                                                            data-bahan="{{ $dataProduk->bahan_sedang->nama_bahan ?? '' }}"
                                                             data-harga="{{ $dataProduk->harga_sedang }}"
                                                             data-berat="{{ $dataProduk->berat_sedang ?? 0 }}">
                                                             {{ $dataProduk->ukuran_sedang }}</option>
                                                     @endif
                                                     @if ($dataProduk->ukuran_besar)
                                                         <option value="{{ $dataProduk->ukuran_besar }}"
-                                                            data-bahan="{{ $dataProduk->bahan_besar->nama_bahan }}"
+                                                            data-bahan="{{ $dataProduk->bahan_besar->nama_bahan ?? '' }}"
                                                             data-harga="{{ $dataProduk->harga_besar }}"
                                                             data-berat="{{ $dataProduk->berat_besar ?? 0 }}">
                                                             {{ $dataProduk->ukuran_besar }}</option>
                                                     @endif
-                                                @else
-                                                    <option value="" disabled>Data produk tidak ditemukan</option>
-                                                @endif
-                                            </select>
-                                        </div>
+                                                </select>
+                                            </div>
+                                        @else
+                                            <input type="text" name="ukuran" id="ukuran"
+                                                class="form-control input-aesthetic"
+                                                placeholder="Contoh: 40x40 cm / custom" required>
+                                            <small class="text-muted mt-2 d-block">Produk custom akan dikonfirmasi admin
+                                                (harga, berat, dan status).</small>
+                                        @endif
                                     </div>
 
                                     <div class="mb-4" id="wrapper_berat_satuan" style="display:none;">
@@ -307,9 +314,19 @@
 
                                     <div class="mb-4">
                                         <label class="label-aesthetic">Jenis Bahan Marmer</label>
-                                        <input type="text" name="jenis_marmer" id="jenis_marmer"
-                                            class="form-control input-aesthetic"
-                                            placeholder="Otomatis terisi saat ukuran dipilih" readonly>
+                                        @if (isset($dataProduk) && $dataProduk)
+                                            <input type="text" name="jenis_marmer" id="jenis_marmer"
+                                                class="form-control input-aesthetic"
+                                                placeholder="Otomatis terisi saat ukuran dipilih" readonly>
+                                        @else
+                                            <select name="jenis_marmer" id="jenis_marmer" class="form-select input-aesthetic"
+                                                required>
+                                                <option value="" selected disabled>-- Pilih Bahan Marmer --</option>
+                                                @foreach ($listBahan as $bahan)
+                                                    <option value="{{ $bahan->nama_bahan }}">{{ $bahan->nama_bahan }}</option>
+                                                @endforeach
+                                            </select>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -355,7 +372,7 @@
                                                     id="tab_bus" onclick="pilihJenisPengiriman('bus')">
                                                     <i class="fa-solid fa-bus me-2"></i>Via Bus
                                                 </button> --}}
-                                                <button type="button" class="btn btn-outline-secondary flex-fill"
+                                                <button type="button" class="btn btn-outline-secondary flex-fill active"
                                                     id="tab_cargo" onclick="pilihJenisPengiriman('cargo')">
                                                     <i class="fa-solid fa-truck me-2"></i>Cargo
                                                 </button>
@@ -495,6 +512,7 @@
     <script>
         const CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const ORIGIN_KECAMATAN_ID = document.querySelector('meta[name="origin-kecamatan-id"]').getAttribute('content');
+        const isProdukKatalog = @json(isset($dataProduk) && $dataProduk);
 
         let hargaProdukGlobal = 0;
         let beratSatuanGlobal = 0;
@@ -529,6 +547,18 @@
         }
 
         function updateHarga() {
+            if (!isProdukKatalog) {
+                hargaProdukGlobal = 0;
+                beratSatuanGlobal = 0;
+                beratTotalGlobal = 0;
+                document.getElementById('label_total_produk').innerText = 'Rp 0';
+                document.getElementById('label_total_berat').innerText = '0 kg';
+                document.getElementById('wrapper_berat_satuan').style.display = 'none';
+                document.getElementById('berat_satuan_hidden').value = 0;
+                refreshGrandTotal();
+                return;
+            }
+
             const sel = document.getElementById('ukuran');
             const opt = sel.options[sel.selectedIndex];
             const bahanId = (opt && opt.getAttribute('data-bahan')) ? opt.getAttribute('data-bahan') : null;
@@ -550,6 +580,7 @@
 
             document.getElementById('label_total_produk').innerText = 'Rp ' + hargaProdukGlobal.toLocaleString('id-ID');
             document.getElementById('label_total_berat').innerText = beratTotalGlobal.toFixed(1) + ' kg';
+            document.getElementById('berat_satuan_hidden').value = beratSatuanGlobal;
 
             const metode = document.getElementById('metode_pengambilan').value;
             if (metode === 'dikirim') {
@@ -574,14 +605,22 @@
             document.getElementById('jenis_pengiriman_hidden').value = jenis;
             document.getElementById('section_bus').style.display = jenis === 'bus' ? 'block' : 'none';
             document.getElementById('section_cargo').style.display = jenis === 'cargo' ? 'block' : 'none';
-            document.getElementById('tab_bus').classList.toggle('active', jenis === 'bus');
-            document.getElementById('tab_cargo').classList.toggle('active', jenis === 'cargo');
+            const tabBus = document.getElementById('tab_bus');
+            const tabCargo = document.getElementById('tab_cargo');
+            if (tabBus) tabBus.classList.toggle('active', jenis === 'bus');
+            if (tabCargo) tabCargo.classList.toggle('active', jenis === 'cargo');
             ongkirGlobal = 0;
             document.getElementById('label_ongkir').innerText = 'Rp 0';
             refreshGrandTotal();
         }
 
         function hitungOngkirBerat() {
+            if (!isProdukKatalog) {
+                ongkirGlobal = 0;
+                document.getElementById('label_ongkir').innerText = 'Rp 0';
+                refreshGrandTotal();
+                return;
+            }
             const sel = document.getElementById('terminal_id');
             const opt = sel.options[sel.selectedIndex];
             document.getElementById('wrapper_alamat_manual').style.display =
@@ -609,6 +648,12 @@
         }
 
         async function hitungOngkirCargo() {
+            if (!isProdukKatalog) {
+                ongkirGlobal = 0;
+                document.getElementById('label_ongkir').innerText = 'Rp 0';
+                refreshGrandTotal();
+                return;
+            }
             if (!selectedKecamatanId || !selectedKurir || !ORIGIN_KECAMATAN_ID) return;
             const beratGram = Math.max(Math.round(beratTotalGlobal * 1000), 1);
 
@@ -673,6 +718,7 @@
 
         window.onload = function() {
             updateHarga();
+            pilihJenisPengiriman('cargo');
             @if ($listAlamat->isNotEmpty())
                 const utama = document.querySelector('.alamat-card-select.selected');
                 if (utama) {

@@ -178,11 +178,17 @@
                                                     </span>
                                                     <div class="text-danger small"><b>Menunggu Pembayaran</b></div>
                                                 </div>
-                                            @else
-                                                <span
-                                                    class="badge badge-status-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ $item->status }}</span>
-                                            @endif
-                                        </td>
+                                         @else
+                                             <span
+                                                 class="badge badge-status-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ $item->status }}</span>
+                                         @endif
+                                            <div class="small mt-1 text-muted">
+                                                {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'DP 50%' : 'Belum Bayar') }}
+                                                @if ($item->midtrans_bank || $item->midtrans_payment_type)
+                                                    &middot; {{ strtoupper($item->midtrans_bank ?? $item->midtrans_payment_type) }}
+                                                @endif
+                                            </div>
+                                         </td>
                                         <td class="text-end pe-4">
                                             <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold"
                                                 onclick="showDetail({{ json_encode($item) }})">Detail</button>
@@ -304,6 +310,14 @@
                                     <label class="small fw-bold text-uppercase m-0">Total Pembayaran</label>
                                     <h4 class="fw-bold text-dark m-0" id="det-total"></h4>
                                 </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <span class="small text-muted">Metode Bayar:</span>
+                                    <span id="det-metode-bayar" class="small fw-bold text-dark">-</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="small text-muted">Status Pembayaran:</span>
+                                    <span id="det-status-bayar" class="small fw-bold text-dark">-</span>
+                                </div>
 
                                 <div id="det-label-status" class="mt-3"></div>
                             </div>
@@ -358,11 +372,16 @@
             }
 
             const labelStatus = document.getElementById('det-label-status');
+            const metodeBayar = document.getElementById('det-metode-bayar');
+            const statusBayar = document.getElementById('det-status-bayar');
             const formatter = new Intl.NumberFormat('id-ID', {
                 style: 'currency',
                 currency: 'IDR',
                 minimumFractionDigits: 0
             });
+
+            metodeBayar.innerText = (data.midtrans_bank || data.midtrans_payment_type || '-').toString().toUpperCase();
+            statusBayar.innerText = data.status_pembayaran === 'paid' ? 'Lunas' : (data.status_pembayaran === 'dp' ? 'DP 50%' : 'Belum Bayar');
 
             if (data.status == 'Menunggu Verifikasi Admin') {
                 document.getElementById('det-harga-produk').innerText = "Menunggu...";
@@ -403,12 +422,26 @@
                 } else if (data.status === 'Diverifikasi' && data.status_pembayaran === 'no_paid') {
                     labelStatus.innerHTML = `
                             <div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
-                                <i class="fas fa-exclamation-circle me-1"></i> Pesanan diverifikasi. Lakukan pembayaran lewat payment gateway.
+                                <i class="fas fa-exclamation-circle me-1"></i> Pesanan diverifikasi. Pilih metode pembayaran.
                             </div>
-                            <button class="btn btn-warning w-100 rounded-pill fw-bold shadow-sm py-2 text-dark" onclick="bayarSekarang(${data.id})">
-                                <i class="fas fa-credit-card me-2"></i> Bayar Sekarang
-                            </button>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-warning w-100 rounded-pill fw-bold shadow-sm py-2 text-dark" onclick="bayarSekarang(${data.id}, 'dp')">
+                                    <i class="fas fa-credit-card me-2"></i> Bayar DP 50%
+                                </button>
+                                <button class="btn btn-warning w-100 rounded-pill fw-bold shadow-sm py-2 text-dark" onclick="bayarSekarang(${data.id}, 'lunas')">
+                                    <i class="fas fa-wallet me-2"></i> Bayar Lunas
+                                </button>
+                            </div>
                         `;
+                } else if (data.status === 'Diverifikasi' && data.status_pembayaran === 'dp') {
+                    labelStatus.innerHTML = `
+                    <div class="alert alert-info border-0 small mb-2 py-2" style="border-radius:12px;">
+                        <i class="fas fa-check-circle me-1"></i> DP 50% sudah dibayar. Lanjutkan pelunasan.
+                    </div>
+                    <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="bayarSekarang(${data.id}, 'lunas')">
+                        <i class="fas fa-money-check-dollar me-2"></i> Bayar Pelunasan
+                    </button>
+                `;
                 } else if (data.status_pembayaran === 'paid') {
                     labelStatus.innerHTML =
                         '<span class="badge w-100 bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2"><i class="fas fa-check-circle me-1"></i> Sudah Dibayar</span>';
@@ -474,7 +507,7 @@
             });
         }
 
-        function bayarSekarang(pesananId) {
+        function bayarSekarang(pesananId, paymentStep = 'lunas') {
             Swal.fire({
                 title: 'Memproses...',
                 didOpen: () => {
@@ -484,7 +517,7 @@
                 showConfirmButton: false
             });
 
-            fetch(`/pesanan/${pesananId}/snap-token`, {
+            fetch(`/pesanan/${pesananId}/snap-token?payment_step=${paymentStep}`, {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'

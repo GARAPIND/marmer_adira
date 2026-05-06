@@ -89,6 +89,10 @@
                 <li class="nav-item">
                     <a class="nav-link {{ Request::is('/') ? 'active' : '' }}" href="/">Beranda</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ Request::is('tentang-kami') ? 'active' : '' }}"
+                        href="{{ route('tentang.kami') }}">Tentang Kami</a>
+                </li>
 
                 @auth
                     {{-- --- MENU UNTUK ADMIN --- --}}

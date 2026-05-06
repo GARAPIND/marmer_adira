@@ -14,12 +14,15 @@ class Pesanan extends Model
 
     protected $fillable = [
         'user_id',
+        'is_custom',
         'nama_produk',
         'ukuran',
         'jenis_marmer',
         'catatan_khusus',
         'gambar_referensi',
         'jumlah',
+        'berat_satuan',
+        'total_berat',
         'metode_pengambilan',
         'jenis_pengiriman',
         'alamat_pembeli_id',
@@ -30,12 +33,24 @@ class Pesanan extends Model
         'midtrans_order_id',
         'midtrans_transaction_id',
         'midtrans_payment_type',
+        'midtrans_bank',
         'status_pembayaran',
+        'jenis_pembayaran',
+        'jumlah_dibayar',
         'tanggal_bayar',
+        'tanggal_lunas',
         'midtrans_status',
         'midtrans_gross_amount',
         'midtrans_currency',
         'midtrans_fraud_status',
+    ];
+
+    protected $casts = [
+        'is_custom' => 'boolean',
+        'berat_satuan' => 'float',
+        'total_berat' => 'float',
+        'tanggal_bayar' => 'datetime',
+        'tanggal_lunas' => 'datetime',
     ];
 
     public function user(): BelongsTo
