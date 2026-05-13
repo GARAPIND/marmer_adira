@@ -16,6 +16,20 @@ use Illuminate\Support\Facades\Schema;
 
 class PesananController extends Controller
 {
+    private function normalizeDecimalInput(mixed $value): mixed
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        return str_replace(',', '.', $value);
+    }
+
     private function inferPaymentStepFromPayload(array $payload): string
     {
         $customField = strtolower((string) ($payload['custom_field1'] ?? ''));
@@ -360,6 +374,10 @@ class PesananController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'berat_satuan' => $this->normalizeDecimalInput($request->input('berat_satuan')),
+        ]);
+
         $rules = [
             'nama_produk'        => 'required|string|max:255',
             'ukuran'             => 'required',
@@ -374,6 +392,7 @@ class PesananController extends Controller
 
         if ($request->metode_pengambilan === 'dikirim') {
             $rules['jenis_pengiriman'] = 'required|in:bus,cargo';
+            $rules['biaya_pengiriman'] = 'required|numeric|gt:0';
 
             if ($request->jenis_pengiriman === 'bus') {
                 $rules['terminal_id'] = 'required';
@@ -388,7 +407,12 @@ class PesananController extends Controller
             }
         }
 
-        $request->validate($rules);
+        $request->validate($rules, [
+            'biaya_pengiriman.required' => 'Ongkir wajib diisi jika metode pengambilan dikirim.',
+            'biaya_pengiriman.numeric' => 'Ongkir harus berupa angka.',
+            'biaya_pengiriman.gt' => 'Ongkir harus lebih dari 0 untuk pengiriman.',
+            'berat_satuan.numeric' => 'Berat satuan harus berupa angka, bisa memakai koma atau titik.',
+        ]);
 
         $alamatFinal = 'Ambil di Tempat (Tulungagung)';
         $alamatPembeliId = null;

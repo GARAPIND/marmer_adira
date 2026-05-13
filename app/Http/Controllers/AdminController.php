@@ -101,6 +101,20 @@ class AdminController extends Controller
         ];
     }
 
+    private function normalizeDecimalInput(mixed $value): mixed
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        return str_replace(',', '.', $value);
+    }
+
     // ==========================================
     // 2. DASHBOARD & UPDATE PESANAN
     // ==========================================
@@ -125,11 +139,28 @@ class AdminController extends Controller
     public function updatePesanan(Request $request, $id)
     {
         $pesanan = Pesanan::findOrFail($id);
-        $request->validate([
+
+        $request->merge([
+            'berat_satuan' => $this->normalizeDecimalInput($request->input('berat_satuan')),
+        ]);
+
+        $rules = [
             'total_harga' => 'required|numeric|min:0',
             'biaya_pengiriman' => 'nullable|numeric|min:0',
             'berat_satuan' => 'nullable|numeric|min:0',
             'status' => 'required|string',
+        ];
+
+        if ($pesanan->metode_pengambilan === 'dikirim') {
+            $rules['biaya_pengiriman'] = 'required|numeric|min:0';
+        }
+
+        $request->validate([
+            ...$rules,
+        ], [
+            'biaya_pengiriman.required' => 'Ongkir wajib diisi untuk pesanan yang dikirim.',
+            'biaya_pengiriman.numeric' => 'Ongkir harus berupa angka.',
+            'berat_satuan.numeric' => 'Berat satuan harus berupa angka, bisa memakai koma atau titik.',
         ]);
 
         // Pastikan admin mengisi rincian pengiriman jika metode pengirimannya via bus

@@ -719,6 +719,34 @@
         }
 
         document.getElementById('input_qty').addEventListener('input', updateHarga);
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            const metode = document.getElementById('metode_pengambilan').value;
+            const jenisPengiriman = document.getElementById('jenis_pengiriman_hidden').value;
+
+            if (metode !== 'dikirim') {
+                return;
+            }
+
+            if (!jenisPengiriman) {
+                e.preventDefault();
+                alert('Silakan pilih jenis pengiriman terlebih dahulu.');
+                return;
+            }
+
+            if (jenisPengiriman === 'cargo' && (!selectedKecamatanId || !selectedKurir || ongkirGlobal <= 0)) {
+                e.preventDefault();
+                alert('Silakan pilih alamat, kurir, dan layanan cargo sampai ongkir terhitung.');
+                return;
+            }
+
+            if (jenisPengiriman === 'bus') {
+                const terminal = document.getElementById('terminal_id');
+                if (!terminal || !terminal.value || ongkirGlobal <= 0) {
+                    e.preventDefault();
+                    alert('Silakan pilih terminal tujuan sampai ongkir bus terhitung.');
+                }
+            }
+        });
 
         window.onload = function() {
             updateHarga();

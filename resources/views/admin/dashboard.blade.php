@@ -306,9 +306,10 @@
                                 <label class="form-label small fw-bold">Berat Satuan (kg)</label>
                                 <div class="input-group">
                                     <span class="input-group-text border-dark bg-dark text-white">kg</span>
-                                    <input type="number" name="berat_satuan" id="input_berat_satuan"
-                                        class="form-control border-dark" placeholder="0" min="0" step="0.01">
+                                    <input type="text" name="berat_satuan" id="input_berat_satuan"
+                                        class="form-control border-dark" placeholder="0 atau 0,5" inputmode="decimal">
                                 </div>
+                                <small class="text-muted">Berat bisa diisi dengan koma atau titik, contoh `1,5` atau `1.5`.</small>
                             </div>
 
                             <div class="mb-3 d-none" id="group_ongkir_input">
