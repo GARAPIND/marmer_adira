@@ -22,6 +22,20 @@
             letter-spacing: 1px;
             border: none;
         }
+
+        .table-elegant {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-elegant thead {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .table-elegant tbody tr:hover {
+            background: #f1f3f5;
+        }
     </style>
 
     <div class="container py-5 mt-2">
@@ -97,32 +111,93 @@
                     <thead>
                         <tr>
                             <th class="ps-4">ID</th>
+                            <th>Tanggal Pesanan</th>
                             <th>Pembeli</th>
-                            <th>Metode Pembayaran</th>
+                            <th>Nama Produk</th>
+                            <th>Jumlah</th>
+                            <th class="text-end">Total Harga Produk</th>
+                            <th class="text-end">Ongkos Kirim</th>
+                            <th class="text-end">Total Dibayar</th>
+                            <th class="text-end">Sisa Pembayaran</th>
                             <th>Status</th>
-                            <th>Total Harga</th>
+                            <th>Metode Pembayaran</th>
                             <th>Tanggal DP</th>
                             <th>Waktu Lunas</th>
-                            <th class="text-end pe-4">Total Dibayar</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($transaksi as $item)
+                            @php
+                                $totalHarga = (int) $item->total_harga;
+                                $ongkir = $item->biaya_pengiriman ?? 0;
+                                $totalDibayar = $item->payment_summary['total_dibayar'] ?? 0;
+                                $sisa = $totalHarga + $ongkir - $totalDibayar;
+                            @endphp
+
                             <tr>
-                                <td class="ps-4 fw-bold text-primary">ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
-                                <td>{{ $item->user->name }}</td>
-                                <td>{{ $item->payment_summary['metode_terakhir'] }}</td>
-                                <td>
-                                    {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar') }}
+                                <td class="ps-4 fw-bold text-primary">
+                                    ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}
                                 </td>
-                                <td>Rp {{ number_format((int) $item->total_harga + (int) ($item->biaya_pengiriman ?? 0), 0, ',', '.') }}</td>
-                                <td>{{ $item->payment_summary['waktu_dp'] ? \Carbon\Carbon::parse($item->payment_summary['waktu_dp'])->format('d M Y H:i') : '-' }}</td>
-                                <td>{{ $item->payment_summary['waktu_lunas'] ? \Carbon\Carbon::parse($item->payment_summary['waktu_lunas'])->format('d M Y H:i') : '-' }}</td>
-                                <td class="text-end pe-4">Rp {{ number_format($item->payment_summary['total_dibayar'] ?? 0, 0, ',', '.') }}</td>
+
+                                <td>
+                                    {{ \Carbon\Carbon::parse($item->created_at)->format('d M Y H:i') }}
+                                </td>
+
+                                <td>{{ $item->user->name }}</td>
+
+                                <td>
+                                    {{ $item->nama_produk }} ({{ $item->jenis_marmer }})
+                                </td>
+
+                                <td>{{ $item->jumlah }}</td>
+
+                                <td class="text-end">
+                                    Rp {{ number_format($totalHarga, 0, ',', '.') }}
+                                </td>
+
+                                <td class="text-end">
+                                    Rp {{ number_format($ongkir, 0, ',', '.') }}
+                                </td>
+
+                                <td class="text-end">
+                                    Rp {{ number_format($totalDibayar, 0, ',', '.') }}
+                                </td>
+
+                                <td class="text-end">
+                                    Rp {{ number_format($sisa, 0, ',', '.') }}
+                                </td>
+
+                                <td>
+                                    @if ($item->status_pembayaran === 'paid')
+                                        <span class="badge bg-success">Lunas</span>
+                                    @elseif ($item->status_pembayaran === 'dp')
+                                        <span class="badge bg-warning text-dark">DP</span>
+                                    @else
+                                        <span class="badge bg-danger">Belum</span>
+                                    @endif
+                                </td>
+
+                                <td>
+                                    {{ $item->payment_summary['metode_terakhir'] ?? '-' }}
+                                </td>
+
+                                <td>
+                                    {{ $item->payment_summary['waktu_dp']
+                                        ? \Carbon\Carbon::parse($item->payment_summary['waktu_dp'])->format('d M Y H:i')
+                                        : '-' }}
+                                </td>
+
+                                <td>
+                                    {{ $item->payment_summary['waktu_lunas']
+                                        ? \Carbon\Carbon::parse($item->payment_summary['waktu_lunas'])->format('d M Y H:i')
+                                        : '-' }}
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">Belum ada data transaksi.</td>
+                                <td colspan="13" class="text-center py-4 text-muted">
+                                    Belum ada data transaksi.
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>

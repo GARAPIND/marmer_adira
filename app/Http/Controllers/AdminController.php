@@ -218,10 +218,12 @@ class AdminController extends Controller
     public function exportKeuanganPdf(Request $request)
     {
         $data = $this->getKeuanganData($request->tgl_mulai, $request->tgl_akhir);
+
         $pdf = Pdf::loadView('admin.exports.laporan-keuangan-pdf', [
             'stats' => $data['stats'],
             'transaksi' => $data['transaksi']
-        ]);
+        ])->setPaper('a4', 'landscape');
+
         return $pdf->download('Laporan-Keuangan-Adira-Marmer.pdf');
     }
 
@@ -230,18 +232,49 @@ class AdminController extends Controller
         $data = $this->getKeuanganData($request->tgl_mulai, $request->tgl_akhir);
 
         return response()->streamDownload(function () use ($data) {
-            echo "ID Pesanan,Nama Pembeli,Metode Pembayaran,Status Pembayaran,Total Harga,Tanggal DP,Tanggal Lunas,Nominal Dibayar\n";
+
+            echo "ID,Tanggal Pesanan,Pembeli,Nama Produk,Jumlah,Total Harga,Ongkir,Total Dibayar,Sisa Pembayaran,Status,Metode Pembayaran,Tanggal DP,Waktu Lunas\n";
+
             foreach ($data['transaksi'] as $item) {
-                $summary = $item->payment_summary;
-                $totalHarga = (int) $item->total_harga + (int) ($item->biaya_pengiriman ?? 0);
-                echo "ORD-" . str_pad($item->id, 3, '0', STR_PAD_LEFT) . ",";
-                echo $item->user->name . ",";
-                echo $summary['metode_terakhir'] . ",";
-                echo ($item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar')) . ",";
-                echo $totalHarga . ",";
-                echo ($summary['waktu_dp'] ? Carbon::parse($summary['waktu_dp'])->format('d M Y H:i') : '-') . ",";
-                echo ($summary['waktu_lunas'] ? Carbon::parse($summary['waktu_lunas'])->format('d M Y H:i') : '-') . ",";
-                echo ((int) ($summary['total_dibayar'] ?? 0)) . "\n";
+                $summary = $item->payment_summary ?? [];
+
+                $totalHarga = (int) $item->total_harga;
+                $ongkir = (int) ($item->biaya_pengiriman ?? 0);
+                $totalDibayar = (int) ($summary['total_dibayar'] ?? 0);
+                $sisa = $totalHarga + $ongkir - $totalDibayar;
+
+                $status = $item->status_pembayaran === 'paid'
+                    ? 'Lunas'
+                    : ($item->status_pembayaran === 'dp'
+                        ? 'DP'
+                        : 'Belum Bayar');
+
+                $tglPesanan = Carbon::parse($item->created_at)->format('d M Y H:i');
+                $tglDP = !empty($summary['waktu_dp'])
+                    ? Carbon::parse($summary['waktu_dp'])->format('d M Y H:i')
+                    : '-';
+                $tglLunas = !empty($summary['waktu_lunas'])
+                    ? Carbon::parse($summary['waktu_lunas'])->format('d M Y H:i')
+                    : '-';
+
+                $namaPembeli = '"' . str_replace('"', '""', $item->user->name) . '"';
+                $namaProduk = '"' . str_replace('"', '""', $item->nama_produk . ' (' . $item->jenis_marmer . ')') . '"';
+                $metode = '"' . str_replace('"', '""', ($summary['metode_terakhir'] ?? '-')) . '"';
+
+                echo
+                "ORD-" . str_pad($item->id, 3, '0', STR_PAD_LEFT) . "," .
+                    $tglPesanan . "," .
+                    $namaPembeli . "," .
+                    $namaProduk . "," .
+                    $item->jumlah . "," .
+                    $totalHarga . "," .
+                    $ongkir . "," .
+                    $totalDibayar . "," .
+                    $sisa . "," .
+                    $status . "," .
+                    $metode . "," .
+                    $tglDP . "," .
+                    $tglLunas . "\n";
             }
         }, 'Laporan-Keuangan-Adira.csv');
     }
