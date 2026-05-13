@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AlamatPembeli;
 use App\Models\User;
 use App\Models\Pesanan;
 use App\Models\Bahan; // Pastikan Model Bahan diimport
+use App\Models\Terminal;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class AdminController extends Controller
 {
@@ -115,6 +118,34 @@ class AdminController extends Controller
         return str_replace(',', '.', $value);
     }
 
+    private function resolvePesananCourier(Pesanan $pesanan): ?string
+    {
+        if (!is_string($pesanan->alamat_pengiriman) || $pesanan->alamat_pengiriman === '') {
+            return null;
+        }
+
+        if (preg_match('/Ekspedisi:\s*([A-Z0-9]+)/i', $pesanan->alamat_pengiriman, $matches)) {
+            return strtolower(trim($matches[1]));
+        }
+
+        return null;
+    }
+
+    private function resolveBusTerminal(Pesanan $pesanan): ?Terminal
+    {
+        if (!is_string($pesanan->alamat_pengiriman) || $pesanan->alamat_pengiriman === '') {
+            return null;
+        }
+
+        $alamat = $pesanan->alamat_pengiriman;
+
+        return Terminal::query()
+            ->get()
+            ->first(function (Terminal $terminal) use ($alamat) {
+                return str_contains(strtolower($alamat), strtolower($terminal->nama_terminal));
+            });
+    }
+
     // ==========================================
     // 2. DASHBOARD & UPDATE PESANAN
     // ==========================================
@@ -182,6 +213,120 @@ class AdminController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Pesanan berhasil diperbarui!');
+    }
+
+    public function hitungOngkirPesanan(Request $request, $id)
+    {
+        $pesanan = Pesanan::with('alamatPembeli')->findOrFail($id);
+
+        $request->merge([
+            'berat_satuan' => $this->normalizeDecimalInput($request->input('berat_satuan')),
+        ]);
+
+        $validated = $request->validate([
+            'berat_satuan' => 'required|numeric|min:0',
+        ], [
+            'berat_satuan.required' => 'Berat satuan wajib diisi.',
+            'berat_satuan.numeric' => 'Berat satuan harus berupa angka, bisa memakai koma atau titik.',
+        ]);
+
+        if ($pesanan->metode_pengambilan !== 'dikirim') {
+            return response()->json([
+                'biaya_pengiriman' => 0,
+                'total_berat' => 0,
+                'summary' => 'Pesanan tidak memakai pengiriman.',
+                'calculation' => null,
+            ]);
+        }
+
+        $beratSatuan = (float) $validated['berat_satuan'];
+        $totalBerat = max($beratSatuan * (int) $pesanan->jumlah, 0);
+
+        if ($totalBerat <= 0) {
+            return response()->json([
+                'biaya_pengiriman' => 0,
+                'total_berat' => 0,
+                'summary' => 'Isi berat satuan untuk menghitung ongkir otomatis.',
+                'calculation' => null,
+            ]);
+        }
+
+        if ($pesanan->jenis_pengiriman === 'bus') {
+            $terminal = $this->resolveBusTerminal($pesanan);
+            if (!$terminal) {
+                return response()->json([
+                    'message' => 'Terminal tujuan tidak ditemukan dari rincian pesanan. Ongkir perlu diisi manual.',
+                ], 422);
+            }
+
+            $tarifPerKg = (int) ($terminal->tarif_per_kg ?? $terminal->tarif_per_km ?? 0);
+            $ongkir = (int) ceil($totalBerat * $tarifPerKg);
+
+            return response()->json([
+                'biaya_pengiriman' => $ongkir,
+                'total_berat' => $totalBerat,
+                'summary' => 'Ongkir bus dihitung otomatis dari tarif terminal.',
+                'calculation' => [
+                    'jenis_pengiriman' => 'bus',
+                    'terminal' => $terminal->nama_terminal,
+                    'tarif_per_kg' => $tarifPerKg,
+                    'berat_total' => $totalBerat,
+                    'formula' => 'ceil(total_berat x tarif_per_kg)',
+                ],
+            ]);
+        }
+
+        if ($pesanan->jenis_pengiriman === 'cargo') {
+            $alamat = $pesanan->alamatPembeli instanceof AlamatPembeli ? $pesanan->alamatPembeli : null;
+            $courier = $this->resolvePesananCourier($pesanan);
+            $origin = (string) config('services.rajaongkir.origin_kecamatan_id', '');
+
+            if (!$alamat || !$alamat->kecamatan_id || !$courier || $origin === '') {
+                return response()->json([
+                    'message' => 'Data alamat, ekspedisi, atau origin RajaOngkir belum lengkap. Ongkir perlu diisi manual.',
+                ], 422);
+            }
+
+            $weightGram = max((int) ceil($totalBerat * 1000), 1);
+
+            $response = Http::withHeaders([
+                'key' => config('services.rajaongkir.key'),
+                'Accept' => 'application/json',
+            ])->asForm()->post('https://rajaongkir.komerce.id/api/v1/calculate/district/domestic-cost', [
+                'origin' => $origin,
+                'destination' => $alamat->kecamatan_id,
+                'weight' => $weightGram,
+                'courier' => $courier,
+                'price' => 'lowest',
+            ]);
+
+            $result = $response->json('data');
+            $service = is_array($result) && isset($result[0]) ? $result[0] : null;
+
+            if (!$response->successful() || !is_array($service) || !isset($service['cost'])) {
+                return response()->json([
+                    'message' => 'Gagal mengambil ongkir otomatis dari RajaOngkir. Ongkir perlu diisi manual.',
+                ], 422);
+            }
+
+            return response()->json([
+                'biaya_pengiriman' => (int) $service['cost'],
+                'total_berat' => $totalBerat,
+                'summary' => 'Ongkir cargo dihitung otomatis dari RajaOngkir.',
+                'calculation' => [
+                    'jenis_pengiriman' => 'cargo',
+                    'courier' => strtoupper($courier),
+                    'service' => $service['service'] ?? null,
+                    'description' => $service['description'] ?? null,
+                    'etd' => $service['etd'] ?? null,
+                    'weight_gram' => $weightGram,
+                ],
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Jenis pengiriman tidak dikenali. Ongkir perlu diisi manual.',
+        ], 422);
     }
 
     public function selesaiPesanan(Request $request, $id)

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     {{-- CUSTOM CSS UNTUK ESTETIKA DASHBOARD ADMIN --}}
     <style>
         :root {
@@ -319,6 +320,7 @@
                                     <input type="number" name="biaya_pengiriman" id="input_ongkir"
                                         class="form-control border-danger" value="0" min="0">
                                 </div>
+                                <small class="text-muted d-block mt-2" id="ongkir_calc_hint"></small>
                             </div>
 
                             <div class="mt-3" id="form_verifikasi">
@@ -353,7 +355,94 @@
     </div>
 
     <script>
+        let activeAdminOrder = null;
+
+        function getAdminCsrf() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
+
+        function formatAdminCurrency(value) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(Number(value || 0));
+        }
+
+        function parseDecimalInput(value) {
+            return parseFloat(String(value ?? '').replace(',', '.'));
+        }
+
+        function updateAdminTotals() {
+            const harga = parseInt(document.getElementById('input_harga').value || 0, 10) || 0;
+            const ongkir = parseInt(document.getElementById('input_ongkir').value || 0, 10) || 0;
+            document.getElementById('display_harga_produk').innerText = formatAdminCurrency(harga);
+            document.getElementById('display_ongkir_admin').innerText = formatAdminCurrency(ongkir);
+            document.getElementById('display_total_seluruh').innerText = formatAdminCurrency(harga + ongkir);
+        }
+
+        async function recalculateAdminShipping() {
+            const hint = document.getElementById('ongkir_calc_hint');
+            const inputOngkir = document.getElementById('input_ongkir');
+
+            if (!activeAdminOrder || activeAdminOrder.metode_pengambilan !== 'dikirim') {
+                hint.innerText = '';
+                updateAdminTotals();
+                return;
+            }
+
+            const beratSatuan = parseDecimalInput(document.getElementById('input_berat_satuan').value);
+            if (!Number.isFinite(beratSatuan) || beratSatuan <= 0) {
+                inputOngkir.value = 0;
+                hint.innerText = 'Isi berat satuan agar ongkir bisa dihitung otomatis.';
+                updateAdminTotals();
+                return;
+            }
+
+            hint.innerText = 'Menghitung ongkir otomatis...';
+
+            try {
+                const response = await fetch(`/admin/pesanan/${activeAdminOrder.id}/hitung-ongkir`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': getAdminCsrf(),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        berat_satuan: document.getElementById('input_berat_satuan').value,
+                    }),
+                });
+
+                const json = await response.json();
+                if (!response.ok) {
+                    throw new Error(json.message || 'Gagal menghitung ongkir otomatis.');
+                }
+
+                inputOngkir.value = parseInt(json.biaya_pengiriman || 0, 10) || 0;
+
+                const calc = json.calculation || {};
+                if (calc.jenis_pengiriman === 'cargo') {
+                    const service = calc.service ? ` ${calc.service}` : '';
+                    hint.innerText =
+                        `Otomatis via ${calc.courier || 'cargo'}${service}. Berat total ${Number(json.total_berat || 0).toFixed(2)} kg.`;
+                } else if (calc.jenis_pengiriman === 'bus') {
+                    hint.innerText =
+                        `Otomatis via bus ${calc.terminal || ''}: ${Number(json.total_berat || 0).toFixed(2)} kg x Rp ${(calc.tarif_per_kg || 0).toLocaleString('id-ID')}/kg.`;
+                } else {
+                    hint.innerText = json.summary || 'Ongkir dihitung otomatis.';
+                }
+
+                updateAdminTotals();
+            } catch (error) {
+                inputOngkir.value = parseInt(inputOngkir.value || 0, 10) || 0;
+                hint.innerText = error.message;
+                updateAdminTotals();
+            }
+        }
+
         function showAdminDetail(data) {
+            activeAdminOrder = data;
             const modal = new bootstrap.Modal(document.getElementById('modalDetailAdmin'));
             const formatter = new Intl.NumberFormat('id-ID', {
                 style: 'currency',
@@ -390,16 +479,19 @@
             const inputHarga = document.getElementById('input_harga');
             const inputOngkir = document.getElementById('input_ongkir');
             const inputBerat = document.getElementById('input_berat_satuan');
+            const ongkirHint = document.getElementById('ongkir_calc_hint');
 
             if (data.metode_pengambilan === 'dikirim') {
                 alamatSection.style.display = 'block';
                 document.getElementById('md-alamat-text').innerText = data.alamat_pengiriman;
                 ongkirRow.classList.remove('d-none');
                 ongkirInputGroup.classList.remove('d-none');
+                ongkirHint.innerText = 'Isi atau ubah berat satuan untuk menghitung ongkir otomatis.';
             } else {
                 alamatSection.style.display = 'none';
                 ongkirRow.classList.add('d-none');
                 ongkirInputGroup.classList.add('d-none');
+                ongkirHint.innerText = '';
             }
 
             // Rincian Harga
@@ -446,6 +538,16 @@
                 inputHarga.readOnly = true;
                 inputOngkir.readOnly = true;
                 inputBerat.readOnly = true;
+            }
+
+            inputHarga.oninput = updateAdminTotals;
+            inputOngkir.oninput = updateAdminTotals;
+            inputBerat.oninput = recalculateAdminShipping;
+
+            updateAdminTotals();
+
+            if (data.metode_pengambilan === 'dikirim' && parseDecimalInput(inputBerat.value) > 0) {
+                recalculateAdminShipping();
             }
         }
     </script>
