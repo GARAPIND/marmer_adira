@@ -73,7 +73,7 @@ class AdminController extends Controller
             $query->whereBetween('created_at', [$tgl_mulai . " 00:00:00", $tgl_akhir . " 23:59:59"]);
         }
 
-        $transaksi = (clone $query)->orderByDesc('created_at')->get()->map(function ($item) {
+        $transaksi = (clone $query)->where('status', '!=', 'Ditolak')->orderByDesc('created_at')->get()->map(function ($item) {
             $item->payment_summary = $this->buildPaymentSummary($item);
             return $item;
         });
