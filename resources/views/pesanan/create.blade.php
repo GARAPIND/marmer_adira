@@ -3,8 +3,6 @@
 @section('content')
     {{-- CSRF & config via meta tag agar tidak expired --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="origin-kecamatan-id" content="{{ config('services.rajaongkir.origin_kecamatan_id', '') }}">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <style>
@@ -383,7 +381,7 @@
                                                 <label class="label-aesthetic"><i class="fa-solid fa-bus me-2"></i>Pilih
                                                     Terminal Tujuan</label>
                                                 <select name="terminal_id" id="terminal_id"
-                                                    class="form-select input-aesthetic" onchange="hitungOngkirBerat()">
+                                                    class="form-select input-aesthetic" onchange="handleTerminalChange()">
                                                     <option value="" data-tarif-per-kg="0" selected disabled>--
                                                         Pilih Terminal --</option>
                                                     @foreach ($listTerminal as $t)
@@ -450,7 +448,7 @@
                                                         @endforeach
                                                     </div>
 
-                                                    <label class="label-aesthetic mb-2">Pilih Kurir</label>
+                                                    <label class="label-aesthetic mb-2">Pilih Ekspedisi</label>
                                                     <div class="d-flex flex-wrap gap-2 mb-3" id="courier_list">
                                                         @foreach (['jne', 'tiki', 'pos', 'jnt', 'sicepat'] as $kurir)
                                                             <div class="courier-btn" data-kurir="{{ $kurir }}"
@@ -458,17 +456,8 @@
                                                                 {{ strtoupper($kurir) }}</div>
                                                         @endforeach
                                                     </div>
-
-                                                    <div id="section_layanan_cargo" style="display:none;">
-                                                        <label class="label-aesthetic mb-2">Pilih Layanan</label>
-                                                        <div id="loading_ongkir" class="text-muted small text-center py-2"
-                                                            style="display:none;">
-                                                            <i class="fa-solid fa-spinner fa-spin me-2"></i>Menghitung
-                                                            ongkos kirim...
-                                                        </div>
-                                                        <div id="list_layanan_cargo" class="d-flex flex-column gap-2">
-                                                        </div>
-                                                    </div>
+                                                    <small class="text-muted d-block">Ongkir akan dihitung admin
+                                                        setelah pesanan diverifikasi.</small>
                                                 @endif
                                             </div>
                                         </div>
@@ -486,7 +475,7 @@
                                         </div>
                                         <div class="d-flex justify-content-between mt-2">
                                             <span class="small opacity-75">Ongkos Kirim:</span>
-                                            <span class="fw-bold text-warning" id="label_ongkir">Rp 0</span>
+                                            <span class="fw-bold text-warning" id="label_ongkir">Dihitung admin</span>
                                         </div>
                                         <hr class="bg-light">
                                         <div class="d-flex justify-content-between align-items-center">
@@ -511,7 +500,6 @@
 
     <script>
         const CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        const ORIGIN_KECAMATAN_ID = document.querySelector('meta[name="origin-kecamatan-id"]').getAttribute('content');
         const isProdukKatalog = @json(isset($dataProduk) && $dataProduk);
 
         let hargaProdukGlobal = 0;
@@ -584,9 +572,8 @@
 
             const metode = document.getElementById('metode_pengambilan').value;
             if (metode === 'dikirim') {
-                const jenis = document.getElementById('jenis_pengiriman_hidden').value;
-                if (jenis === 'bus') hitungOngkirBerat();
-                else if (jenis === 'cargo' && selectedKecamatanId && selectedKurir) hitungOngkirCargo();
+                ongkirGlobal = 0;
+                refreshGrandTotal();
             } else {
                 ongkirGlobal = 0;
                 refreshGrandTotal();
@@ -602,6 +589,7 @@
             } else {
                 document.getElementById('jenis_pengiriman_hidden').value = '';
             }
+            updateOngkirLabel();
             refreshGrandTotal();
         }
 
@@ -614,25 +602,15 @@
             if (tabBus) tabBus.classList.toggle('active', jenis === 'bus');
             if (tabCargo) tabCargo.classList.toggle('active', jenis === 'cargo');
             ongkirGlobal = 0;
-            document.getElementById('label_ongkir').innerText = 'Rp 0';
+            updateOngkirLabel();
             refreshGrandTotal();
         }
 
-        function hitungOngkirBerat() {
-            if (!isProdukKatalog) {
-                ongkirGlobal = 0;
-                document.getElementById('label_ongkir').innerText = 'Rp 0';
-                refreshGrandTotal();
-                return;
-            }
+        function handleTerminalChange() {
             const sel = document.getElementById('terminal_id');
             const opt = sel.options[sel.selectedIndex];
             document.getElementById('wrapper_alamat_manual').style.display =
                 (opt && opt.value === 'lainnya') ? 'block' : 'none';
-            const tarifPerKg = (opt && !opt.disabled) ? parseInt(opt.getAttribute('data-tarif-per-kg')) || 0 : 0;
-            ongkirGlobal = Math.round(beratTotalGlobal * tarifPerKg);
-            document.getElementById('label_ongkir').innerText = 'Rp ' + ongkirGlobal.toLocaleString('id-ID');
-            refreshGrandTotal();
         }
 
         function pilihAlamat(el) {
@@ -640,7 +618,6 @@
             el.classList.add('selected');
             selectedKecamatanId = el.dataset.kecamatanId;
             document.getElementById('alamat_pembeli_id_hidden').value = el.dataset.id;
-            if (selectedKurir) hitungOngkirCargo();
         }
 
         function pilihKurir(kurir) {
@@ -648,67 +625,11 @@
             document.getElementById('courier_hidden').value = kurir;
             document.querySelectorAll('.courier-btn').forEach(b => b.classList.toggle('selected', b.dataset.kurir ===
                 kurir));
-            if (selectedKecamatanId) hitungOngkirCargo();
         }
 
-        async function hitungOngkirCargo() {
-            if (!isProdukKatalog) {
-                ongkirGlobal = 0;
-                document.getElementById('label_ongkir').innerText = 'Rp 0';
-                refreshGrandTotal();
-                return;
-            }
-            if (!selectedKecamatanId || !selectedKurir || !ORIGIN_KECAMATAN_ID) return;
-            const beratGram = Math.max(Math.round(beratTotalGlobal * 1000), 1);
-
-            document.getElementById('section_layanan_cargo').style.display = 'block';
-            document.getElementById('loading_ongkir').style.display = 'block';
-            document.getElementById('list_layanan_cargo').innerHTML = '';
-
-            const json = await apiFetch('/ongkir/hitung', 'POST', {
-                origin: ORIGIN_KECAMATAN_ID,
-                destination: selectedKecamatanId,
-                weight: beratGram,
-                courier: selectedKurir,
-            });
-
-            document.getElementById('loading_ongkir').style.display = 'none';
-            if (!json) return;
-
-            // V2: data = [ { code, name, service, description, cost, etd }, ... ]
-            const results = json.data || [];
-            const container = document.getElementById('list_layanan_cargo');
-            container.innerHTML = '';
-
-            if (!results.length) {
-                container.innerHTML = '<p class="text-muted small">Layanan tidak tersedia untuk tujuan ini.</p>';
-                return;
-            }
-
-            results.forEach(item => {
-                const cost = item.cost;
-                const etd = item.etd;
-                const el = document.createElement('div');
-                el.className = 'service-option';
-                el.dataset.cost = cost;
-                el.innerHTML = `<div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="fw-bold small">${item.code.toUpperCase()} - ${item.service}</span><br>
-                        <span class="text-muted" style="font-size:0.78rem;">${item.description} &middot; Est. ${item.etd}</span>
-                    </div>
-                    <span class="fw-bold text-success">Rp ${cost.toLocaleString('id-ID')}</span>
-                </div>`;
-                el.onclick = function() {
-                    document.querySelectorAll('.service-option').forEach(x => x.classList.remove(
-                        'selected'));
-                    el.classList.add('selected');
-                    ongkirGlobal = cost;
-                    document.getElementById('label_ongkir').innerText = 'Rp ' + cost.toLocaleString(
-                        'id-ID');
-                    refreshGrandTotal();
-                };
-                container.appendChild(el);
-            });
+        function updateOngkirLabel() {
+            const metode = document.getElementById('metode_pengambilan').value;
+            document.getElementById('label_ongkir').innerText = metode === 'dikirim' ? 'Dihitung admin' : 'Rp 0';
         }
 
         function refreshGrandTotal() {
@@ -733,17 +654,17 @@
                 return;
             }
 
-            if (jenisPengiriman === 'cargo' && (!selectedKecamatanId || !selectedKurir || ongkirGlobal <= 0)) {
+            if (jenisPengiriman === 'cargo' && (!selectedKecamatanId || !selectedKurir)) {
                 e.preventDefault();
-                alert('Silakan pilih alamat, kurir, dan layanan cargo sampai ongkir terhitung.');
+                alert('Silakan pilih alamat dan ekspedisi cargo terlebih dahulu.');
                 return;
             }
 
             if (jenisPengiriman === 'bus') {
                 const terminal = document.getElementById('terminal_id');
-                if (!terminal || !terminal.value || ongkirGlobal <= 0) {
+                if (!terminal || !terminal.value) {
                     e.preventDefault();
-                    alert('Silakan pilih terminal tujuan sampai ongkir bus terhitung.');
+                    alert('Silakan pilih terminal tujuan terlebih dahulu.');
                 }
             }
         });

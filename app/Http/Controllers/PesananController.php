@@ -392,7 +392,6 @@ class PesananController extends Controller
 
         if ($request->metode_pengambilan === 'dikirim') {
             $rules['jenis_pengiriman'] = 'required|in:bus,cargo';
-            $rules['biaya_pengiriman'] = 'required|numeric|gt:0';
 
             if ($request->jenis_pengiriman === 'bus') {
                 $rules['terminal_id'] = 'required';
@@ -408,9 +407,6 @@ class PesananController extends Controller
         }
 
         $request->validate($rules, [
-            'biaya_pengiriman.required' => 'Ongkir wajib diisi jika metode pengambilan dikirim.',
-            'biaya_pengiriman.numeric' => 'Ongkir harus berupa angka.',
-            'biaya_pengiriman.gt' => 'Ongkir harus lebih dari 0 untuk pengiriman.',
             'berat_satuan.numeric' => 'Berat satuan harus berupa angka, bisa memakai koma atau titik.',
         ]);
 
@@ -435,6 +431,10 @@ class PesananController extends Controller
                 if ($alamat) {
                     $alamatFinal    = $alamat->alamat_lengkap . ', ' . $alamat->kecamatan_nama . ', ' . $alamat->kota_nama . ', ' . $alamat->provinsi_nama;
                     $alamatPembeliId = $alamat->id;
+
+                    if ($request->filled('courier')) {
+                        $alamatFinal .= ' | Ekspedisi: ' . strtoupper((string) $request->courier);
+                    }
                 }
             }
         }
@@ -456,7 +456,7 @@ class PesananController extends Controller
             'jenis_pengiriman'   => $jenisPengiriman,
             'alamat_pembeli_id'  => $alamatPembeliId,
             'alamat_pengiriman'  => $alamatFinal,
-            'biaya_pengiriman'   => (int) ($request->biaya_pengiriman ?? 0),
+            'biaya_pengiriman'   => 0,
             'total_harga'        => (int) ($request->total_harga ?? 0),
             'status'             => 'Menunggu Verifikasi Admin',
             'status_pembayaran'  => 'no_paid',
