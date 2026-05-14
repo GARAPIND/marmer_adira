@@ -31,6 +31,7 @@ class Pesanan extends Model
         'biaya_pengiriman',
         'alasan_penolakan',
         'status',
+        'tgl_update_proses',
         'total_harga',
         'midtrans_order_id',
         'midtrans_transaction_id',

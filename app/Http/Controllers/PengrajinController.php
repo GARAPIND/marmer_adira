@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Pesanan;
 use App\Models\Produk;
 use App\Models\Bahan;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,7 +17,7 @@ class PengrajinController extends Controller
         $stats = [
             'baru'    => Pesanan::where('status', 'Diverifikasi')->count(),
             'proses'  => Pesanan::whereIn('status', ['Diproses', 'Dikerjakan'])->count(),
-            'selesai' => Pesanan::where('status', 'Selesai')->count(),
+            'selesai' => Pesanan::where('status', 'Selesai')->whereDate('tgl_update_proses', Carbon::today())->count(),
         ];
         return view('pengrajin.dashboard', compact('stats'));
     }
@@ -167,20 +168,33 @@ class PengrajinController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $pesanan = Pesanan::findOrFail($id);
-        $pesanan->update(['status' => $request->status]);
+        $pesanan->update(['status' => $request->status, 'tgl_update_proses' => now()]);
         return redirect()->back()->with('success', 'Status diperbarui.');
     }
 
     public function riwayat(Request $request)
     {
-        $search = $request->query('search');
-        $riwayat = Pesanan::with('user')->whereIn('status', ['Selesai', 'Dibatalkan', 'diekspedisi'])
+        $search         = $request->query('search');
+        $status         = $request->query('status');
+        $tanggal   = $request->query('tanggal');
+
+        $riwayat = Pesanan::with('user')
+            ->whereIn('status', ['Selesai', 'Dibatalkan', 'diekspedisi'])
             ->when($search, function ($query, $search) {
                 return $query->where('id', 'LIKE', "%{$search}%")
                     ->orWhereHas('user', function ($u) use ($search) {
                         $u->where('name', 'LIKE', "%{$search}%");
                     });
-            })->latest('updated_at')->get();
+            })
+            ->when($status, function ($query, $status) {
+                return $query->where('status', $status);
+            })
+            ->when($tanggal, function ($query, $tanggal) {
+                return $query->whereDate('tgl_update_proses', $tanggal);
+            })
+            ->latest('updated_at')
+            ->get();
+
         return view('pengrajin.riwayat', compact('riwayat'));
     }
 
