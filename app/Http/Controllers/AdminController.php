@@ -163,8 +163,7 @@ class AdminController extends Controller
                 ->first()->total ?? 0
         ];
 
-        $pesananTerbaru = Pesanan::with('user')->latest()->take(5)->get();
-        return view('admin.dashboard', compact('stats', 'pesananTerbaru'));
+        return view('admin.dashboard', compact('stats'));
     }
 
     public function updatePesanan(Request $request, $id)
