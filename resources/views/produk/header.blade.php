@@ -420,9 +420,11 @@
                         <p class="mat-label">Anda Tentukan Sendiri</p>
                         <div class="mb-3">
                             <div class="custom-point"><i class="fas fa-check-circle"></i> Nama produk custom</div>
-                            <div class="custom-point"><i class="fas fa-check-circle"></i> Ukuran / dimensi sesuai kebutuhan</div>
+                            <div class="custom-point"><i class="fas fa-check-circle"></i> Ukuran / dimensi sesuai kebutuhan
+                            </div>
                             <div class="custom-point"><i class="fas fa-check-circle"></i> Pilihan bahan marmer</div>
-                            <div class="custom-point"><i class="fas fa-check-circle"></i> Catatan detail & referensi gambar</div>
+                            <div class="custom-point"><i class="fas fa-check-circle"></i> Catatan detail & referensi gambar
+                            </div>
                         </div>
                     </div>
 
@@ -432,9 +434,11 @@
                             Form request custom
                         </span>
                         @auth
-                            <a href="{{ route('pesanan.create') }}" class="detail-btn">Buat Custom <i class="fas fa-arrow-right"></i></a>
+                            <a href="{{ route('pesanan.create') }}" class="detail-btn">Buat Custom <i
+                                    class="fas fa-arrow-right"></i></a>
                         @else
-                            <a href="{{ route('login') }}" class="detail-btn">Login untuk Pesan <i class="fas fa-arrow-right"></i></a>
+                            <a href="{{ route('login') }}" class="detail-btn">Login untuk Pesan <i
+                                    class="fas fa-arrow-right"></i></a>
                         @endauth
                     </div>
                 </div>
@@ -455,7 +459,7 @@
 
                 @php
                     $delay = $loop->index * 60;
-                    $slug = \Illuminate\Support\Str::slug($item['nama_produk']);
+                    $slug = encrypt($item['nama_produk']);
                 @endphp
 
                 <div class="product-card" style="transition-delay: {{ $delay }}ms;">

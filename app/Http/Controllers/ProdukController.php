@@ -41,6 +41,7 @@ class ProdukController extends Controller
     }
     public function index($slug)
     {
+        $slug = decrypt($slug);
         $produk = Produk::with('bahan_kecil', 'bahan_sedang', 'bahan_besar')
             ->whereNotNull('gambar')
             ->where('nama_produk', $slug)
