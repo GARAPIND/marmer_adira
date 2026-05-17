@@ -9,6 +9,7 @@ use App\Models\Bahan;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class PengrajinController extends Controller
 {
@@ -23,33 +24,67 @@ class PengrajinController extends Controller
 
     private function hasProgressPhotos(Pesanan $pesanan, string $field): bool
     {
-        $photos = $pesanan->{$field} ?? [];
+        $photos = $this->normalizeProgressPhotos($pesanan->{$field} ?? []);
         return is_array($photos) && count($photos) > 0;
     }
 
-    private function uploadProgressPhotos(Request $request, Pesanan $pesanan, string $field): array
+    private function normalizeProgressPhotos(mixed $photos): array
     {
-        $existingPhotos = $pesanan->{$field} ?? [];
-
-        if (!is_array($existingPhotos)) {
-            $existingPhotos = [];
+        if (is_string($photos)) {
+            $decodedPhotos = json_decode($photos, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $photos = $decodedPhotos;
+            } elseif (trim($photos) !== '') {
+                $photos = [$photos];
+            } else {
+                $photos = [];
+            }
         }
 
+        if (!is_array($photos)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter($photos, fn ($photo) => is_string($photo) && trim($photo) !== '')));
+    }
+
+    private function extractProgressFiles(Request $request): array
+    {
+        $files = $request->file('foto_progres');
+
+        if ($files === null) {
+            return [];
+        }
+
+        if (!is_array($files)) {
+            return [$files];
+        }
+
+        $normalizedFiles = [];
+        array_walk_recursive($files, function ($file) use (&$normalizedFiles) {
+            if ($file !== null) {
+                $normalizedFiles[] = $file;
+            }
+        });
+
+        return $normalizedFiles;
+    }
+
+    private function uploadProgressPhotos(Pesanan $pesanan, string $field, array $files): array
+    {
+        $existingPhotos = $this->normalizeProgressPhotos($pesanan->{$field} ?? []);
         $uploadedPhotos = [];
-        foreach ($request->file('foto_progres', []) as $file) {
+
+        foreach ($files as $file) {
             $uploadedPhotos[] = $file->store('pesanan/progress', 'public');
         }
 
-        return array_values(array_merge($existingPhotos, $uploadedPhotos));
+        return array_values(array_unique(array_merge($existingPhotos, $uploadedPhotos)));
     }
 
     private function removeProgressPhoto(Pesanan $pesanan, string $field, string $photoPath): array
     {
-        $existingPhotos = $pesanan->{$field} ?? [];
-
-        if (!is_array($existingPhotos)) {
-            $existingPhotos = [];
-        }
+        $existingPhotos = $this->normalizeProgressPhotos($pesanan->{$field} ?? []);
 
         $remainingPhotos = array_values(array_filter($existingPhotos, fn ($photo) => $photo !== $photoPath));
 
@@ -240,26 +275,29 @@ class PengrajinController extends Controller
 
         $validated = $request->validate([
             'status_target' => 'required|in:Dikerjakan,Selesai',
-            'foto_progres' => 'required|array|min:1',
-            'foto_progres.*' => 'image|mimes:jpg,jpeg,png|max:4096',
             'deleted_existing' => 'nullable|array',
             'deleted_existing.*' => 'string',
+        ]);
+
+        $files = $this->extractProgressFiles($request);
+        Validator::make([
+            'foto_progres' => $files,
         ], [
-            'foto_progres.required' => 'Pilih minimal satu foto untuk diunggah.',
+            'foto_progres' => 'nullable|array',
+            'foto_progres.*' => 'file|image|mimes:jpg,jpeg,png|max:4096',
+        ], [
+            'foto_progres.*.file' => 'File foto progres tidak valid.',
             'foto_progres.*.image' => 'Setiap file foto progres harus berupa gambar.',
             'foto_progres.*.mimes' => 'Foto progres harus berformat jpg, jpeg, atau png.',
             'foto_progres.*.max' => 'Ukuran setiap foto progres maksimal 4MB.',
-        ]);
+        ])->validate();
 
         $field = $this->getProgressPhotoField($validated['status_target']);
         if ($field === null) {
             return redirect()->back()->with('error', 'Status foto tidak valid.');
         }
 
-        $photos = $pesanan->{$field} ?? [];
-        if (!is_array($photos)) {
-            $photos = [];
-        }
+        $photos = $this->normalizeProgressPhotos($pesanan->{$field} ?? []);
 
         foreach ($validated['deleted_existing'] ?? [] as $photoPath) {
             $photos = $this->removeProgressPhoto($pesanan->forceFill([$field => $photos]), $field, $photoPath);
@@ -267,8 +305,10 @@ class PengrajinController extends Controller
 
         $pesanan->forceFill([$field => $photos]);
 
-        if ($request->hasFile('foto_progres')) {
-            $photos = $this->uploadProgressPhotos($request, $pesanan, $field);
+        if (count($files) > 0) {
+            $photos = $this->uploadProgressPhotos($pesanan, $field, $files);
+        } elseif (empty($validated['deleted_existing'] ?? [])) {
+            return redirect()->back()->with('error', 'Pilih minimal satu foto untuk diunggah.');
         }
 
         if (count($photos) === 0) {

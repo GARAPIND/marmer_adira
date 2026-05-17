@@ -437,15 +437,16 @@
                                     <div class="col-md-8">
                                         <label class="form-label small fw-bold text-uppercase text-muted">Pilih Foto</label>
                                         <input type="file" id="modal-photo-input" name="foto_progres[]" class="form-control" multiple
-                                            accept=".jpg,.jpeg,.png">
+                                            accept="image/*,.jpg,.jpeg,.png">
+                                        <div id="modal-photo-helper" class="form-text">Bisa pilih 1 foto atau beberapa foto sekaligus.</div>
                                     </div>
                                     <div class="col-md-4">
                                         <button type="submit" id="btn-save-photo-list" class="btn btn-dark w-100 rounded-pill">
-                                            Upload Multi Foto
+                                            Upload Foto
                                         </button>
                                     </div>
                                 </div>
-                                <p class="text-muted small mb-0 mt-3">Pilih banyak foto sekaligus lalu upload. Foto yang sudah tersimpan tetap tampil di bawah dan bisa dihapus satu per satu.</p>
+                                <p class="text-muted small mb-0 mt-3">Upload satu per satu atau banyak sekaligus. Foto yang sudah tersimpan tetap tampil di bawah dan bisa dihapus satu per satu.</p>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -498,6 +499,8 @@
                 const modalStatusTarget = document.getElementById('modal-status-target');
                 const modalTitle = document.getElementById('modal-foto-title');
                 const modalSubtitle = document.getElementById('modal-foto-subtitle');
+                const modalPhotoInput = document.getElementById('modal-photo-input');
+                const modalPhotoHelper = document.getElementById('modal-photo-helper');
                 const tableBody = document.getElementById('modal-photo-table-body');
                 const btnFotoDikerjakan = document.getElementById('btn-foto-dikerjakan');
                 const btnFotoSelesai = document.getElementById('btn-foto-selesai');
@@ -605,15 +608,23 @@
                     uploadForm.action = `/pengrajin/pesanan/${actionUrl.split('/').pop()}/foto-progres`;
                     modalTitle.innerText = statusTarget === 'Dikerjakan' ? 'Kelola Foto Dikerjakan' : 'Kelola Foto Selesai';
                     modalSubtitle.innerText = `${id} - ${statusTarget === 'Dikerjakan' ? 'Foto tahap produksi' : 'Foto hasil akhir pesanan'}`;
-                    document.getElementById('modal-photo-input').value = '';
+                    modalPhotoInput.value = '';
+                    modalPhotoHelper.innerText = 'Bisa pilih 1 foto atau beberapa foto sekaligus.';
                     renderPhotoTable(photos, statusTarget);
                 };
 
                 btnFotoDikerjakan.onclick = () => configureModal('Dikerjakan', fotoDikerjakan);
                 btnFotoSelesai.onclick = () => configureModal('Selesai', fotoSelesai);
 
+                modalPhotoInput.addEventListener('change', () => {
+                    const totalFiles = modalPhotoInput.files.length;
+                    modalPhotoHelper.innerText = totalFiles > 0
+                        ? `${totalFiles} foto siap diupload.`
+                        : 'Bisa pilih 1 foto atau beberapa foto sekaligus.';
+                });
+
                 uploadForm.onsubmit = (event) => {
-                    if (!document.getElementById('modal-photo-input').files.length) {
+                    if (!modalPhotoInput.files.length) {
                         event.preventDefault();
                         Swal.fire({
                             icon: 'warning',
