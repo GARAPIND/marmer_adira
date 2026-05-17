@@ -713,8 +713,8 @@
                     const formData = new FormData();
                     formData.append('_token', uploadForm.querySelector('input[name="_token"]').value);
                     formData.append('status_target', modalPhotoState.statusTarget);
-                    modalPhotoState.deletedExisting.forEach((photo) => formData.append('deleted_existing[]', photo));
-                    modalPhotoState.newFiles.forEach((file) => formData.append('foto_progres[]', file, file.name));
+                    modalPhotoState.deletedExisting.forEach((photo, index) => formData.append(`deleted_existing[${index}]`, photo));
+                    modalPhotoState.newFiles.forEach((file, index) => formData.append(`foto_progres[${index}]`, file, file.name));
 
                     Swal.fire({
                         title: 'Menyimpan foto...',

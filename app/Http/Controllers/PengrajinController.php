@@ -259,11 +259,12 @@ class PengrajinController extends Controller
 
         $validated = $request->validate([
             'status_target' => 'required|in:Dikerjakan,Selesai',
-            'foto_progres' => 'nullable|array',
-            'foto_progres.*' => 'image|mimes:jpg,jpeg,png|max:4096',
+            'foto_progres' => 'nullable',
+            'foto_progres.*' => 'file|image|mimes:jpg,jpeg,png|max:4096',
             'deleted_existing' => 'nullable|array',
             'deleted_existing.*' => 'string',
         ], [
+            'foto_progres.*.file' => 'Setiap file foto progres tidak valid.',
             'foto_progres.*.image' => 'Setiap file foto progres harus berupa gambar.',
             'foto_progres.*.mimes' => 'Foto progres harus berformat jpg, jpeg, atau png.',
             'foto_progres.*.max' => 'Ukuran setiap foto progres maksimal 4MB.',
