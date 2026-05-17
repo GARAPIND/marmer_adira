@@ -342,7 +342,7 @@ class PesananController extends Controller
 
     public function index()
     {
-        $pesanan = Pesanan::with('paymentHistories')
+        $pesanan = Pesanan::with(['paymentHistories', 'progressPhotos'])
             ->where('user_id', Auth::id())
             ->latest()
             ->get();

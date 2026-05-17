@@ -36,7 +36,7 @@ class PembeliController extends Controller
 
         // 2. Mengambil data pesanan untuk tabel "Aktivitas Pesanan Terbaru"
         // Menggunakan latest() agar pesanan terbaru muncul di paling atas
-        $pesanan = Pesanan::where('user_id', $userId)->latest()->get();
+        $pesanan = Pesanan::with('progressPhotos')->where('user_id', $userId)->latest()->get();
 
         // 3. Mengarahkan ke view dengan mengirimkan variabel stats dan pesanan
         return view('pembeli.dashboard', compact('stats', 'pesanan'));

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pesanan;
+use App\Models\PhotoProsesPesanan;
 use App\Models\Produk;
 use App\Models\Bahan;
 use Carbon\Carbon;
@@ -22,30 +23,35 @@ class PengrajinController extends Controller
         };
     }
 
-    private function hasProgressPhotos(Pesanan $pesanan, string $field): bool
+    private function getProgressStatusLabelFromField(string $field): ?string
     {
-        $photos = $this->normalizeProgressPhotos($pesanan->{$field} ?? []);
-        return is_array($photos) && count($photos) > 0;
+        return match ($field) {
+            'foto_dikerjakan' => 'Dikerjakan',
+            'foto_selesai' => 'Selesai',
+            default => null,
+        };
     }
 
-    private function normalizeProgressPhotos(mixed $photos): array
+    private function getProgressPhotos(Pesanan $pesanan, string $field): array
     {
-        if (is_string($photos)) {
-            $decodedPhotos = json_decode($photos, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                $photos = $decodedPhotos;
-            } elseif (trim($photos) !== '') {
-                $photos = [$photos];
-            } else {
-                $photos = [];
-            }
-        }
-
-        if (!is_array($photos)) {
+        $statusTarget = $this->getProgressStatusLabelFromField($field);
+        if ($statusTarget === null) {
             return [];
         }
 
-        return array_values(array_unique(array_filter($photos, fn ($photo) => is_string($photo) && trim($photo) !== '')));
+        if ($pesanan->relationLoaded('progressPhotos')) {
+            return $pesanan->progressPhotos
+                ->where('status_target', $statusTarget)
+                ->pluck('photo_path')
+                ->values()
+                ->all();
+        }
+
+        return $pesanan->progressPhotos()
+            ->where('status_target', $statusTarget)
+            ->pluck('photo_path')
+            ->values()
+            ->all();
     }
 
     private function extractProgressFiles(Request $request): array
@@ -72,27 +78,45 @@ class PengrajinController extends Controller
 
     private function uploadProgressPhotos(Pesanan $pesanan, string $field, array $files): array
     {
-        $existingPhotos = $this->normalizeProgressPhotos($pesanan->{$field} ?? []);
-        $uploadedPhotos = [];
-
-        foreach ($files as $file) {
-            $uploadedPhotos[] = $file->store('pesanan/progress', 'public');
+        $statusTarget = $this->getProgressStatusLabelFromField($field);
+        if ($statusTarget === null) {
+            return [];
         }
 
-        return array_values(array_unique(array_merge($existingPhotos, $uploadedPhotos)));
+        $urutanTerakhir = (int) $pesanan->progressPhotos()
+            ->where('status_target', $statusTarget)
+            ->max('urutan');
+
+        foreach ($files as $index => $file) {
+            $photoPath = $file->store('pesanan/progress', 'public');
+            $pesanan->progressPhotos()->create([
+                'status_target' => $statusTarget,
+                'photo_path' => $photoPath,
+                'urutan' => $urutanTerakhir + $index + 1,
+            ]);
+        }
+
+        return $this->getProgressPhotos($pesanan->fresh('progressPhotos'), $field);
     }
 
     private function removeProgressPhoto(Pesanan $pesanan, string $field, string $photoPath): array
     {
-        $existingPhotos = $this->normalizeProgressPhotos($pesanan->{$field} ?? []);
-
-        $remainingPhotos = array_values(array_filter($existingPhotos, fn ($photo) => $photo !== $photoPath));
-
-        if (in_array($photoPath, $existingPhotos, true)) {
-            Storage::disk('public')->delete($photoPath);
+        $statusTarget = $this->getProgressStatusLabelFromField($field);
+        if ($statusTarget === null) {
+            return [];
         }
 
-        return $remainingPhotos;
+        $photo = $pesanan->progressPhotos()
+            ->where('status_target', $statusTarget)
+            ->where('photo_path', $photoPath)
+            ->first();
+
+        if ($photo instanceof PhotoProsesPesanan) {
+            Storage::disk('public')->delete($photo->photo_path);
+            $photo->delete();
+        }
+
+        return $this->getProgressPhotos($pesanan->fresh('progressPhotos'), $field);
     }
 
     public function dashboard()
@@ -108,6 +132,7 @@ class PengrajinController extends Controller
     public function pesananMasuk()
     {
         $pesanan = Pesanan::with('user')
+            ->with('progressPhotos')
             ->where('status', 'Diverifikasi')
             ->latest()
             ->get();
@@ -297,25 +322,23 @@ class PengrajinController extends Controller
             return redirect()->back()->with('error', 'Status foto tidak valid.');
         }
 
-        $photos = $this->normalizeProgressPhotos($pesanan->{$field} ?? []);
-
         foreach ($validated['deleted_existing'] ?? [] as $photoPath) {
-            $photos = $this->removeProgressPhoto($pesanan->forceFill([$field => $photos]), $field, $photoPath);
+            $this->removeProgressPhoto($pesanan, $field, $photoPath);
         }
 
-        $pesanan->forceFill([$field => $photos]);
+        if (count($files) === 0 && empty($validated['deleted_existing'] ?? [])) {
+            return redirect()->back()->with('error', 'Pilih minimal satu foto untuk diunggah.');
+        }
+
+        $photos = $this->getProgressPhotos($pesanan->fresh('progressPhotos'), $field);
 
         if (count($files) > 0) {
             $photos = $this->uploadProgressPhotos($pesanan, $field, $files);
-        } elseif (empty($validated['deleted_existing'] ?? [])) {
-            return redirect()->back()->with('error', 'Pilih minimal satu foto untuk diunggah.');
         }
 
         if (count($photos) === 0) {
             return redirect()->back()->with('error', 'Minimal harus ada satu foto pada daftar sebelum disimpan.');
         }
-
-        $pesanan->update([$field => $photos]);
 
         return redirect()->back()->with('success', 'Foto progres berhasil diunggah.');
     }
@@ -334,9 +357,7 @@ class PengrajinController extends Controller
             return redirect()->back()->with('error', 'Status foto tidak valid.');
         }
 
-        $pesanan->update([
-            $field => $this->removeProgressPhoto($pesanan, $field, $validated['photo_path']),
-        ]);
+        $this->removeProgressPhoto($pesanan, $field, $validated['photo_path']);
 
         return redirect()->back()->with('success', 'Foto progres berhasil dihapus.');
     }
@@ -347,7 +368,7 @@ class PengrajinController extends Controller
         $status         = $request->query('status');
         $tanggal   = $request->query('tanggal');
 
-        $riwayat = Pesanan::with('user')
+        $riwayat = Pesanan::with(['user', 'progressPhotos'])
             ->whereIn('status', ['Selesai', 'Dibatalkan', 'diekspedisi'])
             ->when($search, function ($query, $search) {
                 return $query->where('id', 'LIKE', "%{$search}%")
@@ -369,13 +390,13 @@ class PengrajinController extends Controller
 
     public function prosesPengerjaan()
     {
-        $pesananAktif = Pesanan::with('user')->whereIn('status', ['Diproses', 'Dikerjakan'])->latest()->get();
+        $pesananAktif = Pesanan::with(['user', 'progressPhotos'])->whereIn('status', ['Diproses', 'Dikerjakan'])->latest()->get();
         return view('pengrajin.proses_pengerjaan', compact('pesananAktif'));
     }
 
     public function detailRiwayat($id)
     {
-        $pesanan = Pesanan::with('user')->findOrFail($id);
+        $pesanan = Pesanan::with(['user', 'progressPhotos'])->findOrFail($id);
         return view('pengrajin.detail-riwayat', compact('pesanan'));
     }
 }

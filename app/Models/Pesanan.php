@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Pesanan extends Model
 {
@@ -21,8 +22,6 @@ class Pesanan extends Model
         'jenis_marmer',
         'catatan_khusus',
         'gambar_referensi',
-        'foto_dikerjakan',
-        'foto_selesai',
         'jumlah',
         'berat_satuan',
         'total_berat',
@@ -53,13 +52,16 @@ class Pesanan extends Model
 
     protected $casts = [
         'is_custom' => 'boolean',
-        'foto_dikerjakan' => 'array',
-        'foto_selesai' => 'array',
         'berat_satuan' => 'float',
         'total_berat' => 'float',
         'tanggal_bayar' => 'datetime',
         'tanggal_lunas' => 'datetime',
         'midtrans_payload' => 'array',
+    ];
+
+    protected $appends = [
+        'foto_dikerjakan',
+        'foto_selesai',
     ];
 
     public function user(): BelongsTo
@@ -85,5 +87,57 @@ class Pesanan extends Model
     public function paymentHistories(): HasMany
     {
         return $this->hasMany(PesananPaymentHistory::class)->orderBy('event_time');
+    }
+
+    public function progressPhotos(): HasMany
+    {
+        return $this->hasMany(PhotoProsesPesanan::class)->orderBy('status_target')->orderBy('urutan')->orderBy('id');
+    }
+
+    public function progressPhotosDikerjakan(): HasMany
+    {
+        return $this->hasMany(PhotoProsesPesanan::class)
+            ->where('status_target', 'Dikerjakan')
+            ->orderBy('urutan')
+            ->orderBy('id');
+    }
+
+    public function progressPhotosSelesai(): HasMany
+    {
+        return $this->hasMany(PhotoProsesPesanan::class)
+            ->where('status_target', 'Selesai')
+            ->orderBy('urutan')
+            ->orderBy('id');
+    }
+
+    protected function fotoDikerjakan(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->resolveProgressPhotoPaths('Dikerjakan')
+        );
+    }
+
+    protected function fotoSelesai(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->resolveProgressPhotoPaths('Selesai')
+        );
+    }
+
+    private function resolveProgressPhotoPaths(string $statusTarget): array
+    {
+        if ($this->relationLoaded('progressPhotos')) {
+            return $this->progressPhotos
+                ->where('status_target', $statusTarget)
+                ->pluck('photo_path')
+                ->values()
+                ->all();
+        }
+
+        return $this->progressPhotos()
+            ->where('status_target', $statusTarget)
+            ->pluck('photo_path')
+            ->values()
+            ->all();
     }
 }
