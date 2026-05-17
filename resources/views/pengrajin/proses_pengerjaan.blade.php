@@ -114,6 +114,11 @@
             border-radius: 12px;
             border: 1px solid #eee;
         }
+
+        .table-photo-list td,
+        .table-photo-list th {
+            vertical-align: middle;
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -277,6 +282,11 @@
                         <div id="preview-foto-dikerjakan" class="photo-grid">
                             <span class="text-muted small">Belum ada foto.</span>
                         </div>
+                        <button type="button" id="btn-foto-dikerjakan"
+                            class="btn btn-outline-dark btn-sm rounded-pill mt-3"
+                            data-bs-toggle="modal" data-bs-target="#modalFotoProgres">
+                            Kelola Foto Dikerjakan
+                        </button>
                     </div>
 
                     <div class="mb-4">
@@ -284,28 +294,29 @@
                         <div id="preview-foto-selesai" class="photo-grid">
                             <span class="text-muted small">Belum ada foto.</span>
                         </div>
+                        <button type="button" id="btn-foto-selesai"
+                            class="btn btn-outline-dark btn-sm rounded-pill mt-3"
+                            data-bs-toggle="modal" data-bs-target="#modalFotoProgres">
+                            Kelola Foto Selesai
+                        </button>
                     </div>
 
                     <div class="row g-2">
                         <div class="col-6">
-                            <form id="form-dikerjakan" method="POST" action="" enctype="multipart/form-data">
+                            <form id="form-dikerjakan" method="POST" action="">
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
                                 <input type="hidden" name="status" value="Dikerjakan">
-                                <input type="file" name="foto_progres[]" class="form-control mb-2" multiple
-                                    accept=".jpg,.jpeg,.png">
                                 <button type="submit" class="btn btn-outline-dark w-100 py-2 fw-bold small rounded-pill">
                                     Mulai Pengerjaan
                                 </button>
                             </form>
                         </div>
                         <div class="col-6">
-                            <form id="form-selesai" method="POST" action="" enctype="multipart/form-data">
+                            <form id="form-selesai" method="POST" action="">
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
                                 <input type="hidden" name="status" value="Selesai">
-                                <input type="file" name="foto_progres[]" class="form-control mb-2" multiple
-                                    accept=".jpg,.jpeg,.png">
                                 <button type="submit" class="btn btn-gold w-100 py-2 fw-bold small rounded-pill shadow-sm">
                                     Tandai Selesai
                                 </button>
@@ -322,6 +333,55 @@
             <div class="modal-content border-0 rounded-4">
                 <div class="modal-body p-2 text-center">
                     <img id="previewGambar" src="" class="img-fluid rounded">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalFotoProgres" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0 rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h5 class="fw-bold mb-1" id="modal-foto-title">Kelola Foto Progres</h5>
+                        <p class="text-muted small mb-0" id="modal-foto-subtitle">Upload dan kelola foto progres pesanan.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <form id="form-upload-foto" method="POST" action="" enctype="multipart/form-data" class="mb-4">
+                        @csrf
+                        <input type="hidden" name="status_target" id="modal-status-target" value="">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Upload Foto</label>
+                                <input type="file" name="foto_progres[]" class="form-control" multiple
+                                    accept=".jpg,.jpeg,.png" required>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-dark w-100 rounded-pill">
+                                    Upload Foto
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table class="table table-photo-list align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="width: 90px;">Preview</th>
+                                    <th>Nama File</th>
+                                    <th style="width: 180px;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modal-photo-table-body">
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">Belum ada foto.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -350,6 +410,13 @@
                 const fotoDikerjakanContainer = document.getElementById('preview-foto-dikerjakan');
                 const fotoSelesaiContainer = document.getElementById('preview-foto-selesai');
                 const tombolSelesai = document.querySelector('#form-selesai button[type="submit"]');
+                const uploadForm = document.getElementById('form-upload-foto');
+                const modalStatusTarget = document.getElementById('modal-status-target');
+                const modalTitle = document.getElementById('modal-foto-title');
+                const modalSubtitle = document.getElementById('modal-foto-subtitle');
+                const tableBody = document.getElementById('modal-photo-table-body');
+                const btnFotoDikerjakan = document.getElementById('btn-foto-dikerjakan');
+                const btnFotoSelesai = document.getElementById('btn-foto-selesai');
 
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('form-dikerjakan').action = actionUrl;
@@ -382,6 +449,46 @@
 
                 renderPhotos(fotoDikerjakanContainer, fotoDikerjakan);
                 renderPhotos(fotoSelesaiContainer, fotoSelesai);
+
+                const renderPhotoTable = (photos, statusTarget) => {
+                    if (!Array.isArray(photos) || !photos.length) {
+                        tableBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Belum ada foto.</td></tr>';
+                        return;
+                    }
+
+                    tableBody.innerHTML = photos.map((photo) => {
+                        const fileName = photo.split('/').pop();
+                        return `
+                            <tr>
+                                <td><a href="/storage/${photo}" target="_blank"><img src="/storage/${photo}" alt="Foto progres" class="img-fluid rounded" style="height:60px; width:60px; object-fit:cover;"></a></td>
+                                <td>${fileName}</td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a href="/storage/${photo}" target="_blank" class="btn btn-outline-dark btn-sm rounded-pill">Lihat</a>
+                                        <form method="POST" action="/pengrajin/pesanan/${actionUrl.split('/').pop()}/foto-progres" onsubmit="return confirm('Hapus foto ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <input type="hidden" name="status_target" value="${statusTarget}">
+                                            <input type="hidden" name="photo_path" value="${photo}">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">Hapus</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                };
+
+                const configureModal = (statusTarget, photos) => {
+                    modalStatusTarget.value = statusTarget;
+                    uploadForm.action = `/pengrajin/pesanan/${actionUrl.split('/').pop()}/foto-progres`;
+                    modalTitle.innerText = statusTarget === 'Dikerjakan' ? 'Kelola Foto Dikerjakan' : 'Kelola Foto Selesai';
+                    modalSubtitle.innerText = `${id} - ${statusTarget === 'Dikerjakan' ? 'Foto tahap produksi' : 'Foto hasil akhir pesanan'}`;
+                    renderPhotoTable(photos, statusTarget);
+                };
+
+                btnFotoDikerjakan.onclick = () => configureModal('Dikerjakan', fotoDikerjakan);
+                btnFotoSelesai.onclick = () => configureModal('Selesai', fotoSelesai);
 
                 // Reset Timeline Classes
                 const steps = ['step-diproses', 'step-dikerjakan', 'step-selesai'];

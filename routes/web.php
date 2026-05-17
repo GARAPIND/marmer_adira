@@ -110,6 +110,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [PengrajinController::class, 'dashboard'])->name('dashboard');
         Route::get('/pesanan-masuk', [PengrajinController::class, 'pesananMasuk'])->name('pesanan.masuk');
         Route::match(['post', 'patch'], '/pesanan/update/{id}', [PengrajinController::class, 'updateStatus'])->name('update.status');
+        Route::post('/pesanan/{id}/foto-progres', [PengrajinController::class, 'uploadFotoProgres'])->name('foto.upload');
+        Route::delete('/pesanan/{id}/foto-progres', [PengrajinController::class, 'hapusFotoProgres'])->name('foto.delete');
         Route::get('/proses-pengerjaan', [PengrajinController::class, 'prosesPengerjaan'])->name('proses');
         Route::get('/riwayat', [PengrajinController::class, 'riwayat'])->name('riwayat');
         Route::get('/riwayat/{id}', [PengrajinController::class, 'detailRiwayat'])->name('riwayat.detail');

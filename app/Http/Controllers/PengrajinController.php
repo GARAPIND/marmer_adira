@@ -12,6 +12,21 @@ use Illuminate\Support\Facades\Auth;
 
 class PengrajinController extends Controller
 {
+    private function getProgressPhotoField(string $status): ?string
+    {
+        return match ($status) {
+            'Dikerjakan' => 'foto_dikerjakan',
+            'Selesai' => 'foto_selesai',
+            default => null,
+        };
+    }
+
+    private function hasProgressPhotos(Pesanan $pesanan, string $field): bool
+    {
+        $photos = $pesanan->{$field} ?? [];
+        return is_array($photos) && count($photos) > 0;
+    }
+
     private function uploadProgressPhotos(Request $request, Pesanan $pesanan, string $field): array
     {
         $existingPhotos = $pesanan->{$field} ?? [];
@@ -26,6 +41,23 @@ class PengrajinController extends Controller
         }
 
         return array_values(array_merge($existingPhotos, $uploadedPhotos));
+    }
+
+    private function removeProgressPhoto(Pesanan $pesanan, string $field, string $photoPath): array
+    {
+        $existingPhotos = $pesanan->{$field} ?? [];
+
+        if (!is_array($existingPhotos)) {
+            $existingPhotos = [];
+        }
+
+        $remainingPhotos = array_values(array_filter($existingPhotos, fn ($photo) => $photo !== $photoPath));
+
+        if (in_array($photoPath, $existingPhotos, true)) {
+            Storage::disk('public')->delete($photoPath);
+        }
+
+        return $remainingPhotos;
     }
 
     public function dashboard()
@@ -194,8 +226,9 @@ class PengrajinController extends Controller
             'foto_progres.*.max' => 'Ukuran setiap foto progres maksimal 4MB.',
         ]);
 
-        if (in_array($validated['status'], ['Dikerjakan', 'Selesai'], true) && !$request->hasFile('foto_progres')) {
-            return redirect()->back()->withInput()->with('error', 'Foto progres wajib diunggah saat status Dikerjakan atau Selesai.');
+        $photoField = $this->getProgressPhotoField($validated['status']);
+        if ($photoField !== null && !$request->hasFile('foto_progres') && !$this->hasProgressPhotos($pesanan, $photoField)) {
+            return redirect()->back()->withInput()->with('error', 'Foto progres wajib diunggah terlebih dahulu sebelum status ini disimpan.');
         }
 
         if ($validated['status'] === 'Selesai' && $pesanan->status_pembayaran !== 'paid') {
@@ -218,6 +251,54 @@ class PengrajinController extends Controller
         $pesanan->update($updatePayload);
 
         return redirect()->back()->with('success', 'Status diperbarui.');
+    }
+
+    public function uploadFotoProgres(Request $request, $id)
+    {
+        $pesanan = Pesanan::findOrFail($id);
+
+        $validated = $request->validate([
+            'status_target' => 'required|in:Dikerjakan,Selesai',
+            'foto_progres' => 'required|array|min:1',
+            'foto_progres.*' => 'image|mimes:jpg,jpeg,png|max:4096',
+        ], [
+            'foto_progres.required' => 'Pilih minimal satu foto untuk diunggah.',
+            'foto_progres.*.image' => 'Setiap file foto progres harus berupa gambar.',
+            'foto_progres.*.mimes' => 'Foto progres harus berformat jpg, jpeg, atau png.',
+            'foto_progres.*.max' => 'Ukuran setiap foto progres maksimal 4MB.',
+        ]);
+
+        $field = $this->getProgressPhotoField($validated['status_target']);
+        if ($field === null) {
+            return redirect()->back()->with('error', 'Status foto tidak valid.');
+        }
+
+        $pesanan->update([
+            $field => $this->uploadProgressPhotos($request, $pesanan, $field),
+        ]);
+
+        return redirect()->back()->with('success', 'Foto progres berhasil diunggah.');
+    }
+
+    public function hapusFotoProgres(Request $request, $id)
+    {
+        $pesanan = Pesanan::findOrFail($id);
+
+        $validated = $request->validate([
+            'status_target' => 'required|in:Dikerjakan,Selesai',
+            'photo_path' => 'required|string',
+        ]);
+
+        $field = $this->getProgressPhotoField($validated['status_target']);
+        if ($field === null) {
+            return redirect()->back()->with('error', 'Status foto tidak valid.');
+        }
+
+        $pesanan->update([
+            $field => $this->removeProgressPhoto($pesanan, $field, $validated['photo_path']),
+        ]);
+
+        return redirect()->back()->with('success', 'Foto progres berhasil dihapus.');
     }
 
     public function riwayat(Request $request)
