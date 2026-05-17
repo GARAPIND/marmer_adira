@@ -379,7 +379,7 @@
                     </div>
 
                     <div class="row g-2">
-                        <div class="col-6">
+                        <div class="col-6" id="col-form-dikerjakan">
                             <form id="form-dikerjakan" method="POST" action="">
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
@@ -389,7 +389,7 @@
                                 </button>
                             </form>
                         </div>
-                        <div class="col-6">
+                        <div class="col-6" id="col-form-selesai">
                             <form id="form-selesai" method="POST" action="">
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
@@ -502,6 +502,8 @@
                 const fotoSelesaiContainer = document.getElementById('preview-foto-selesai');
                 const tombolSelesai = document.querySelector('#form-selesai button[type="submit"]');
                 const tombolDikerjakan = document.querySelector('#form-dikerjakan button[type="submit"]');
+                const colFormDikerjakan = document.getElementById('col-form-dikerjakan');
+                const colFormSelesai = document.getElementById('col-form-selesai');
                 const uploadForm = document.getElementById('form-upload-foto');
                 const modalStatusTarget = document.getElementById('modal-status-target');
                 const modalTitle = document.getElementById('modal-foto-title');
@@ -519,20 +521,35 @@
                 document.getElementById('form-dikerjakan').action = actionUrl;
                 document.getElementById('form-selesai').action = actionUrl;
                 tombolDikerjakan.disabled = false;
+                tombolSelesai.disabled = false;
 
                 if (paymentStatus === 'paid') {
                     paymentBadge.innerText = 'Lunas';
                     paymentBadge.className = 'badge bg-success px-3 py-2 rounded-pill';
-                    tombolSelesai.disabled = false;
                 } else if (paymentStatus === 'dp') {
                     paymentBadge.innerText = 'DP 50%';
                     paymentBadge.className = 'badge bg-warning text-dark px-3 py-2 rounded-pill';
-                    tombolSelesai.disabled = true;
                 } else {
                     paymentBadge.innerText = 'Belum Bayar';
                     paymentBadge.className = 'badge bg-danger px-3 py-2 rounded-pill';
-                    tombolSelesai.disabled = true;
                 }
+
+                if (status === 'Dikerjakan') {
+                    colFormDikerjakan.classList.add('d-none');
+                    colFormSelesai.classList.remove('col-6');
+                    colFormSelesai.classList.add('col-12');
+                } else {
+                    colFormDikerjakan.classList.remove('d-none');
+                    colFormSelesai.classList.remove('col-12');
+                    colFormSelesai.classList.add('col-6');
+                }
+
+                document.getElementById('form-selesai').onsubmit = (event) => {
+                    if (paymentStatus !== 'paid') {
+                        event.preventDefault();
+                        alert('PEMBELI HARUS MELUNASI TERLEBIH DAHULU');
+                    }
+                };
 
                 const renderPhotos = (container, photos) => {
                     if (!Array.isArray(photos) || !photos.length) {
