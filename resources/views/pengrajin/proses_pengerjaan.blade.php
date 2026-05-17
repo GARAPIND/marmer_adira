@@ -350,6 +350,8 @@
                         tetapi pengiriman hanya bisa dilakukan setelah pembayaran lunas.
                     </div>
 
+                    <div id="status-action-hint" class="alert alert-warning border-0 small mb-4 d-none"></div>
+
                     <div class="mb-4">
                         <h6 class="small fw-bold text-uppercase text-muted mb-3">Status Pembayaran:</h6>
                         <span id="payment-badge" class="badge bg-secondary px-3 py-2 rounded-pill">-</span>
@@ -503,6 +505,7 @@
                 const fotoSelesaiContainer = document.getElementById('preview-foto-selesai');
                 const tombolSelesai = document.querySelector('#form-selesai button[type="submit"]');
                 const tombolDikerjakan = document.querySelector('#form-dikerjakan button[type="submit"]');
+                const statusActionHint = document.getElementById('status-action-hint');
                 const colFormDikerjakan = document.getElementById('col-form-dikerjakan');
                 const colFormSelesai = document.getElementById('col-form-selesai');
                 const uploadForm = document.getElementById('form-upload-foto');
@@ -523,6 +526,8 @@
                 document.getElementById('form-selesai').action = actionUrl;
                 tombolDikerjakan.disabled = false;
                 tombolSelesai.disabled = false;
+                statusActionHint.classList.add('d-none');
+                statusActionHint.innerHTML = '';
 
                 if (paymentStatus === 'paid') {
                     paymentBadge.innerText = 'Lunas';
@@ -560,6 +565,14 @@
 
                 renderPhotos(fotoDikerjakanContainer, fotoDikerjakan);
                 renderPhotos(fotoSelesaiContainer, fotoSelesai);
+
+                const hasFotoDikerjakan = Array.isArray(fotoDikerjakan) && fotoDikerjakan.length > 0;
+                if (!hasFotoDikerjakan) {
+                    tombolDikerjakan.disabled = true;
+                    statusActionHint.classList.remove('d-none');
+                    statusActionHint.innerHTML =
+                        '<i class="fas fa-camera me-1"></i> Upload foto progress dikerjakan terlebih dahulu agar tombol <b>Mulai Pengerjaan</b> bisa dipakai.';
+                }
 
                 const renderPhotoTable = (photos, statusTarget) => {
                     const activeExisting = modalPhotoState.existing
@@ -692,7 +705,59 @@
                             text: 'Minimal harus ada satu foto pada daftar sebelum disimpan.',
                             confirmButtonColor: '#2c3e50'
                         });
+                        return;
                     }
+
+                    event.preventDefault();
+
+                    const formData = new FormData();
+                    formData.append('_token', uploadForm.querySelector('input[name="_token"]').value);
+                    formData.append('status_target', modalPhotoState.statusTarget);
+                    modalPhotoState.deletedExisting.forEach((photo) => formData.append('deleted_existing[]', photo));
+                    modalPhotoState.newFiles.forEach((file) => formData.append('foto_progres[]', file, file.name));
+
+                    Swal.fire({
+                        title: 'Menyimpan foto...',
+                        didOpen: () => {
+                            Swal.showLoading();
+                        },
+                        allowOutsideClick: false,
+                        showConfirmButton: false
+                    });
+
+                    fetch(uploadForm.action, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            body: formData
+                        })
+                        .then(async (response) => {
+                            const data = await response.json().catch(() => ({}));
+                            if (!response.ok) {
+                                const validationMessage = data?.message || Object.values(data?.errors || {})?.flat?.()[0] ||
+                                    'Gagal menyimpan foto progres.';
+                                throw new Error(validationMessage);
+                            }
+                            return data;
+                        })
+                        .then((data) => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil',
+                                text: data?.message || 'Foto progres berhasil diunggah.',
+                                confirmButtonColor: '#2c3e50'
+                            }).then(() => window.location.reload());
+                        })
+                        .catch((error) => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Upload Gagal',
+                                text: error?.message || 'Gagal menyimpan foto progres.',
+                                confirmButtonColor: '#2c3e50'
+                            });
+                        });
                 };
 
                 // Reset Timeline Classes

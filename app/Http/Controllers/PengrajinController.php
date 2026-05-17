@@ -290,10 +290,18 @@ class PengrajinController extends Controller
         }
 
         if (count($photos) === 0) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Minimal harus ada satu foto pada daftar sebelum disimpan.'], 422);
+            }
+
             return redirect()->back()->with('error', 'Minimal harus ada satu foto pada daftar sebelum disimpan.');
         }
 
         $pesanan->update([$field => $photos]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Foto progres berhasil diunggah.']);
+        }
 
         return redirect()->back()->with('success', 'Foto progres berhasil diunggah.');
     }
