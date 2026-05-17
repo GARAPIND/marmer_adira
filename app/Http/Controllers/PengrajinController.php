@@ -218,18 +218,7 @@ class PengrajinController extends Controller
         $pesanan = Pesanan::findOrFail($id);
         $validated = $request->validate([
             'status' => 'required|in:Diproses,Dikerjakan,Selesai,diekspedisi',
-            'foto_progres' => 'nullable|array',
-            'foto_progres.*' => 'image|mimes:jpg,jpeg,png|max:4096',
-        ], [
-            'foto_progres.*.image' => 'Setiap file foto progres harus berupa gambar.',
-            'foto_progres.*.mimes' => 'Foto progres harus berformat jpg, jpeg, atau png.',
-            'foto_progres.*.max' => 'Ukuran setiap foto progres maksimal 4MB.',
         ]);
-
-        $photoField = $this->getProgressPhotoField($validated['status']);
-        if ($photoField !== null && !$request->hasFile('foto_progres') && !$this->hasProgressPhotos($pesanan, $photoField)) {
-            return redirect()->back()->withInput()->with('error', 'Foto progres wajib diunggah terlebih dahulu sebelum status ini disimpan.');
-        }
 
         if ($validated['status'] === 'diekspedisi' && $pesanan->status_pembayaran !== 'paid') {
             return redirect()->back()->withInput()->with('error', 'Pesanan belum bisa dikirim karena pembayaran belum lunas.');
@@ -239,14 +228,6 @@ class PengrajinController extends Controller
             'status' => $validated['status'],
             'tgl_update_proses' => now(),
         ];
-
-        if ($validated['status'] === 'Dikerjakan' && $request->hasFile('foto_progres')) {
-            $updatePayload['foto_dikerjakan'] = $this->uploadProgressPhotos($request, $pesanan, 'foto_dikerjakan');
-        }
-
-        if ($validated['status'] === 'Selesai' && $request->hasFile('foto_progres')) {
-            $updatePayload['foto_selesai'] = $this->uploadProgressPhotos($request, $pesanan, 'foto_selesai');
-        }
 
         $pesanan->update($updatePayload);
 
@@ -259,12 +240,12 @@ class PengrajinController extends Controller
 
         $validated = $request->validate([
             'status_target' => 'required|in:Dikerjakan,Selesai',
-            'foto_progres' => 'nullable',
-            'foto_progres.*' => 'file|image|mimes:jpg,jpeg,png|max:4096',
+            'foto_progres' => 'required|array|min:1',
+            'foto_progres.*' => 'image|mimes:jpg,jpeg,png|max:4096',
             'deleted_existing' => 'nullable|array',
             'deleted_existing.*' => 'string',
         ], [
-            'foto_progres.*.file' => 'Setiap file foto progres tidak valid.',
+            'foto_progres.required' => 'Pilih minimal satu foto untuk diunggah.',
             'foto_progres.*.image' => 'Setiap file foto progres harus berupa gambar.',
             'foto_progres.*.mimes' => 'Foto progres harus berformat jpg, jpeg, atau png.',
             'foto_progres.*.max' => 'Ukuran setiap foto progres maksimal 4MB.',
@@ -291,18 +272,10 @@ class PengrajinController extends Controller
         }
 
         if (count($photos) === 0) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Minimal harus ada satu foto pada daftar sebelum disimpan.'], 422);
-            }
-
             return redirect()->back()->with('error', 'Minimal harus ada satu foto pada daftar sebelum disimpan.');
         }
 
         $pesanan->update([$field => $photos]);
-
-        if ($request->expectsJson()) {
-            return response()->json(['message' => 'Foto progres berhasil diunggah.']);
-        }
 
         return redirect()->back()->with('success', 'Foto progres berhasil diunggah.');
     }

@@ -116,11 +116,6 @@
             border: 1px solid #eee;
         }
 
-        .table-photo-list td,
-        .table-photo-list th {
-            vertical-align: middle;
-        }
-
         .btn:disabled {
             cursor: not-allowed;
             opacity: 0.6;
@@ -196,6 +191,10 @@
             text-align: center;
             color: #7b8794;
             background: rgba(255, 255, 255, 0.78);
+        }
+
+        .upload-hidden {
+            display: none;
         }
     </style>
 
@@ -346,8 +345,8 @@
                     </div>
 
                     <div class="alert alert-light border rounded-4 small mb-4">
-                        Upload foto wajib saat pindah ke `Dikerjakan` dan `Selesai`. Pesanan boleh diselesaikan pengrajin,
-                        tetapi pengiriman hanya bisa dilakukan setelah pembayaran lunas.
+                        Klik `Mulai Pengerjaan` terlebih dahulu. Setelah status menjadi `Dikerjakan`, tombol upload foto
+                        akan muncul dan Anda bisa upload banyak gambar sekaligus.
                     </div>
 
                     <div id="status-action-hint" class="alert alert-warning border-0 small mb-4 d-none"></div>
@@ -357,25 +356,25 @@
                         <span id="payment-badge" class="badge bg-secondary px-3 py-2 rounded-pill">-</span>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-4 upload-hidden" id="section-foto-dikerjakan">
                         <h6 class="small fw-bold text-uppercase text-muted mb-3">Foto Progres Dikerjakan:</h6>
                         <div id="preview-foto-dikerjakan" class="photo-grid">
                             <span class="text-muted small">Belum ada foto.</span>
                         </div>
                         <button type="button" id="btn-foto-dikerjakan"
-                            class="btn btn-outline-dark btn-sm rounded-pill mt-3" disabled
+                            class="btn btn-outline-dark btn-sm rounded-pill mt-3"
                             data-bs-toggle="modal" data-bs-target="#modalFotoProgres">
                             Kelola Foto Dikerjakan
                         </button>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-4 upload-hidden" id="section-foto-selesai">
                         <h6 class="small fw-bold text-uppercase text-muted mb-3">Foto Hasil Selesai:</h6>
                         <div id="preview-foto-selesai" class="photo-grid">
                             <span class="text-muted small">Belum ada foto.</span>
                         </div>
                         <button type="button" id="btn-foto-selesai"
-                            class="btn btn-outline-dark btn-sm rounded-pill mt-3" disabled
+                            class="btn btn-outline-dark btn-sm rounded-pill mt-3"
                             data-bs-toggle="modal" data-bs-target="#modalFotoProgres">
                             Kelola Foto Selesai
                         </button>
@@ -392,7 +391,7 @@
                                 </button>
                             </form>
                         </div>
-                        <div class="col-6" id="col-form-selesai">
+                        <div class="col-6 upload-hidden" id="col-form-selesai">
                             <form id="form-selesai" method="POST" action="">
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
@@ -432,33 +431,27 @@
                     <form id="form-upload-foto" method="POST" action="" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="status_target" id="modal-status-target" value="">
-                        <div id="deleted-existing-wrapper"></div>
                         <div class="photo-manager-shell">
                             <div class="photo-manager-dropzone mb-4">
                                 <div class="row g-3 align-items-end">
-                                    <div class="col-md-6">
+                                    <div class="col-md-8">
                                         <label class="form-label small fw-bold text-uppercase text-muted">Pilih Foto</label>
                                         <input type="file" id="modal-photo-input" name="foto_progres[]" class="form-control" multiple
                                             accept=".jpg,.jpeg,.png">
                                     </div>
-                                    <div class="col-md-3">
-                                        <button type="button" id="btn-add-photo-list" class="btn btn-outline-dark w-100 rounded-pill">
-                                            Tambah ke List
-                                        </button>
-                                    </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-4">
                                         <button type="submit" id="btn-save-photo-list" class="btn btn-dark w-100 rounded-pill">
-                                            Simpan Daftar Foto
+                                            Upload Multi Foto
                                         </button>
                                     </div>
                                 </div>
-                                <p class="text-muted small mb-0 mt-3">Susun dulu daftar foto di bawah. Yang tersisa di daftar inilah yang akan disimpan.</p>
+                                <p class="text-muted small mb-0 mt-3">Pilih banyak foto sekaligus lalu upload. Foto yang sudah tersimpan tetap tampil di bawah dan bisa dihapus satu per satu.</p>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
-                                    <h6 class="fw-bold mb-1">Daftar Foto</h6>
-                                    <p class="text-muted small mb-0">Kelola foto tersimpan dan foto baru dalam satu tampilan.</p>
+                                    <h6 class="fw-bold mb-1">Foto Tersimpan</h6>
+                                    <p class="text-muted small mb-0">Daftar foto yang sudah masuk ke sistem.</p>
                                 </div>
                                 <span id="photo-list-counter" class="badge bg-dark rounded-pill px-3 py-2">0 foto</span>
                             </div>
@@ -483,15 +476,6 @@
             });
         });
 
-        let modalPhotoState = {
-            existing: [],
-            deletedExisting: [],
-            newFiles: [],
-            orderId: null,
-            actionUrl: '',
-            statusTarget: '',
-        };
-
         document.querySelectorAll('.btn-lihat-detail').forEach(button => {
             button.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
@@ -508,6 +492,8 @@
                 const statusActionHint = document.getElementById('status-action-hint');
                 const colFormDikerjakan = document.getElementById('col-form-dikerjakan');
                 const colFormSelesai = document.getElementById('col-form-selesai');
+                const sectionFotoDikerjakan = document.getElementById('section-foto-dikerjakan');
+                const sectionFotoSelesai = document.getElementById('section-foto-selesai');
                 const uploadForm = document.getElementById('form-upload-foto');
                 const modalStatusTarget = document.getElementById('modal-status-target');
                 const modalTitle = document.getElementById('modal-foto-title');
@@ -515,10 +501,6 @@
                 const tableBody = document.getElementById('modal-photo-table-body');
                 const btnFotoDikerjakan = document.getElementById('btn-foto-dikerjakan');
                 const btnFotoSelesai = document.getElementById('btn-foto-selesai');
-                const deletedExistingWrapper = document.getElementById('deleted-existing-wrapper');
-                const modalPhotoInput = document.getElementById('modal-photo-input');
-                const btnAddPhotoList = document.getElementById('btn-add-photo-list');
-                const btnSavePhotoList = document.getElementById('btn-save-photo-list');
                 const photoListCounter = document.getElementById('photo-list-counter');
 
                 document.getElementById('display-id').innerText = id;
@@ -542,12 +524,25 @@
 
                 if (status === 'Dikerjakan') {
                     colFormDikerjakan.classList.add('d-none');
-                    colFormSelesai.classList.remove('col-6');
+                    colFormSelesai.classList.remove('upload-hidden', 'col-6');
                     colFormSelesai.classList.add('col-12');
+                    sectionFotoDikerjakan.classList.remove('upload-hidden');
+                    sectionFotoSelesai.classList.remove('upload-hidden');
+                    statusActionHint.classList.remove('d-none');
+                    statusActionHint.className = 'alert alert-info border-0 small mb-4';
+                    statusActionHint.innerHTML =
+                        '<i class="fas fa-circle-info me-1"></i> Pesanan sudah masuk tahap dikerjakan. Sekarang Anda bisa upload foto progress dan lanjut tandai selesai.';
                 } else {
                     colFormDikerjakan.classList.remove('d-none');
+                    colFormSelesai.classList.add('upload-hidden');
                     colFormSelesai.classList.remove('col-12');
                     colFormSelesai.classList.add('col-6');
+                    sectionFotoDikerjakan.classList.add('upload-hidden');
+                    sectionFotoSelesai.classList.add('upload-hidden');
+                    statusActionHint.classList.remove('d-none');
+                    statusActionHint.className = 'alert alert-warning border-0 small mb-4';
+                    statusActionHint.innerHTML =
+                        '<i class="fas fa-hammer me-1"></i> Klik <b>Mulai Pengerjaan</b> terlebih dahulu. Setelah itu menu upload foto akan muncul.';
                 }
 
                 document.getElementById('form-selesai').onsubmit = null;
@@ -566,198 +561,67 @@
                 renderPhotos(fotoDikerjakanContainer, fotoDikerjakan);
                 renderPhotos(fotoSelesaiContainer, fotoSelesai);
 
-                const hasFotoDikerjakan = Array.isArray(fotoDikerjakan) && fotoDikerjakan.length > 0;
-                if (!hasFotoDikerjakan) {
-                    tombolDikerjakan.disabled = true;
-                    statusActionHint.classList.remove('d-none');
-                    statusActionHint.innerHTML =
-                        '<i class="fas fa-camera me-1"></i> Upload foto progress dikerjakan terlebih dahulu agar tombol <b>Mulai Pengerjaan</b> bisa dipakai.';
-                }
-
                 const renderPhotoTable = (photos, statusTarget) => {
-                    const activeExisting = modalPhotoState.existing
-                        .filter((photo) => !modalPhotoState.deletedExisting.includes(photo));
-                    const existingRows = modalPhotoState.existing
-                        .filter((photo) => !modalPhotoState.deletedExisting.includes(photo))
-                        .map((photo) => {
-                            const fileName = photo.split('/').pop();
-                            return `
-                                <div class="photo-manager-card">
-                                    <a href="/storage/${photo}" target="_blank">
-                                        <img src="/storage/${photo}" alt="Foto progres" class="photo-manager-thumb">
-                                    </a>
-                                    <div class="photo-manager-body">
-                                        <div class="photo-manager-name">${fileName}</div>
-                                        <div class="photo-manager-meta">Tersimpan di sistem</div>
-                                        <div class="d-flex gap-2">
-                                            <a href="/storage/${photo}" target="_blank" class="btn btn-outline-dark btn-sm rounded-pill flex-fill">Lihat</a>
-                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill flex-fill btn-delete-existing" data-photo="${photo}">
-                                                Hapus
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-
-                    const newRows = modalPhotoState.newFiles.map((file, index) => `
-                        <div class="photo-manager-card">
-                            <div class="photo-manager-placeholder">
-                                <i class="fas fa-image"></i>
-                            </div>
-                            <div class="photo-manager-body">
-                                <div class="photo-manager-name">${file.name}</div>
-                                <div class="photo-manager-meta">Baru ditambahkan, belum disimpan</div>
-                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill w-100 btn-delete-new" data-index="${index}">
-                                    Hapus dari List
-                                </button>
-                            </div>
-                        </div>
-                    `);
-
-                    const rows = [...existingRows, ...newRows];
-                    const totalPhotos = activeExisting.length + modalPhotoState.newFiles.length;
-                    photoListCounter.innerText = `${totalPhotos} foto`;
-                    if (!rows.length) {
+                    photoListCounter.innerText = `${Array.isArray(photos) ? photos.length : 0} foto`;
+                    if (!Array.isArray(photos) || !photos.length) {
                         tableBody.innerHTML = `
                             <div class="photo-manager-empty">
                                 <i class="fas fa-images fa-2x mb-3 opacity-50"></i>
-                                <div class="fw-bold mb-1">Daftar foto masih kosong</div>
-                                <div class="small">Tambahkan foto ke list agar siap disimpan.</div>
+                                <div class="fw-bold mb-1">Belum ada foto tersimpan</div>
+                                <div class="small">Upload beberapa foto sekaligus melalui form di atas.</div>
                             </div>
                         `;
-                    } else {
-                        tableBody.innerHTML = rows.join('');
+                        return;
                     }
 
-                    deletedExistingWrapper.innerHTML = modalPhotoState.deletedExisting
-                        .map((photo) => `<input type="hidden" name="deleted_existing[]" value="${photo}">`)
-                        .join('');
-
-                    const transfer = new DataTransfer();
-                    modalPhotoState.newFiles.forEach((file) => transfer.items.add(file));
-                    modalPhotoInput.files = transfer.files;
-
-                    tableBody.querySelectorAll('.btn-delete-existing').forEach((deleteButton) => {
-                        deleteButton.addEventListener('click', function() {
-                            modalPhotoState.deletedExisting.push(this.getAttribute('data-photo'));
-                            renderPhotoTable([], statusTarget);
-                        });
-                    });
-
-                    tableBody.querySelectorAll('.btn-delete-new').forEach((deleteButton) => {
-                        deleteButton.addEventListener('click', function() {
-                            modalPhotoState.newFiles.splice(parseInt(this.getAttribute('data-index'), 10), 1);
-                            renderPhotoTable([], statusTarget);
-                        });
-                    });
-
-                    btnSavePhotoList.innerText = 'Simpan Daftar Foto';
+                    tableBody.innerHTML = photos.map((photo) => {
+                        const fileName = photo.split('/').pop();
+                        return `
+                            <div class="photo-manager-card">
+                                <a href="/storage/${photo}" target="_blank">
+                                    <img src="/storage/${photo}" alt="Foto progres" class="photo-manager-thumb">
+                                </a>
+                                <div class="photo-manager-body">
+                                    <div class="photo-manager-name">${fileName}</div>
+                                    <div class="photo-manager-meta">Tersimpan di sistem</div>
+                                    <div class="d-flex gap-2">
+                                        <a href="/storage/${photo}" target="_blank" class="btn btn-outline-dark btn-sm rounded-pill flex-fill">Lihat</a>
+                                        <form method="POST" action="/pengrajin/pesanan/${actionUrl.split('/').pop()}/foto-progres" class="flex-fill">
+                                            @csrf
+                                            @method('DELETE')
+                                            <input type="hidden" name="status_target" value="${statusTarget}">
+                                            <input type="hidden" name="photo_path" value="${photo}">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill w-100">Hapus</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
                 };
 
                 const configureModal = (statusTarget, photos) => {
-                    modalPhotoState = {
-                        existing: Array.isArray(photos) ? [...photos] : [],
-                        deletedExisting: [],
-                        newFiles: [],
-                        orderId: actionUrl.split('/').pop(),
-                        actionUrl: `/pengrajin/pesanan/${actionUrl.split('/').pop()}/foto-progres`,
-                        statusTarget,
-                    };
-
                     modalStatusTarget.value = statusTarget;
-                    uploadForm.action = modalPhotoState.actionUrl;
+                    uploadForm.action = `/pengrajin/pesanan/${actionUrl.split('/').pop()}/foto-progres`;
                     modalTitle.innerText = statusTarget === 'Dikerjakan' ? 'Kelola Foto Dikerjakan' : 'Kelola Foto Selesai';
                     modalSubtitle.innerText = `${id} - ${statusTarget === 'Dikerjakan' ? 'Foto tahap produksi' : 'Foto hasil akhir pesanan'}`;
-                    modalPhotoInput.value = '';
+                    document.getElementById('modal-photo-input').value = '';
                     renderPhotoTable(photos, statusTarget);
                 };
 
                 btnFotoDikerjakan.onclick = () => configureModal('Dikerjakan', fotoDikerjakan);
                 btnFotoSelesai.onclick = () => configureModal('Selesai', fotoSelesai);
-                btnFotoDikerjakan.disabled = false;
-                btnFotoSelesai.disabled = false;
-
-                btnAddPhotoList.onclick = () => {
-                    const pickedFiles = Array.from(modalPhotoInput.files || []);
-                    if (!pickedFiles.length) {
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'Pilih Foto',
-                            text: 'Pilih foto terlebih dahulu.',
-                            confirmButtonColor: '#2c3e50'
-                        });
-                        return;
-                    }
-
-                    modalPhotoState.newFiles.push(...pickedFiles);
-                    modalPhotoInput.value = '';
-                    renderPhotoTable([], modalPhotoState.statusTarget);
-                };
 
                 uploadForm.onsubmit = (event) => {
-                    const remainingExisting = modalPhotoState.existing.filter((photo) => !modalPhotoState.deletedExisting.includes(photo));
-                    if (!remainingExisting.length && !modalPhotoState.newFiles.length) {
+                    if (!document.getElementById('modal-photo-input').files.length) {
                         event.preventDefault();
                         Swal.fire({
                             icon: 'warning',
-                            title: 'Daftar Kosong',
-                            text: 'Minimal harus ada satu foto pada daftar sebelum disimpan.',
+                            title: 'Pilih Foto',
+                            text: 'Pilih minimal satu foto terlebih dahulu.',
                             confirmButtonColor: '#2c3e50'
                         });
-                        return;
                     }
-
-                    event.preventDefault();
-
-                    const formData = new FormData();
-                    formData.append('_token', uploadForm.querySelector('input[name="_token"]').value);
-                    formData.append('status_target', modalPhotoState.statusTarget);
-                    modalPhotoState.deletedExisting.forEach((photo, index) => formData.append(`deleted_existing[${index}]`, photo));
-                    modalPhotoState.newFiles.forEach((file, index) => formData.append(`foto_progres[${index}]`, file, file.name));
-
-                    Swal.fire({
-                        title: 'Menyimpan foto...',
-                        didOpen: () => {
-                            Swal.showLoading();
-                        },
-                        allowOutsideClick: false,
-                        showConfirmButton: false
-                    });
-
-                    fetch(uploadForm.action, {
-                            method: 'POST',
-                            headers: {
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest',
-                            },
-                            body: formData
-                        })
-                        .then(async (response) => {
-                            const data = await response.json().catch(() => ({}));
-                            if (!response.ok) {
-                                const validationMessage = data?.message || Object.values(data?.errors || {})?.flat?.()[0] ||
-                                    'Gagal menyimpan foto progres.';
-                                throw new Error(validationMessage);
-                            }
-                            return data;
-                        })
-                        .then((data) => {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil',
-                                text: data?.message || 'Foto progres berhasil diunggah.',
-                                confirmButtonColor: '#2c3e50'
-                            }).then(() => window.location.reload());
-                        })
-                        .catch((error) => {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Upload Gagal',
-                                text: error?.message || 'Gagal menyimpan foto progres.',
-                                confirmButtonColor: '#2c3e50'
-                            });
-                        });
                 };
 
                 // Reset Timeline Classes
