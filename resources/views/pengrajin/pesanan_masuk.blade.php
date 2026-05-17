@@ -277,6 +277,9 @@
                 if (statusPembayaran === 'paid') {
                     statusElement.innerText = 'Lunas';
                     statusElement.className = 'badge bg-success px-3 py-2';
+                } else if (statusPembayaran === 'dp') {
+                    statusElement.innerText = 'DP 50%';
+                    statusElement.className = 'badge bg-warning text-dark px-3 py-2';
                 } else {
                     statusElement.innerText = 'Belum Dibayar';
                     statusElement.className = 'badge bg-danger px-3 py-2';
