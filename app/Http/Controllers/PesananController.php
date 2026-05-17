@@ -501,13 +501,19 @@ class PesananController extends Controller
     {
         $pesanan = Pesanan::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
         $paymentStep = request()->query('payment_step', 'lunas');
+        $allowedStatusesForDp = ['Diverifikasi'];
+        $allowedStatusesForLunas = ['Diverifikasi', 'Diproses', 'Dikerjakan'];
 
         if (!in_array($paymentStep, ['dp', 'lunas'], true)) {
             return response()->json(['message' => 'Metode pembayaran tidak valid'], 422);
         }
 
-        if ($pesanan->status !== 'Diverifikasi') {
-            return response()->json(['message' => 'Pesanan belum siap dibayar'], 422);
+        if ($paymentStep === 'dp' && !in_array($pesanan->status, $allowedStatusesForDp, true)) {
+            return response()->json(['message' => 'Pesanan belum siap untuk pembayaran DP'], 422);
+        }
+
+        if ($paymentStep === 'lunas' && !in_array($pesanan->status, $allowedStatusesForLunas, true)) {
+            return response()->json(['message' => 'Pelunasan belum tersedia untuk status pesanan saat ini'], 422);
         }
 
         if ($pesanan->status_pembayaran === 'paid') {

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --adira-gold: #C5A47E;
@@ -547,7 +548,12 @@
                 document.getElementById('form-selesai').onsubmit = (event) => {
                     if (paymentStatus !== 'paid') {
                         event.preventDefault();
-                        alert('PEMBELI HARUS MELUNASI TERLEBIH DAHULU');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Pelunasan Diperlukan',
+                            text: 'PEMBELI HARUS MELUNASI TERLEBIH DAHULU',
+                            confirmButtonColor: '#2c3e50'
+                        });
                     }
                 };
 
@@ -672,7 +678,12 @@
                 btnAddPhotoList.onclick = () => {
                     const pickedFiles = Array.from(modalPhotoInput.files || []);
                     if (!pickedFiles.length) {
-                        alert('Pilih foto terlebih dahulu.');
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Pilih Foto',
+                            text: 'Pilih foto terlebih dahulu.',
+                            confirmButtonColor: '#2c3e50'
+                        });
                         return;
                     }
 
@@ -685,7 +696,12 @@
                     const remainingExisting = modalPhotoState.existing.filter((photo) => !modalPhotoState.deletedExisting.includes(photo));
                     if (!remainingExisting.length && !modalPhotoState.newFiles.length) {
                         event.preventDefault();
-                        alert('Minimal harus ada satu foto pada daftar sebelum disimpan.');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Daftar Kosong',
+                            text: 'Minimal harus ada satu foto pada daftar sebelum disimpan.',
+                            confirmButtonColor: '#2c3e50'
+                        });
                     }
                 };
 
