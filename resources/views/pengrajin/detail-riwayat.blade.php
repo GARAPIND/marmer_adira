@@ -85,6 +85,27 @@
         .img-referensi:hover {
             transform: scale(1.02);
         }
+
+        .progress-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+        }
+
+        .progress-gallery a {
+            display: block;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid #eee;
+            background: #fff;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .progress-gallery img {
+            width: 100%;
+            height: 170px;
+            object-fit: cover;
+        }
     </style>
 
     <div class="container py-5 mt-4">
@@ -190,6 +211,34 @@
                         style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 4px solid var(--adira-gold);">
                         "{{ $pesanan->catatan_khusus ?? 'Tidak ada catatan kustomisasi.' }}"
                     </div>
+
+                    <h5 class="section-subtitle mt-5"><i class="fas fa-camera me-2"></i> Foto Progres Pengrajin</h5>
+
+                    <div class="info-label">Saat Dikerjakan</div>
+                    @if (!empty($pesanan->foto_dikerjakan))
+                        <div class="progress-gallery mb-4">
+                            @foreach ($pesanan->foto_dikerjakan as $foto)
+                                <a href="{{ asset('storage/' . $foto) }}" target="_blank">
+                                    <img src="{{ asset('storage/' . $foto) }}" alt="Foto progres dikerjakan">
+                                </a>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-muted small">Belum ada foto saat status dikerjakan.</p>
+                    @endif
+
+                    <div class="info-label">Saat Selesai</div>
+                    @if (!empty($pesanan->foto_selesai))
+                        <div class="progress-gallery mb-4">
+                            @foreach ($pesanan->foto_selesai as $foto)
+                                <a href="{{ asset('storage/' . $foto) }}" target="_blank">
+                                    <img src="{{ asset('storage/' . $foto) }}" alt="Foto pesanan selesai">
+                                </a>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-muted small">Belum ada foto saat status selesai.</p>
+                    @endif
 
                     <h5 class="section-subtitle mt-5"><i class="fas fa-clock me-2"></i> Informasi Waktu Pengerjaan</h5>
                     <div class="time-box">

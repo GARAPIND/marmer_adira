@@ -12,6 +12,22 @@ use Illuminate\Support\Facades\Auth;
 
 class PengrajinController extends Controller
 {
+    private function uploadProgressPhotos(Request $request, Pesanan $pesanan, string $field): array
+    {
+        $existingPhotos = $pesanan->{$field} ?? [];
+
+        if (!is_array($existingPhotos)) {
+            $existingPhotos = [];
+        }
+
+        $uploadedPhotos = [];
+        foreach ($request->file('foto_progres', []) as $file) {
+            $uploadedPhotos[] = $file->store('pesanan/progress', 'public');
+        }
+
+        return array_values(array_merge($existingPhotos, $uploadedPhotos));
+    }
+
     public function dashboard()
     {
         $stats = [
@@ -168,7 +184,39 @@ class PengrajinController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $pesanan = Pesanan::findOrFail($id);
-        $pesanan->update(['status' => $request->status, 'tgl_update_proses' => now()]);
+        $validated = $request->validate([
+            'status' => 'required|in:Diproses,Dikerjakan,Selesai,diekspedisi',
+            'foto_progres' => 'nullable|array',
+            'foto_progres.*' => 'image|mimes:jpg,jpeg,png|max:4096',
+        ], [
+            'foto_progres.*.image' => 'Setiap file foto progres harus berupa gambar.',
+            'foto_progres.*.mimes' => 'Foto progres harus berformat jpg, jpeg, atau png.',
+            'foto_progres.*.max' => 'Ukuran setiap foto progres maksimal 4MB.',
+        ]);
+
+        if (in_array($validated['status'], ['Dikerjakan', 'Selesai'], true) && !$request->hasFile('foto_progres')) {
+            return redirect()->back()->withInput()->with('error', 'Foto progres wajib diunggah saat status Dikerjakan atau Selesai.');
+        }
+
+        if ($validated['status'] === 'Selesai' && $pesanan->status_pembayaran !== 'paid') {
+            return redirect()->back()->withInput()->with('error', 'Pesanan belum bisa diselesaikan karena pembayaran belum lunas.');
+        }
+
+        $updatePayload = [
+            'status' => $validated['status'],
+            'tgl_update_proses' => now(),
+        ];
+
+        if ($validated['status'] === 'Dikerjakan' && $request->hasFile('foto_progres')) {
+            $updatePayload['foto_dikerjakan'] = $this->uploadProgressPhotos($request, $pesanan, 'foto_dikerjakan');
+        }
+
+        if ($validated['status'] === 'Selesai' && $request->hasFile('foto_progres')) {
+            $updatePayload['foto_selesai'] = $this->uploadProgressPhotos($request, $pesanan, 'foto_selesai');
+        }
+
+        $pesanan->update($updatePayload);
+
         return redirect()->back()->with('success', 'Status diperbarui.');
     }
 

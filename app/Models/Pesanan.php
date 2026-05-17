@@ -21,6 +21,8 @@ class Pesanan extends Model
         'jenis_marmer',
         'catatan_khusus',
         'gambar_referensi',
+        'foto_dikerjakan',
+        'foto_selesai',
         'jumlah',
         'berat_satuan',
         'total_berat',
@@ -51,6 +53,8 @@ class Pesanan extends Model
 
     protected $casts = [
         'is_custom' => 'boolean',
+        'foto_dikerjakan' => 'array',
+        'foto_selesai' => 'array',
         'berat_satuan' => 'float',
         'total_berat' => 'float',
         'tanggal_bayar' => 'datetime',

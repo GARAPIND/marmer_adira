@@ -96,6 +96,24 @@
             background-color: #b08d44;
             transform: translateY(-2px);
         }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .photo-grid a {
+            display: block;
+        }
+
+        .photo-grid img {
+            width: 100%;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid #eee;
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -117,6 +135,18 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4">
+                <i class="fas fa-circle-exclamation me-2"></i> {{ session('error') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4">
+                <i class="fas fa-circle-exclamation me-2"></i> {{ $errors->first() }}
+            </div>
+        @endif
+
         <div class="row g-4">
             {{-- SISI KIRI: TABEL PEMANTAUAN --}}
             <div class="col-lg-8">
@@ -132,6 +162,7 @@
                                     <th>Jumlah</th>
                                     <th>Bahan</th>
                                     <th>Gambar</th>
+                                    <th>Pembayaran</th>
                                     <th>Status</th>
                                     <th class="pe-4 text-center">Aksi</th>
                                 </tr>
@@ -171,6 +202,13 @@
 
                                         <td>
                                             <span
+                                                class="badge {{ $item->status_pembayaran === 'paid' ? 'bg-success text-success' : ($item->status_pembayaran === 'dp' ? 'bg-warning text-warning' : 'bg-danger text-danger') }} bg-opacity-10 px-3 py-2 rounded-pill fw-bold">
+                                                {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'DP 50%' : 'Belum Bayar') }}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <span
                                                 class="badge {{ $item->status == 'Dikerjakan' ? 'bg-warning' : 'bg-primary' }} bg-opacity-10 {{ $item->status == 'Dikerjakan' ? 'text-warning' : 'text-primary' }} px-3 py-2 rounded-pill fw-bold">
                                                 {{ $item->status }}
                                             </span>
@@ -181,6 +219,9 @@
                                                 class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold btn-lihat-detail"
                                                 data-id="ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}"
                                                 data-status="{{ $item->status }}"
+                                                data-payment-status="{{ $item->status_pembayaran }}"
+                                                data-foto-dikerjakan='@json($item->foto_dikerjakan ?? [])'
+                                                data-foto-selesai='@json($item->foto_selesai ?? [])'
                                                 data-action="{{ route('pengrajin.update.status', $item->id) }}">
                                                 Lihat Detail
                                             </button>
@@ -188,7 +229,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-center py-5 text-muted italic">
+                                        <td colspan="10" class="text-center py-5 text-muted italic">
                                             Tidak ada pesanan yang sedang dalam proses.
                                         </td>
                                     </tr>
@@ -221,22 +262,50 @@
                         </div>
                     </div>
 
+                    <div class="alert alert-light border rounded-4 small mb-4">
+                        Upload foto wajib saat pindah ke `Dikerjakan` dan `Selesai`. Status `Selesai` hanya bisa dipilih jika
+                        pesanan sudah lunas.
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="small fw-bold text-uppercase text-muted mb-3">Status Pembayaran:</h6>
+                        <span id="payment-badge" class="badge bg-secondary px-3 py-2 rounded-pill">-</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="small fw-bold text-uppercase text-muted mb-3">Foto Progres Dikerjakan:</h6>
+                        <div id="preview-foto-dikerjakan" class="photo-grid">
+                            <span class="text-muted small">Belum ada foto.</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="small fw-bold text-uppercase text-muted mb-3">Foto Hasil Selesai:</h6>
+                        <div id="preview-foto-selesai" class="photo-grid">
+                            <span class="text-muted small">Belum ada foto.</span>
+                        </div>
+                    </div>
+
                     <div class="row g-2">
                         <div class="col-6">
-                            <form id="form-dikerjakan" method="POST" action="">
+                            <form id="form-dikerjakan" method="POST" action="" enctype="multipart/form-data">
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
                                 <input type="hidden" name="status" value="Dikerjakan">
+                                <input type="file" name="foto_progres[]" class="form-control mb-2" multiple
+                                    accept=".jpg,.jpeg,.png">
                                 <button type="submit" class="btn btn-outline-dark w-100 py-2 fw-bold small rounded-pill">
                                     Mulai Pengerjaan
                                 </button>
                             </form>
                         </div>
                         <div class="col-6">
-                            <form id="form-selesai" method="POST" action="">
+                            <form id="form-selesai" method="POST" action="" enctype="multipart/form-data">
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
                                 <input type="hidden" name="status" value="Selesai">
+                                <input type="file" name="foto_progres[]" class="form-control mb-2" multiple
+                                    accept=".jpg,.jpeg,.png">
                                 <button type="submit" class="btn btn-gold w-100 py-2 fw-bold small rounded-pill shadow-sm">
                                     Tandai Selesai
                                 </button>
@@ -274,10 +343,45 @@
                 const id = this.getAttribute('data-id');
                 const status = this.getAttribute('data-status');
                 const actionUrl = this.getAttribute('data-action');
+                const paymentStatus = this.getAttribute('data-payment-status');
+                const fotoDikerjakan = JSON.parse(this.getAttribute('data-foto-dikerjakan') || '[]');
+                const fotoSelesai = JSON.parse(this.getAttribute('data-foto-selesai') || '[]');
+                const paymentBadge = document.getElementById('payment-badge');
+                const fotoDikerjakanContainer = document.getElementById('preview-foto-dikerjakan');
+                const fotoSelesaiContainer = document.getElementById('preview-foto-selesai');
+                const tombolSelesai = document.querySelector('#form-selesai button[type="submit"]');
 
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('form-dikerjakan').action = actionUrl;
                 document.getElementById('form-selesai').action = actionUrl;
+
+                if (paymentStatus === 'paid') {
+                    paymentBadge.innerText = 'Lunas';
+                    paymentBadge.className = 'badge bg-success px-3 py-2 rounded-pill';
+                    tombolSelesai.disabled = false;
+                } else if (paymentStatus === 'dp') {
+                    paymentBadge.innerText = 'DP 50%';
+                    paymentBadge.className = 'badge bg-warning text-dark px-3 py-2 rounded-pill';
+                    tombolSelesai.disabled = true;
+                } else {
+                    paymentBadge.innerText = 'Belum Bayar';
+                    paymentBadge.className = 'badge bg-danger px-3 py-2 rounded-pill';
+                    tombolSelesai.disabled = true;
+                }
+
+                const renderPhotos = (container, photos) => {
+                    if (!Array.isArray(photos) || !photos.length) {
+                        container.innerHTML = '<span class="text-muted small">Belum ada foto.</span>';
+                        return;
+                    }
+
+                    container.innerHTML = photos.map((photo) =>
+                        `<a href="/storage/${photo}" target="_blank"><img src="/storage/${photo}" alt="Foto progres"></a>`
+                    ).join('');
+                };
+
+                renderPhotos(fotoDikerjakanContainer, fotoDikerjakan);
+                renderPhotos(fotoSelesaiContainer, fotoSelesai);
 
                 // Reset Timeline Classes
                 const steps = ['step-diproses', 'step-dikerjakan', 'step-selesai'];

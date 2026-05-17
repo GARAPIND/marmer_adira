@@ -80,6 +80,24 @@
             border-radius: 12px;
         }
 
+        .progress-photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .progress-photo-grid a {
+            display: block;
+        }
+
+        .progress-photo-grid img {
+            width: 100%;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid #eee;
+        }
+
         /* Custom SweetAlert Style */
         .swal2-popup {
             border-radius: 25px !important;
@@ -347,6 +365,20 @@
                                 </div>
                             </div>
 
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold text-uppercase d-block mb-2">Foto Saat Dikerjakan</label>
+                                <div id="det-foto-dikerjakan" class="progress-photo-grid">
+                                    <span class="text-muted small">Belum ada foto progres.</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold text-uppercase d-block mb-2">Foto Saat Selesai</label>
+                                <div id="det-foto-selesai" class="progress-photo-grid">
+                                    <span class="text-muted small">Belum ada foto hasil.</span>
+                                </div>
+                            </div>
+
                             <div class="alert alert-secondary border-0 py-2 small d-flex align-items-center rounded-3">
                                 <i class="fas fa-truck me-2 text-dark"></i>
                                 <div>
@@ -402,6 +434,8 @@
             const waktuBayar = document.getElementById('det-waktu-bayar');
             const waktuLunas = document.getElementById('det-waktu-lunas');
             const paymentHistory = document.getElementById('det-payment-history');
+            const fotoDikerjakan = document.getElementById('det-foto-dikerjakan');
+            const fotoSelesai = document.getElementById('det-foto-selesai');
             const formatter = new Intl.NumberFormat('id-ID', {
                 style: 'currency',
                 currency: 'IDR',
@@ -460,6 +494,20 @@
             } else {
                 paymentHistory.innerHTML = 'Belum ada riwayat pembayaran.';
             }
+
+            const renderPhotos = (container, photos, emptyText) => {
+                if (!Array.isArray(photos) || !photos.length) {
+                    container.innerHTML = `<span class="text-muted small">${emptyText}</span>`;
+                    return;
+                }
+
+                container.innerHTML = photos.map((photo) =>
+                    `<a href="/storage/${photo}" target="_blank"><img src="/storage/${photo}" alt="Foto progres pesanan"></a>`
+                ).join('');
+            };
+
+            renderPhotos(fotoDikerjakan, data.foto_dikerjakan || [], 'Belum ada foto progres.');
+            renderPhotos(fotoSelesai, data.foto_selesai || [], 'Belum ada foto hasil.');
 
             if (data.status == 'Menunggu Verifikasi Admin') {
                 document.getElementById('det-harga-produk').innerText = formatter.format(data.total_harga);

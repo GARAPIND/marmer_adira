@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
@@ -283,6 +284,7 @@
                                             <input type="number" name="biaya_pengiriman" id="input_ongkir"
                                                 class="form-control border-danger" value="0">
                                         </div>
+                                        <small id="ongkir_calc_hint" class="text-muted d-block mt-2"></small>
                                     </div>
 
                                     <div class="mb-4" id="form_verification">
@@ -328,6 +330,70 @@
     </div>
 
     <script>
+        let activeAdminOrder = null;
+
+        function getAdminCsrf() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
+
+        function parseDecimalInput(value) {
+            return parseFloat(String(value ?? '').replace(',', '.'));
+        }
+
+        async function recalculateAdminShipping() {
+            const hint = document.getElementById('ongkir_calc_hint');
+            const inputOngkir = document.getElementById('input_ongkir');
+
+            if (!activeAdminOrder || activeAdminOrder.metode_pengambilan !== 'dikirim') {
+                hint.innerText = '';
+                return;
+            }
+
+            const beratSatuan = parseDecimalInput(document.getElementById('input_berat_satuan').value);
+            if (!Number.isFinite(beratSatuan) || beratSatuan <= 0) {
+                inputOngkir.value = 0;
+                hint.innerText = 'Isi berat satuan agar ongkir bisa dihitung otomatis.';
+                return;
+            }
+
+            hint.innerText = 'Menghitung ongkir otomatis...';
+
+            try {
+                const response = await fetch(`/admin/pesanan/${activeAdminOrder.id}/hitung-ongkir`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': getAdminCsrf(),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        berat_satuan: document.getElementById('input_berat_satuan').value,
+                    }),
+                });
+
+                const json = await response.json();
+                if (!response.ok) {
+                    throw new Error(json.message || 'Gagal menghitung ongkir otomatis.');
+                }
+
+                inputOngkir.value = parseInt(json.biaya_pengiriman || 0, 10) || 0;
+
+                const calc = json.calculation || {};
+                if (calc.jenis_pengiriman === 'cargo') {
+                    const service = calc.service ? ` ${calc.service}` : '';
+                    hint.innerText =
+                        `Otomatis via ${calc.courier || 'cargo'}${service}. Berat total ${Number(json.total_berat || 0).toFixed(2)} kg.`;
+                } else if (calc.jenis_pengiriman === 'bus') {
+                    hint.innerText =
+                        `Otomatis via bus ${calc.terminal || ''}: ${Number(json.total_berat || 0).toFixed(2)} kg x Rp ${(calc.tarif_per_kg || 0).toLocaleString('id-ID')}/kg.`;
+                } else {
+                    hint.innerText = json.summary || 'Ongkir dihitung otomatis.';
+                }
+            } catch (error) {
+                hint.innerText = error.message;
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", function() {
             const statusSelect = document.querySelector('select[name="status"]');
             const alasanForm = document.getElementById('form_alasan');
@@ -351,6 +417,7 @@
         });
 
         function showDetailAdmin(data) {
+            activeAdminOrder = data;
             const modal = new bootstrap.Modal(document.getElementById('modalDetailPesanan'));
 
             document.getElementById('md-nama').innerText = data.user.name;
@@ -374,16 +441,19 @@
             const alamatSection = document.getElementById('md-alamat-section');
             const ongkirGroup = document.getElementById('group-ongkir');
             const inputOngkir = document.getElementById('input_ongkir');
+            const ongkirHint = document.getElementById('ongkir_calc_hint');
 
             if (data.metode_pengambilan === 'dikirim') {
                 alamatSection.style.display = 'block';
                 document.getElementById('md-alamat').innerText = data.alamat_pengiriman || 'Alamat terminal belum diisi';
                 ongkirGroup.style.display = 'block';
                 inputOngkir.value = data.biaya_pengiriman > 0 ? data.biaya_pengiriman : 0;
+                ongkirHint.innerText = 'Isi atau ubah berat satuan untuk menghitung ongkir otomatis.';
             } else {
                 alamatSection.style.display = 'none';
                 ongkirGroup.style.display = 'none';
                 inputOngkir.value = 0;
+                ongkirHint.innerText = '';
             }
 
             const verificationForm = document.getElementById('form_verification');
@@ -413,7 +483,13 @@
 
             inputHarga.readOnly = !isVerify;
             inputOngkir.readOnly = !isVerify;
-            document.getElementById('input_berat_satuan').readOnly = !isVerify;
+            const inputBerat = document.getElementById('input_berat_satuan');
+            inputBerat.readOnly = !isVerify;
+            inputBerat.oninput = isVerify ? recalculateAdminShipping : null;
+
+            if (isVerify && data.metode_pengambilan === 'dikirim' && parseDecimalInput(inputBerat.value) > 0) {
+                recalculateAdminShipping();
+            }
 
             modal.show();
         }
