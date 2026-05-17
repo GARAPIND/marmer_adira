@@ -259,10 +259,11 @@ class PengrajinController extends Controller
 
         $validated = $request->validate([
             'status_target' => 'required|in:Dikerjakan,Selesai',
-            'foto_progres' => 'required|array|min:1',
+            'foto_progres' => 'nullable|array',
             'foto_progres.*' => 'image|mimes:jpg,jpeg,png|max:4096',
+            'deleted_existing' => 'nullable|array',
+            'deleted_existing.*' => 'string',
         ], [
-            'foto_progres.required' => 'Pilih minimal satu foto untuk diunggah.',
             'foto_progres.*.image' => 'Setiap file foto progres harus berupa gambar.',
             'foto_progres.*.mimes' => 'Foto progres harus berformat jpg, jpeg, atau png.',
             'foto_progres.*.max' => 'Ukuran setiap foto progres maksimal 4MB.',
@@ -273,9 +274,26 @@ class PengrajinController extends Controller
             return redirect()->back()->with('error', 'Status foto tidak valid.');
         }
 
-        $pesanan->update([
-            $field => $this->uploadProgressPhotos($request, $pesanan, $field),
-        ]);
+        $photos = $pesanan->{$field} ?? [];
+        if (!is_array($photos)) {
+            $photos = [];
+        }
+
+        foreach ($validated['deleted_existing'] ?? [] as $photoPath) {
+            $photos = $this->removeProgressPhoto($pesanan->forceFill([$field => $photos]), $field, $photoPath);
+        }
+
+        $pesanan->forceFill([$field => $photos]);
+
+        if ($request->hasFile('foto_progres')) {
+            $photos = $this->uploadProgressPhotos($request, $pesanan, $field);
+        }
+
+        if (count($photos) === 0) {
+            return redirect()->back()->with('error', 'Minimal harus ada satu foto pada daftar sebelum disimpan.');
+        }
+
+        $pesanan->update([$field => $photos]);
 
         return redirect()->back()->with('success', 'Foto progres berhasil diunggah.');
     }

@@ -103,6 +103,73 @@
             font-size: 0.7rem;
             text-transform: uppercase;
         }
+
+        .progress-photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .progress-photo-grid a {
+            display: block;
+        }
+
+        .progress-photo-grid img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid #eee;
+        }
+
+        .detail-soft-card {
+            background: linear-gradient(180deg, #fcfbf8 0%, #f7f3ec 100%);
+            border: 1px solid rgba(197, 164, 126, 0.18);
+            border-radius: 18px;
+            padding: 16px;
+        }
+
+        .detail-info-card {
+            background: #fff;
+            border: 1px solid rgba(44, 62, 80, 0.08);
+            border-radius: 16px;
+            padding: 14px;
+            height: 100%;
+        }
+
+        .buyer-photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 14px;
+        }
+
+        .buyer-photo-card {
+            background: #fff;
+            border: 1px solid rgba(44, 62, 80, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 24px rgba(44, 62, 80, 0.05);
+        }
+
+        .buyer-photo-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .buyer-photo-card-body {
+            padding: 10px 12px;
+        }
+
+        .buyer-photo-empty {
+            border: 1px dashed rgba(44, 62, 80, 0.2);
+            border-radius: 16px;
+            padding: 22px 16px;
+            text-align: center;
+            color: #7b8794;
+            background: rgba(255, 255, 255, 0.78);
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -216,8 +283,10 @@
                                             @endif
                                         </td>
                                         <td class="text-end pe-4">
-                                            <a href="{{ route('pesanan.index') }}"
-                                                class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold">Pantau</a>
+                                            <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold"
+                                                onclick="showDashboardDetail({{ json_encode($item) }})">
+                                                Detail
+                                            </button>
                                         </td>
                                     </tr>
                                 @empty
@@ -251,7 +320,109 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modalDetailFotoPembeli" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 overflow-hidden">
+                <div class="modal-header bg-dark text-white">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-1">Detail Progres Pesanan</h5>
+                        <small id="dashboard-det-id" class="text-white-50">-</small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="detail-soft-card">
+                        <div class="detail-info-card mb-3">
+                            <div class="small text-muted text-uppercase fw-bold mb-1">Produk</div>
+                            <div id="dashboard-det-produk" class="fw-bold text-dark">-</div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="detail-info-card">
+                                    <div class="small text-muted text-uppercase fw-bold mb-1">Status Pesanan</div>
+                                    <div id="dashboard-det-status" class="fw-semibold text-dark">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-info-card">
+                                    <div class="small text-muted text-uppercase fw-bold mb-1">Status Pembayaran</div>
+                                    <div id="dashboard-det-bayar" class="fw-semibold text-dark">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="detail-info-card mb-4">
+                            <div class="small text-muted text-uppercase fw-bold mb-2">Catatan</div>
+                            <div id="dashboard-det-catatan" class="small">-</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="small text-muted text-uppercase fw-bold">Foto Saat Dikerjakan</div>
+                                <span class="badge bg-light text-dark rounded-pill px-3 py-2">Progress</span>
+                            </div>
+                            <div id="dashboard-foto-dikerjakan" class="buyer-photo-grid"></div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="small text-muted text-uppercase fw-bold">Foto Saat Selesai</div>
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2">Final</span>
+                            </div>
+                            <div id="dashboard-foto-selesai" class="buyer-photo-grid"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                    <a href="{{ route('pesanan.index') }}" class="btn btn-dark rounded-pill px-4 fw-bold">Buka Riwayat Lengkap</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- FontAwesome & Animate.css --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <script>
+        function showDashboardDetail(data) {
+            const modal = new bootstrap.Modal(document.getElementById('modalDetailFotoPembeli'));
+            const renderPhotos = (containerId, photos, emptyText) => {
+                const container = document.getElementById(containerId);
+                if (!Array.isArray(photos) || !photos.length) {
+                    container.innerHTML = `
+                        <div class="buyer-photo-empty">
+                            <i class="fas fa-images fa-2x mb-3 opacity-50"></i>
+                            <div class="fw-bold mb-1">Belum ada foto</div>
+                            <div class="small">${emptyText}</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = photos.map((photo) =>
+                    `<div class="buyer-photo-card">
+                        <a href="/storage/${photo}" target="_blank">
+                            <img src="/storage/${photo}" alt="Foto progres pesanan">
+                        </a>
+                        <div class="buyer-photo-card-body">
+                            <a href="/storage/${photo}" target="_blank" class="btn btn-outline-dark btn-sm rounded-pill w-100">Lihat Foto</a>
+                        </div>
+                    </div>`
+                ).join('');
+            };
+
+            document.getElementById('dashboard-det-id').innerText = 'ORD-' + data.id.toString().padStart(3, '0');
+            document.getElementById('dashboard-det-produk').innerText = data.nama_produk || '-';
+            document.getElementById('dashboard-det-status').innerText = data.status || '-';
+            document.getElementById('dashboard-det-bayar').innerText = data.status_pembayaran === 'paid' ? 'Lunas' :
+                (data.status_pembayaran === 'dp' ? 'Dibayar DP 50%' : 'Belum Bayar');
+            document.getElementById('dashboard-det-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan tambahan.';
+
+            renderPhotos('dashboard-foto-dikerjakan', data.foto_dikerjakan || [], 'Belum ada foto progres.');
+            renderPhotos('dashboard-foto-selesai', data.foto_selesai || [], 'Belum ada foto hasil.');
+
+            modal.show();
+        }
+    </script>
 @endsection

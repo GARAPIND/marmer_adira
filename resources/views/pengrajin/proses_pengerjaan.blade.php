@@ -119,6 +119,83 @@
         .table-photo-list th {
             vertical-align: middle;
         }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .photo-manager-shell {
+            background: linear-gradient(180deg, #fcfbf8 0%, #f6f2eb 100%);
+            border: 1px solid rgba(197, 164, 126, 0.2);
+            border-radius: 20px;
+            padding: 18px;
+        }
+
+        .photo-manager-dropzone {
+            border: 1.5px dashed rgba(44, 62, 80, 0.25);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 18px;
+        }
+
+        .photo-manager-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .photo-manager-card {
+            background: #fff;
+            border: 1px solid rgba(44, 62, 80, 0.08);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 24px rgba(44, 62, 80, 0.06);
+        }
+
+        .photo-manager-thumb {
+            width: 100%;
+            height: 155px;
+            object-fit: cover;
+            background: #eef1f4;
+        }
+
+        .photo-manager-placeholder {
+            width: 100%;
+            height: 155px;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e8ecef 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8a94a0;
+            font-size: 1.6rem;
+        }
+
+        .photo-manager-body {
+            padding: 14px;
+        }
+
+        .photo-manager-name {
+            font-weight: 700;
+            color: var(--adira-dark);
+            word-break: break-word;
+            margin-bottom: 6px;
+        }
+
+        .photo-manager-meta {
+            font-size: 0.78rem;
+            color: #7b8794;
+            margin-bottom: 12px;
+        }
+
+        .photo-manager-empty {
+            border: 1px dashed rgba(44, 62, 80, 0.2);
+            border-radius: 18px;
+            padding: 28px 18px;
+            text-align: center;
+            color: #7b8794;
+            background: rgba(255, 255, 255, 0.78);
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -283,7 +360,7 @@
                             <span class="text-muted small">Belum ada foto.</span>
                         </div>
                         <button type="button" id="btn-foto-dikerjakan"
-                            class="btn btn-outline-dark btn-sm rounded-pill mt-3"
+                            class="btn btn-outline-dark btn-sm rounded-pill mt-3" disabled
                             data-bs-toggle="modal" data-bs-target="#modalFotoProgres">
                             Kelola Foto Dikerjakan
                         </button>
@@ -295,7 +372,7 @@
                             <span class="text-muted small">Belum ada foto.</span>
                         </div>
                         <button type="button" id="btn-foto-selesai"
-                            class="btn btn-outline-dark btn-sm rounded-pill mt-3"
+                            class="btn btn-outline-dark btn-sm rounded-pill mt-3" disabled
                             data-bs-toggle="modal" data-bs-target="#modalFotoProgres">
                             Kelola Foto Selesai
                         </button>
@@ -307,7 +384,7 @@
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
                                 <input type="hidden" name="status" value="Dikerjakan">
-                                <button type="submit" class="btn btn-outline-dark w-100 py-2 fw-bold small rounded-pill">
+                                <button type="submit" class="btn btn-outline-dark w-100 py-2 fw-bold small rounded-pill" disabled>
                                     Mulai Pengerjaan
                                 </button>
                             </form>
@@ -317,7 +394,7 @@
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
                                 <input type="hidden" name="status" value="Selesai">
-                                <button type="submit" class="btn btn-gold w-100 py-2 fw-bold small rounded-pill shadow-sm">
+                                <button type="submit" class="btn btn-gold w-100 py-2 fw-bold small rounded-pill shadow-sm" disabled>
                                     Tandai Selesai
                                 </button>
                             </form>
@@ -349,39 +426,43 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body pt-3">
-                    <form id="form-upload-foto" method="POST" action="" enctype="multipart/form-data" class="mb-4">
+                    <form id="form-upload-foto" method="POST" action="" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="status_target" id="modal-status-target" value="">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-md-8">
-                                <label class="form-label small fw-bold">Upload Foto</label>
-                                <input type="file" name="foto_progres[]" class="form-control" multiple
-                                    accept=".jpg,.jpeg,.png" required>
+                        <div id="deleted-existing-wrapper"></div>
+                        <div class="photo-manager-shell">
+                            <div class="photo-manager-dropzone mb-4">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-uppercase text-muted">Pilih Foto</label>
+                                        <input type="file" id="modal-photo-input" class="form-control" multiple
+                                            accept=".jpg,.jpeg,.png">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="button" id="btn-add-photo-list" class="btn btn-outline-dark w-100 rounded-pill">
+                                            Tambah ke List
+                                        </button>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="submit" id="btn-save-photo-list" class="btn btn-dark w-100 rounded-pill">
+                                            Simpan Daftar Foto
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-muted small mb-0 mt-3">Susun dulu daftar foto di bawah. Yang tersisa di daftar inilah yang akan disimpan.</p>
                             </div>
-                            <div class="col-md-4">
-                                <button type="submit" class="btn btn-dark w-100 rounded-pill">
-                                    Upload Foto
-                                </button>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="fw-bold mb-1">Daftar Foto</h6>
+                                    <p class="text-muted small mb-0">Kelola foto tersimpan dan foto baru dalam satu tampilan.</p>
+                                </div>
+                                <span id="photo-list-counter" class="badge bg-dark rounded-pill px-3 py-2">0 foto</span>
                             </div>
+
+                            <div id="modal-photo-table-body" class="photo-manager-grid"></div>
                         </div>
                     </form>
-
-                    <div class="table-responsive">
-                        <table class="table table-photo-list align-middle">
-                            <thead>
-                                <tr>
-                                    <th style="width: 90px;">Preview</th>
-                                    <th>Nama File</th>
-                                    <th style="width: 180px;">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="modal-photo-table-body">
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted py-4">Belum ada foto.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
         </div>
@@ -398,6 +479,16 @@
                 });
             });
         });
+
+        let modalPhotoState = {
+            existing: [],
+            deletedExisting: [],
+            newFiles: [],
+            orderId: null,
+            actionUrl: '',
+            statusTarget: '',
+        };
+
         document.querySelectorAll('.btn-lihat-detail').forEach(button => {
             button.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
@@ -410,6 +501,7 @@
                 const fotoDikerjakanContainer = document.getElementById('preview-foto-dikerjakan');
                 const fotoSelesaiContainer = document.getElementById('preview-foto-selesai');
                 const tombolSelesai = document.querySelector('#form-selesai button[type="submit"]');
+                const tombolDikerjakan = document.querySelector('#form-dikerjakan button[type="submit"]');
                 const uploadForm = document.getElementById('form-upload-foto');
                 const modalStatusTarget = document.getElementById('modal-status-target');
                 const modalTitle = document.getElementById('modal-foto-title');
@@ -417,10 +509,16 @@
                 const tableBody = document.getElementById('modal-photo-table-body');
                 const btnFotoDikerjakan = document.getElementById('btn-foto-dikerjakan');
                 const btnFotoSelesai = document.getElementById('btn-foto-selesai');
+                const deletedExistingWrapper = document.getElementById('deleted-existing-wrapper');
+                const modalPhotoInput = document.getElementById('modal-photo-input');
+                const btnAddPhotoList = document.getElementById('btn-add-photo-list');
+                const btnSavePhotoList = document.getElementById('btn-save-photo-list');
+                const photoListCounter = document.getElementById('photo-list-counter');
 
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('form-dikerjakan').action = actionUrl;
                 document.getElementById('form-selesai').action = actionUrl;
+                tombolDikerjakan.disabled = false;
 
                 if (paymentStatus === 'paid') {
                     paymentBadge.innerText = 'Lunas';
@@ -451,44 +549,128 @@
                 renderPhotos(fotoSelesaiContainer, fotoSelesai);
 
                 const renderPhotoTable = (photos, statusTarget) => {
-                    if (!Array.isArray(photos) || !photos.length) {
-                        tableBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Belum ada foto.</td></tr>';
-                        return;
+                    const activeExisting = modalPhotoState.existing
+                        .filter((photo) => !modalPhotoState.deletedExisting.includes(photo));
+                    const existingRows = modalPhotoState.existing
+                        .filter((photo) => !modalPhotoState.deletedExisting.includes(photo))
+                        .map((photo) => {
+                            const fileName = photo.split('/').pop();
+                            return `
+                                <div class="photo-manager-card">
+                                    <a href="/storage/${photo}" target="_blank">
+                                        <img src="/storage/${photo}" alt="Foto progres" class="photo-manager-thumb">
+                                    </a>
+                                    <div class="photo-manager-body">
+                                        <div class="photo-manager-name">${fileName}</div>
+                                        <div class="photo-manager-meta">Tersimpan di sistem</div>
+                                        <div class="d-flex gap-2">
+                                            <a href="/storage/${photo}" target="_blank" class="btn btn-outline-dark btn-sm rounded-pill flex-fill">Lihat</a>
+                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill flex-fill btn-delete-existing" data-photo="${photo}">
+                                                Hapus
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                    const newRows = modalPhotoState.newFiles.map((file, index) => `
+                        <div class="photo-manager-card">
+                            <div class="photo-manager-placeholder">
+                                <i class="fas fa-image"></i>
+                            </div>
+                            <div class="photo-manager-body">
+                                <div class="photo-manager-name">${file.name}</div>
+                                <div class="photo-manager-meta">Baru ditambahkan, belum disimpan</div>
+                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill w-100 btn-delete-new" data-index="${index}">
+                                    Hapus dari List
+                                </button>
+                            </div>
+                        </div>
+                    `);
+
+                    const rows = [...existingRows, ...newRows];
+                    const totalPhotos = activeExisting.length + modalPhotoState.newFiles.length;
+                    photoListCounter.innerText = `${totalPhotos} foto`;
+                    if (!rows.length) {
+                        tableBody.innerHTML = `
+                            <div class="photo-manager-empty">
+                                <i class="fas fa-images fa-2x mb-3 opacity-50"></i>
+                                <div class="fw-bold mb-1">Daftar foto masih kosong</div>
+                                <div class="small">Tambahkan foto ke list agar siap disimpan.</div>
+                            </div>
+                        `;
+                    } else {
+                        tableBody.innerHTML = rows.join('');
                     }
 
-                    tableBody.innerHTML = photos.map((photo) => {
-                        const fileName = photo.split('/').pop();
-                        return `
-                            <tr>
-                                <td><a href="/storage/${photo}" target="_blank"><img src="/storage/${photo}" alt="Foto progres" class="img-fluid rounded" style="height:60px; width:60px; object-fit:cover;"></a></td>
-                                <td>${fileName}</td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <a href="/storage/${photo}" target="_blank" class="btn btn-outline-dark btn-sm rounded-pill">Lihat</a>
-                                        <form method="POST" action="/pengrajin/pesanan/${actionUrl.split('/').pop()}/foto-progres" onsubmit="return confirm('Hapus foto ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <input type="hidden" name="status_target" value="${statusTarget}">
-                                            <input type="hidden" name="photo_path" value="${photo}">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">Hapus</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
+                    deletedExistingWrapper.innerHTML = modalPhotoState.deletedExisting
+                        .map((photo) => `<input type="hidden" name="deleted_existing[]" value="${photo}">`)
+                        .join('');
+
+                    const transfer = new DataTransfer();
+                    modalPhotoState.newFiles.forEach((file) => transfer.items.add(file));
+                    modalPhotoInput.files = transfer.files;
+
+                    tableBody.querySelectorAll('.btn-delete-existing').forEach((deleteButton) => {
+                        deleteButton.addEventListener('click', function() {
+                            modalPhotoState.deletedExisting.push(this.getAttribute('data-photo'));
+                            renderPhotoTable([], statusTarget);
+                        });
+                    });
+
+                    tableBody.querySelectorAll('.btn-delete-new').forEach((deleteButton) => {
+                        deleteButton.addEventListener('click', function() {
+                            modalPhotoState.newFiles.splice(parseInt(this.getAttribute('data-index'), 10), 1);
+                            renderPhotoTable([], statusTarget);
+                        });
+                    });
+
+                    btnSavePhotoList.innerText = 'Simpan Daftar Foto';
                 };
 
                 const configureModal = (statusTarget, photos) => {
+                    modalPhotoState = {
+                        existing: Array.isArray(photos) ? [...photos] : [],
+                        deletedExisting: [],
+                        newFiles: [],
+                        orderId: actionUrl.split('/').pop(),
+                        actionUrl: `/pengrajin/pesanan/${actionUrl.split('/').pop()}/foto-progres`,
+                        statusTarget,
+                    };
+
                     modalStatusTarget.value = statusTarget;
-                    uploadForm.action = `/pengrajin/pesanan/${actionUrl.split('/').pop()}/foto-progres`;
+                    uploadForm.action = modalPhotoState.actionUrl;
                     modalTitle.innerText = statusTarget === 'Dikerjakan' ? 'Kelola Foto Dikerjakan' : 'Kelola Foto Selesai';
                     modalSubtitle.innerText = `${id} - ${statusTarget === 'Dikerjakan' ? 'Foto tahap produksi' : 'Foto hasil akhir pesanan'}`;
+                    modalPhotoInput.value = '';
                     renderPhotoTable(photos, statusTarget);
                 };
 
                 btnFotoDikerjakan.onclick = () => configureModal('Dikerjakan', fotoDikerjakan);
                 btnFotoSelesai.onclick = () => configureModal('Selesai', fotoSelesai);
+                btnFotoDikerjakan.disabled = false;
+                btnFotoSelesai.disabled = false;
+
+                btnAddPhotoList.onclick = () => {
+                    const pickedFiles = Array.from(modalPhotoInput.files || []);
+                    if (!pickedFiles.length) {
+                        alert('Pilih foto terlebih dahulu.');
+                        return;
+                    }
+
+                    modalPhotoState.newFiles.push(...pickedFiles);
+                    modalPhotoInput.value = '';
+                    renderPhotoTable([], modalPhotoState.statusTarget);
+                };
+
+                uploadForm.onsubmit = (event) => {
+                    const remainingExisting = modalPhotoState.existing.filter((photo) => !modalPhotoState.deletedExisting.includes(photo));
+                    if (!remainingExisting.length && !modalPhotoState.newFiles.length) {
+                        event.preventDefault();
+                        alert('Minimal harus ada satu foto pada daftar sebelum disimpan.');
+                    }
+                };
 
                 // Reset Timeline Classes
                 const steps = ['step-diproses', 'step-dikerjakan', 'step-selesai'];
