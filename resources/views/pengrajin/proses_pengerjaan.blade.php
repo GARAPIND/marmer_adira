@@ -436,7 +436,7 @@
                                 <div class="row g-3 align-items-end">
                                     <div class="col-md-6">
                                         <label class="form-label small fw-bold text-uppercase text-muted">Pilih Foto</label>
-                                        <input type="file" id="modal-photo-input" class="form-control" multiple
+                                        <input type="file" id="modal-photo-input" name="foto_progres[]" class="form-control" multiple
                                             accept=".jpg,.jpeg,.png">
                                     </div>
                                     <div class="col-md-3">
