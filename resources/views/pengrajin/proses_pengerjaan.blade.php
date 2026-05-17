@@ -436,8 +436,7 @@
                                 <div class="row g-3 align-items-end">
                                     <div class="col-md-8">
                                         <label class="form-label small fw-bold text-uppercase text-muted">Pilih Foto</label>
-                                        <input type="file" id="modal-photo-input" name="foto_progres[]" class="form-control" multiple
-                                            accept="image/*,.jpg,.jpeg,.png">
+                                        <input type="file" id="modal-photo-input" name="foto_progres[]" class="form-control" multiple>
                                         <div id="modal-photo-helper" class="form-text">Bisa pilih 1 foto atau beberapa foto sekaligus.</div>
                                     </div>
                                     <div class="col-md-4">
@@ -622,18 +621,6 @@
                         ? `${totalFiles} foto siap diupload.`
                         : 'Bisa pilih 1 foto atau beberapa foto sekaligus.';
                 });
-
-                uploadForm.onsubmit = (event) => {
-                    if (!modalPhotoInput.files.length) {
-                        event.preventDefault();
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Pilih Foto',
-                            text: 'Pilih minimal satu foto terlebih dahulu.',
-                            confirmButtonColor: '#2c3e50'
-                        });
-                    }
-                };
 
                 // Reset Timeline Classes
                 const steps = ['step-diproses', 'step-dikerjakan', 'step-selesai'];

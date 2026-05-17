@@ -10,7 +10,6 @@ use App\Models\Bahan;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 
 class PengrajinController extends Controller
 {
@@ -305,17 +304,6 @@ class PengrajinController extends Controller
         ]);
 
         $files = $this->extractProgressFiles($request);
-        Validator::make([
-            'foto_progres' => $files,
-        ], [
-            'foto_progres' => 'nullable|array',
-            'foto_progres.*' => 'file|image|mimes:jpg,jpeg,png|max:4096',
-        ], [
-            'foto_progres.*.file' => 'File foto progres tidak valid.',
-            'foto_progres.*.image' => 'Setiap file foto progres harus berupa gambar.',
-            'foto_progres.*.mimes' => 'Foto progres harus berformat jpg, jpeg, atau png.',
-            'foto_progres.*.max' => 'Ukuran setiap foto progres maksimal 4MB.',
-        ])->validate();
 
         $field = $this->getProgressPhotoField($validated['status_target']);
         if ($field === null) {
