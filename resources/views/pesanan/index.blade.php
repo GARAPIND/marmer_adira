@@ -541,6 +541,15 @@
                             ${data.alasan_penolakan || '-'}
                         </div>
                     `;
+                } else if (data.status === 'Selesai' && data.status_pembayaran !== 'paid') {
+                    labelStatus.innerHTML = `
+                    <div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
+                        <i class="fas fa-exclamation-circle me-1"></i> Pengerjaan sudah selesai, tetapi pembeli harus melunasi terlebih dahulu agar pesanan bisa dikirim.
+                    </div>
+                    <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="bayarSekarang(${data.id}, 'lunas')">
+                        <i class="fas fa-money-check-dollar me-2"></i> Bayar Pelunasan
+                    </button>
+                `;
                 } else if (data.status === 'Selesai') {
                     labelStatus.innerHTML =
                         '<span class="badge w-100 bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2"><i class="fas fa-check-circle me-1"></i> Pesanan Selesai</span>';
@@ -580,15 +589,6 @@
                     labelStatus.innerHTML = `
                     <div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
                         <i class="fas fa-exclamation-circle me-1"></i> Pesanan sedang dikerjakan. Pembeli harus melunasi terlebih dahulu agar pesanan bisa dikirim.
-                    </div>
-                    <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="bayarSekarang(${data.id}, 'lunas')">
-                        <i class="fas fa-money-check-dollar me-2"></i> Bayar Pelunasan
-                    </button>
-                `;
-                } else if (data.status === 'Selesai' && data.status_pembayaran !== 'paid') {
-                    labelStatus.innerHTML = `
-                    <div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
-                        <i class="fas fa-exclamation-circle me-1"></i> Pengerjaan sudah selesai. Pembeli harus melunasi terlebih dahulu agar pesanan bisa dikirim.
                     </div>
                     <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="bayarSekarang(${data.id}, 'lunas')">
                         <i class="fas fa-money-check-dollar me-2"></i> Bayar Pelunasan
