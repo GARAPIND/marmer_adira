@@ -145,6 +145,12 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4">
+                <i class="fas fa-circle-exclamation me-2"></i> {{ session('error') }}
+            </div>
+        @endif
+
         <div class="filter-section shadow-sm">
             <form action="{{ route('pengrajin.riwayat') }}" method="GET">
                 <div class="input-group">
@@ -189,8 +195,12 @@
                                             <i class="fas fa-truck-moving me-1"></i> Diekspedisi
                                         </span>
                                     @else
-                                        <span class="status-badge bg-success bg-opacity-10 text-success">
+                                        <span class="status-badge bg-success bg-opacity-10 text-success d-inline-block mb-1">
                                             <i class="fas fa-check-circle me-1"></i> Selesai
+                                        </span>
+                                        <br>
+                                        <span class="status-badge {{ $item->status_pembayaran === 'paid' ? 'bg-success bg-opacity-10 text-success' : ($item->status_pembayaran === 'dp' ? 'bg-warning bg-opacity-10 text-warning' : 'bg-danger bg-opacity-10 text-danger') }}">
+                                            {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'DP 50%' : 'Belum Lunas') }}
                                         </span>
                                     @endif
                                 </td>
@@ -211,7 +221,8 @@
                                             '{{ number_format($item->biaya_pengiriman, 0, ',', '.') }}', 
                                             '{{ number_format($item->total_harga + $item->biaya_pengiriman, 0, ',', '.') }}', 
                                             '{{ $item->alamat_pengiriman }}', 
-                                            {{ $item->id }}
+                                            {{ $item->id }},
+                                            '{{ $item->status_pembayaran }}'
                                         )">
                                                     <i class="fas fa-bus"></i> Kirim
                                                 </button>
@@ -232,7 +243,17 @@
     </div>
 
     <script>
-        function konfirmasiKirimBus(orderId, ongkir, total, tujuan, id) {
+        function konfirmasiKirimBus(orderId, ongkir, total, tujuan, id, statusPembayaran) {
+            if (statusPembayaran !== 'paid') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Pelunasan Diperlukan',
+                    text: 'PEMBELI HARUS MELUNASI TERLEBIH DAHULU SEBELUM PESANAN DIKIRIM.',
+                    confirmButtonColor: '#2c3e50'
+                });
+                return;
+            }
+
             Swal.fire({
                 title: '<h4 class="fw-bold mb-0" style="color: var(--adira-dark)">Konfirmasi Pengiriman</h4>',
                 html: `

@@ -231,8 +231,8 @@ class PengrajinController extends Controller
             return redirect()->back()->withInput()->with('error', 'Foto progres wajib diunggah terlebih dahulu sebelum status ini disimpan.');
         }
 
-        if ($validated['status'] === 'Selesai' && $pesanan->status_pembayaran !== 'paid') {
-            return redirect()->back()->withInput()->with('error', 'Pesanan belum bisa diselesaikan karena pembayaran belum lunas.');
+        if ($validated['status'] === 'diekspedisi' && $pesanan->status_pembayaran !== 'paid') {
+            return redirect()->back()->withInput()->with('error', 'Pesanan belum bisa dikirim karena pembayaran belum lunas.');
         }
 
         $updatePayload = [

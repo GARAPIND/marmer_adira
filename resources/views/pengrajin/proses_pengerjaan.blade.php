@@ -346,8 +346,8 @@
                     </div>
 
                     <div class="alert alert-light border rounded-4 small mb-4">
-                        Upload foto wajib saat pindah ke `Dikerjakan` dan `Selesai`. Status `Selesai` hanya bisa dipilih jika
-                        pesanan sudah lunas.
+                        Upload foto wajib saat pindah ke `Dikerjakan` dan `Selesai`. Pesanan boleh diselesaikan pengrajin,
+                        tetapi pengiriman hanya bisa dilakukan setelah pembayaran lunas.
                     </div>
 
                     <div class="mb-4">
@@ -545,17 +545,7 @@
                     colFormSelesai.classList.add('col-6');
                 }
 
-                document.getElementById('form-selesai').onsubmit = (event) => {
-                    if (paymentStatus !== 'paid') {
-                        event.preventDefault();
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Pelunasan Diperlukan',
-                            text: 'PEMBELI HARUS MELUNASI TERLEBIH DAHULU',
-                            confirmButtonColor: '#2c3e50'
-                        });
-                    }
-                };
+                document.getElementById('form-selesai').onsubmit = null;
 
                 const renderPhotos = (container, photos) => {
                     if (!Array.isArray(photos) || !photos.length) {
