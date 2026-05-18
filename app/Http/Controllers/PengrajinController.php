@@ -133,6 +133,7 @@ class PengrajinController extends Controller
         $pesanan = Pesanan::with('user')
             ->with('progressPhotos')
             ->where('status', 'Diverifikasi')
+            ->where('status_pembayaran', '!=', 'no_paid')
             ->latest()
             ->get();
         return view('pengrajin.pesanan_masuk', compact('pesanan'));
