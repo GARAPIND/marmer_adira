@@ -75,6 +75,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/pesanan/{id}/selesai', [AdminController::class, 'selesaiPesanan'])->name('pesanan.selesai');
 
         Route::resource('/pengguna', PenggunaController::class);
+        Route::patch('/pengguna/toggle-status/{id}', [PenggunaController::class, 'toggleStatus'])->name('pengguna.toggle-status');
 
         Route::get('/produk', [AdminController::class, 'manajemenProduk'])->name('produk.index');
         Route::get('/pesanan/baru', [AdminController::class, 'pesananBaru'])->name('pesanan.baru');

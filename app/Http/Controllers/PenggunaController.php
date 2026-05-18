@@ -37,6 +37,21 @@ class PenggunaController extends Controller
             ->with('success', 'Data pengguna berhasil ditambahkan.');
     }
 
+    public function toggleStatus($id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->status == 'AKTIF') {
+            $user->status = 'NON-AKTIF';
+        } else {
+            $user->status = 'AKTIF';
+        }
+
+        $user->save();
+
+        return redirect()->back()->with('success', 'Status pengguna berhasil diubah.');
+    }
+
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
