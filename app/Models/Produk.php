@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Produk extends Model
 {
     use HasFactory;
-
+    use SoftDeletes;
     // Sesuai migrasi Sugeng: Schema::table('produk', ...)
     protected $table = 'produk';
 
@@ -31,6 +32,7 @@ class Produk extends Model
         'stok',
         'gambar',
         'pengrajin_id',
+        'deleted_at'
     ];
 
     public function pengrajin()
