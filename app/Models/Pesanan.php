@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pesanan extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'pesanan';
 
@@ -57,11 +58,14 @@ class Pesanan extends Model
         'tanggal_bayar' => 'datetime',
         'tanggal_lunas' => 'datetime',
         'midtrans_payload' => 'array',
+        'deleted_at' => 'datetime',
     ];
 
     protected $appends = [
         'foto_dikerjakan',
         'foto_selesai',
+        'status_label_pembeli',
+        'is_menunggu_pelunasan',
     ];
 
     public function user(): BelongsTo
@@ -121,6 +125,30 @@ class Pesanan extends Model
     {
         return Attribute::make(
             get: fn () => $this->resolveProgressPhotoPaths('Selesai')
+        );
+    }
+
+    protected function isMenungguPelunasan(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->status === 'Selesai' && $this->status_pembayaran !== 'paid'
+        );
+    }
+
+    protected function statusLabelPembeli(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if ($this->status === 'diekspedisi') {
+                    return 'Dikirim';
+                }
+
+                if ($this->status === 'Selesai' && $this->status_pembayaran !== 'paid') {
+                    return 'Menunggu Pelunasan';
+                }
+
+                return $this->status;
+            }
         );
     }
 

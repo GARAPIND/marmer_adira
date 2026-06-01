@@ -39,6 +39,8 @@ Route::post('/midtrans/callback', [PesananController::class, 'midtransCallback']
 Route::middleware(['auth'])->group(function () {
     Route::get('/pesanan/{id}/snap-token', [PesananController::class, 'getSnapToken'])->name('pesanan.snapToken');
     Route::post('/pesanan/{id}/payment-success', [PesananController::class, 'paymentSuccess'])->name('pesanan.paymentSuccess');
+    Route::get('/pesanan/sampah', [PesananController::class, 'trash'])->name('pesanan.trash');
+    Route::patch('/pesanan/{id}/restore', [PesananController::class, 'restore'])->name('pesanan.restore');
 
     // --- A. ROLE PEMBELI ---
     Route::get('/dashboard', [PembeliController::class, 'dashboard'])->name('pembeli.dashboard');

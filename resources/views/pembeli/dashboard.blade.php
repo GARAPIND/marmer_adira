@@ -201,7 +201,7 @@
                         <div class="marble-icon-box me-3"><i class="fas fa-hammer"></i></div>
                         <div>
                             <p class="small fw-bold text-uppercase text-muted mb-1">Sedang Diproses</p>
-                            <h2 class="fw-bold m-0 text-dark">{{ $pesanan->where('status', 'Diproses')->count() }}</h2>
+                            <h2 class="fw-bold m-0 text-dark">{{ $stats['proses'] }}</h2>
                         </div>
                     </div>
                 </div>
@@ -213,7 +213,7 @@
                         <div class="marble-icon-box me-3"><i class="fas fa-check-circle"></i></div>
                         <div>
                             <p class="small fw-bold text-uppercase text-muted mb-1">Pesanan Selesai</p>
-                            <h2 class="fw-bold m-0 text-dark">{{ $pesanan->where('status', 'Selesai')->count() }}</h2>
+                            <h2 class="fw-bold m-0 text-dark">{{ $stats['selesai'] }}</h2>
                         </div>
                     </div>
                 </div>
@@ -249,6 +249,9 @@
                                                 <span
                                                     class="badge badge-status-custom bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Verifikasi
                                                     Admin</span>
+                                            @elseif($item->is_menunggu_pelunasan)
+                                                <span
+                                                    class="badge badge-status-custom bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">{{ $item->status_label_pembeli }}</span>
                                             @elseif($item->status == 'Diproses')
                                                 <span
                                                     class="badge badge-status-custom bg-info bg-opacity-10 text-info border border-info border-opacity-25">Sedang
@@ -279,7 +282,7 @@
                                                 </div>
                                             @else
                                                 <span
-                                                    class="badge badge-status-custom bg-success bg-opacity-10 text-success border border-success border-opacity-25">{{ $item->status }}</span>
+                                                    class="badge badge-status-custom bg-success bg-opacity-10 text-success border border-success border-opacity-25">{{ $item->status_label_pembeli }}</span>
                                             @endif
                                         </td>
                                         <td class="text-end pe-4">
@@ -414,7 +417,7 @@
 
             document.getElementById('dashboard-det-id').innerText = 'ORD-' + data.id.toString().padStart(3, '0');
             document.getElementById('dashboard-det-produk').innerText = data.nama_produk || '-';
-            document.getElementById('dashboard-det-status').innerText = data.status || '-';
+            document.getElementById('dashboard-det-status').innerText = data.status_label_pembeli || data.status || '-';
             document.getElementById('dashboard-det-bayar').innerText = data.status_pembayaran === 'paid' ? 'Lunas' :
                 (data.status_pembayaran === 'dp' ? 'Dibayar DP 50%' : 'Belum Bayar');
             document.getElementById('dashboard-det-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan tambahan.';

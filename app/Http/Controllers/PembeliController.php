@@ -23,14 +23,22 @@ class PembeliController extends Controller
                             ->count(),
 
             // Card: SEDANG DIPROSES
-            // Menghitung status Diverifikasi (siap dikerjakan), Diproses, dan Dikerjakan
+            // Menghitung status aktif termasuk pesanan yang sudah selesai dibuat
+            // tetapi masih menunggu pelunasan dari pembeli.
             'proses'     => Pesanan::where('user_id', $userId)
-                            ->whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan'])
+                            ->where(function ($query) {
+                                $query->whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'diekspedisi'])
+                                    ->orWhere(function ($subQuery) {
+                                        $subQuery->where('status', 'Selesai')
+                                            ->where('status_pembayaran', '!=', 'paid');
+                                    });
+                            })
                             ->count(),
 
             // Card: PESANAN SELESAI
             'selesai'    => Pesanan::where('user_id', $userId)
                             ->where('status', 'Selesai')
+                            ->where('status_pembayaran', 'paid')
                             ->count(),
         ];
 

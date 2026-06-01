@@ -140,9 +140,14 @@
                     <p class="text-muted small mb-0">Pantau status produksi dan rincian biaya pesanan Anda</p>
                 </div>
             </div>
-            <a href="{{ route('produk.index') }}" class="btn btn-dark rounded-pill px-4 shadow-sm fw-bold">
-                <i class="fas fa-plus me-2 text-gold"></i> Buat Pesanan Baru
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('pesanan.trash') }}" class="btn btn-outline-dark rounded-pill px-4 shadow-sm fw-bold">
+                    <i class="fas fa-trash-alt me-2"></i> Sampah
+                </a>
+                <a href="{{ route('produk.index') }}" class="btn btn-dark rounded-pill px-4 shadow-sm fw-bold">
+                    <i class="fas fa-plus me-2 text-gold"></i> Buat Pesanan Baru
+                </a>
+            </div>
         </div>
 
         <div class="row g-4">
@@ -169,7 +174,11 @@
                                         <td class="text-muted small">{{ $item->created_at->format('d M Y') }}</td>
                                         <td class="fw-semibold text-dark">{{ $item->nama_produk }}</td>
                                         <td class="text-center">
-                                            @if ($item->status == 'Selesai')
+                                            @if ($item->is_menunggu_pelunasan)
+                                                <span
+                                                    class="badge badge-status-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"><i
+                                                        class="fas fa-wallet me-1"></i> {{ $item->status_label_pembeli }}</span>
+                                            @elseif($item->status == 'Selesai')
                                                 <span
                                                     class="badge badge-status-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i
                                                         class="fas fa-check-circle me-1"></i> {{ $item->status }}</span>
@@ -216,8 +225,14 @@
                                             </div>
                                          </td>
                                         <td class="text-end pe-4">
-                                            <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold"
-                                                onclick="showDetail({{ json_encode($item) }})">Detail</button>
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold"
+                                                    onclick="showDetail({{ json_encode($item) }})">Detail</button>
+                                                <button class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold"
+                                                    onclick="konfirmasiBatal({{ $item->id }}, '{{ $item->nama_produk }}')">
+                                                    <i class="fas fa-trash-alt me-1"></i> Hapus
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
@@ -603,7 +618,7 @@
                 } else {
                     labelStatus.innerHTML =
                         '<span class="badge w-100 bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 py-2"><i class="fas fa-tools me-1"></i> ' +
-                        data.status + '</span>';
+                        (data.status_label_pembeli || data.status) + '</span>';
                 }
             }
 
@@ -615,13 +630,13 @@
         // FUNGSI PEMBATALAN (DELETE)
         function konfirmasiBatal(id, namaProduk) {
             Swal.fire({
-                title: '<h4 class="fw-bold mb-0" style="color: var(--adira-dark)">Batalkan Pesanan?</h4>',
-                html: `<p class="text-muted small">Apakah Anda yakin ingin menghapus pesanan <b>${namaProduk}</b>? Tindakan ini tidak dapat dibatalkan.</p>`,
+                title: '<h4 class="fw-bold mb-0" style="color: var(--adira-dark)">Pindahkan ke Sampah?</h4>',
+                html: `<p class="text-muted small">Pesanan <b>${namaProduk}</b> akan dipindahkan ke sampah dan masih bisa dipulihkan dari halaman sampah.</p>`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#2c3e50',
-                confirmButtonText: 'Ya, Batalkan!',
+                confirmButtonText: 'Ya, Pindahkan!',
                 cancelButtonText: 'Kembali',
                 reverseButtons: true
             }).then((result) => {
