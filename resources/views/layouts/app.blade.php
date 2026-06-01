@@ -217,7 +217,29 @@
                     <h5 class="footer-title">Kontak</h5>
                     <p class="small mb-2"><i class="fas fa-phone me-2 text-gold"></i> +62 858-9462-6729</p>
                     <p class="small mb-2"><i class="fas fa-envelope me-2 text-gold"></i> info@adiramarmer.com</p>
-                    <p class="small"><i class="fas fa-map-marker-alt me-2 text-gold"></i> Campurdarat, Tulungagung</p>
+                    <p class="small mb-3">
+                        <i class="fas fa-map-marker-alt me-2 text-gold"></i>
+                        <a href="https://maps.app.goo.gl/unR99MdxoUc2dbLA9?g_st=ac" target="_blank"
+                            style="color: inherit; text-decoration: none; transition: color 0.3s;"
+                            onmouseover="this.style.color='var(--marble-gold)'" onmouseout="this.style.color='inherit'">
+                            Gedangan, Kec. Campurdarat,<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Kab. Tulungagung, Jawa Timur 66272
+                        </a>
+                    </p>
+
+                    <div style="border-radius: 10px; overflow: hidden; border: 1px solid rgba(197, 164, 126, 0.3);">
+                        <iframe
+                            src="https://www.google.com/maps?q=Gedangan,+Kec.+Campurdarat,+Kabupaten+Tulungagung,+Jawa+Timur+66272&output=embed"
+                            width="100%" height="180"
+                            style="border:0; display:block; filter: grayscale(30%) contrast(1.1);" allowfullscreen=""
+                            loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+
+                    <a href="https://maps.app.goo.gl/unR99MdxoUc2dbLA9?g_st=ac" target="_blank"
+                        class="d-inline-block mt-2 small" style="color: var(--marble-gold); letter-spacing: 1px;">
+                        <i class="fas fa-directions me-1"></i> Buka di Google Maps
+                    </a>
                 </div>
 
                 <div class="col-lg-3 col-md-6 reveal text-lg-end">
@@ -227,7 +249,8 @@
                     <div class="d-flex justify-content-lg-end">
                         <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
                         <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-                        <a href="https://wa.me/6285894626729" target="_blank" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+                        <a href="https://wa.me/6285894626729" target="_blank" class="social-icon"><i
+                                class="fab fa-whatsapp"></i></a>
                     </div>
                 </div>
             </div>

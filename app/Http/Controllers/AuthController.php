@@ -11,9 +11,9 @@ use Exception;
 
 class AuthController extends Controller
 {
-    public function showLoginForm() 
-    { 
-        return view('auth.login'); 
+    public function showLoginForm()
+    {
+        return view('auth.login');
     }
 
     public function login(Request $request)
@@ -23,17 +23,27 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (!$user) {
+            return back()->withErrors(['email' => 'Email tidak ditemukan.']);
+        }
+
+        if ($user->status !== 'AKTIF') {
+            return back()->withErrors(['email' => 'Akun tidak aktif.']);
+        }
+
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             return $this->redirectBasedOnRole(Auth::user());
         }
 
-        return back()->withErrors(['email' => 'Email atau password salah.'])->withInput();
+        return back()->withErrors(['email' => 'Password salah.']);
     }
 
-    public function showRegisterForm() 
-    { 
-        return view('auth.register'); 
+    public function showRegisterForm()
+    {
+        return view('auth.register');
     }
 
     public function register(Request $request)
@@ -41,7 +51,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'no_telp' => 'required|string|max:15', 
+            'no_telp' => 'required|string|max:15',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -50,8 +60,8 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'no_telp' => $request->no_telp,
-            'password' => Hash::make($request->password), 
-            'role' => 'pembeli', 
+            'password' => Hash::make($request->password),
+            'role' => 'pembeli',
         ]);
 
         Auth::login($user);
@@ -71,15 +81,15 @@ class AuthController extends Controller
 
             if ($user) {
                 $user->update(['google_id' => $userGoogle->getId()]);
-                Auth::login($user, true); 
+                Auth::login($user, true);
             } else {
                 $user = User::create([
                     'name' => $userGoogle->getName(),
                     'email' => $userGoogle->getEmail(),
                     'google_id' => $userGoogle->getId(),
                     'role' => 'pembeli',
-                    'no_telp' => null, 
-                    'password' => null, 
+                    'no_telp' => null,
+                    'password' => null,
                 ]);
                 Auth::login($user, true);
             }
@@ -95,9 +105,9 @@ class AuthController extends Controller
     private function redirectBasedOnRole($user)
     {
         if ($user->role == 'admin') {
-            return redirect()->route('admin.dashboard'); 
+            return redirect()->route('admin.dashboard');
         }
-        
+
         // PERBAIKAN: Arahkan pengrajin ke dashboard mereka, bukan ke rute pembeli
         if ($user->role == 'pengrajin') {
             return redirect()->route('pengrajin.dashboard');

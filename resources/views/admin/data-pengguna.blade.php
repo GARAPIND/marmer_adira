@@ -187,6 +187,7 @@
                             <th>Alamat Email</th>
                             <th class="text-center">Nomor Telepon</th>
                             <th class="text-center">Role</th>
+                            <th class="text-center">Status</th>
                             <th class="text-center pe-4">Aksi</th>
                         </tr>
                     </thead>
@@ -224,24 +225,57 @@
                                         </span>
                                     @endif
                                 </td>
+                                <td class="text-center">
+                                    @if ($user->status == 'AKTIF')
+                                        <span class="status-badge-elegant badge-active shadow-sm">
+                                            <i class="fas fa-check me-1"></i> AKTIF
+                                        </span>
+                                    @else
+                                        <span class="status-badge-elegant badge-danger shadow-sm">
+                                            <i class="fas fa-times me-1"></i> NON-AKTIF
+                                        </span>
+                                    @endif
+                                </td>
                                 <td class="text-center pe-4">
-                                    <div class="d-flex justify-content-center gap-1">
-                                        <button class="btn btn-link text-primary p-2" title="Edit Data"
-                                            onclick="editPengguna({{ json_encode($user) }})">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-
-                                        <form id="form-delete-{{ $user->id }}"
-                                            action="{{ route('admin.pengguna.destroy', $user->id) }}" method="POST"
-                                            class="d-inline">
-                                            @csrf @method('DELETE')
-                                            <button type="button" class="btn btn-link text-danger p-2"
-                                                title="Hapus Pengguna"
-                                                onclick="confirmDeleteUser({{ $user->id }}, '{{ $user->name }}')">
-                                                <i class="fas fa-trash-alt"></i>
+                                    @if ($user->role !== 'pembeli')
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <button class="btn btn-light text-primary p-2" title="Edit Data"
+                                                onclick="editPengguna({{ json_encode($user) }})">
+                                                <i class="fas fa-edit"></i>
                                             </button>
-                                        </form>
-                                    </div>
+
+                                            <form id="form-delete-{{ $user->id }}"
+                                                action="{{ route('admin.pengguna.destroy', $user->id) }}" method="POST"
+                                                class="d-inline">
+                                                @csrf @method('DELETE')
+                                                <button type="button" class="btn btn-light text-danger p-2"
+                                                    title="Hapus Pengguna"
+                                                    onclick="confirmDeleteUser({{ $user->id }}, '{{ $user->name }}')">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endif
+                                    <form id="form-status-{{ $user->id }}"
+                                        action="{{ route('admin.pengguna.toggle-status', $user->id) }}" method="POST"
+                                        class="d-inline">
+
+                                        @csrf
+                                        @method('PATCH')
+
+                                        <button type="button"
+                                            class="btn btn-light p-2 {{ $user->status == 'AKTIF' ? 'text-danger' : 'text-success' }}"
+                                            title="Ubah Status"
+                                            onclick="confirmToggleStatus({{ $user->id }}, '{{ $user->status }}', '{{ $user->name }}')">
+
+                                            @if ($user->status == 'AKTIF')
+                                                <i class="fas fa-user-slash"></i>
+                                            @else
+                                                <i class="fas fa-user-check"></i>
+                                            @endif
+
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         @empty
@@ -315,8 +349,6 @@
                             <select name="role" id="role"
                                 class="form-select rounded-3 border-light shadow-sm py-2 @error('role') is-invalid @enderror"
                                 required>
-                                <option value="">-- Pilih Role --</option>
-                                <option value="pembeli" {{ old('role') == 'pembeli' ? 'selected' : '' }}>Pembeli</option>
                                 <option value="pengrajin" {{ old('role') == 'pengrajin' ? 'selected' : '' }}>Pengrajin
                                 </option>
                             </select>
@@ -381,6 +413,26 @@
 
             var editModal = new bootstrap.Modal(document.getElementById('modalTambahPengrajin'));
             editModal.show();
+        }
+
+        function confirmToggleStatus(id, status, nama) {
+            let statusBaru = status === 'AKTIF' ? 'NON-AKTIF' : 'AKTIF';
+
+            Swal.fire({
+                title: 'Ubah Status Pengguna?',
+                html: `Akun <b>${nama}</b> akan diubah menjadi <b>${statusBaru}</b>.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: status === 'AKTIF' ? '#d33' : '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: status === 'AKTIF' ? 'Ya, Nonaktifkan!' : 'Ya, Aktifkan!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('form-status-' + id).submit();
+                }
+            });
         }
 
         function confirmDeleteUser(id, nama) {
