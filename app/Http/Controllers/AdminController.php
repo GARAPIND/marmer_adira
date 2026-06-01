@@ -6,6 +6,7 @@ use App\Models\AlamatPembeli;
 use App\Models\User;
 use App\Models\Pesanan;
 use App\Models\Bahan; // Pastikan Model Bahan diimport
+use App\Models\Produk;
 use App\Models\Terminal;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -572,7 +573,23 @@ class AdminController extends Controller
 
     public function hapusBahan($id)
     {
+        $columns = [
+            'kecil'  => ['bahan_kecil_id', 'harga_kecil', 'berat_kecil', 'ukuran_kecil'],
+            'sedang' => ['bahan_sedang_id', 'harga_sedang', 'berat_sedang', 'ukuran_sedang'],
+            'besar'  => ['bahan_besar_id', 'harga_besar', 'berat_besar', 'ukuran_besar'],
+        ];
+
+        foreach ($columns as $size => $fields) {
+            Produk::where($fields[0], $id)->update(array_fill_keys($fields, null));
+        }
+
+        Produk::whereNull('bahan_kecil_id')
+            ->whereNull('bahan_sedang_id')
+            ->whereNull('bahan_besar_id')
+            ->delete();
+
         Bahan::destroy($id);
+
         return redirect()->back()->with('success', 'Bahan berhasil dihapus.');
     }
 
