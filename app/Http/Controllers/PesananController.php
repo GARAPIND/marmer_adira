@@ -348,17 +348,6 @@ class PesananController extends Controller
         return view('pesanan.index', compact('pesanan'));
     }
 
-    public function trash()
-    {
-        $pesanan = Pesanan::onlyTrashed()
-            ->with(['paymentHistories', 'progressPhotos'])
-            ->where('user_id', Auth::id())
-            ->latest('deleted_at')
-            ->get();
-
-        return view('pesanan.trash', compact('pesanan'));
-    }
-
     public function create(Request $request)
     {
         // dd(1);
@@ -488,25 +477,6 @@ class PesananController extends Controller
         Pesanan::create($payload);
 
         return redirect()->route('pesanan.index')->with('success', 'Pesanan berhasil diajukan!');
-    }
-
-    public function destroy($id)
-    {
-        $pesanan = Pesanan::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
-        $pesanan->delete();
-        return redirect()->route('pesanan.index')->with('success', 'Pesanan dipindahkan ke sampah.');
-    }
-
-    public function restore($id)
-    {
-        $pesanan = Pesanan::onlyTrashed()
-            ->where('id', $id)
-            ->where('user_id', Auth::id())
-            ->firstOrFail();
-
-        $pesanan->restore();
-
-        return redirect()->route('pesanan.trash')->with('success', 'Pesanan berhasil dipulihkan dari sampah.');
     }
 
     public function selesai($id)

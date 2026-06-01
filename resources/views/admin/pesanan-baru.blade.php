@@ -2,6 +2,7 @@
 
 @section('content')
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
@@ -108,6 +109,9 @@
                         <li class="breadcrumb-item active fw-bold text-dark">Pesanan Baru</li>
                     </ol>
                 </nav>
+                <a href="{{ route('admin.pesanan.trash') }}" class="btn btn-outline-dark rounded-pill px-4 shadow-sm fw-bold mt-3">
+                    <i class="fas fa-trash-alt me-2"></i> Sampah Pesanan
+                </a>
             </div>
         </div>
 
@@ -180,10 +184,16 @@
                                     @endif
                                 </td>
                                 <td class="text-center pe-4">
-                                    <button class="btn btn-gold btn-sm px-4 shadow-sm fw-bold"
-                                        onclick="showDetailAdmin({{ json_encode($item) }})">
-                                        <i class="fas fa-check-double me-1 text-white"></i> Detail
-                                    </button>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="btn btn-gold btn-sm px-4 shadow-sm fw-bold"
+                                            onclick="showDetailAdmin({{ json_encode($item) }})">
+                                            <i class="fas fa-check-double me-1 text-white"></i> Detail
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm px-3 shadow-sm fw-bold"
+                                            onclick="konfirmasiHapusPesanan({{ $item->id }}, '{{ $item->nama_produk }}')">
+                                            <i class="fas fa-trash-alt me-1"></i> Hapus
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -199,6 +209,11 @@
             </div>
         </div>
     </div>
+
+    <form id="form-hapus-pesanan" method="POST" style="display:none;">
+        @csrf
+        @method('DELETE')
+    </form>
 
     <div class="modal fade" id="modalDetailPesanan" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -331,6 +346,26 @@
 
     <script>
         let activeAdminOrder = null;
+
+        function konfirmasiHapusPesanan(id, namaProduk) {
+            Swal.fire({
+                title: 'Pindahkan ke sampah?',
+                html: `Pesanan <b>${namaProduk}</b> akan dipindahkan ke sampah dan masih bisa dipulihkan oleh admin.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#2c3e50',
+                confirmButtonText: 'Ya, pindahkan',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('form-hapus-pesanan');
+                    form.action = `/admin/pesanan/${id}`;
+                    form.submit();
+                }
+            });
+        }
 
         function getAdminCsrf() {
             return document.querySelector('meta[name="csrf-token"]').getAttribute('content');

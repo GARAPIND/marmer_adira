@@ -39,8 +39,6 @@ Route::post('/midtrans/callback', [PesananController::class, 'midtransCallback']
 Route::middleware(['auth'])->group(function () {
     Route::get('/pesanan/{id}/snap-token', [PesananController::class, 'getSnapToken'])->name('pesanan.snapToken');
     Route::post('/pesanan/{id}/payment-success', [PesananController::class, 'paymentSuccess'])->name('pesanan.paymentSuccess');
-    Route::get('/pesanan/sampah', [PesananController::class, 'trash'])->name('pesanan.trash');
-    Route::patch('/pesanan/{id}/restore', [PesananController::class, 'restore'])->name('pesanan.restore');
 
     // --- A. ROLE PEMBELI ---
     Route::get('/dashboard', [PembeliController::class, 'dashboard'])->name('pembeli.dashboard');
@@ -48,7 +46,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [PesananController::class, 'index'])->name('index');
         Route::get('/create', [ProdukController::class, 'showOrderForm'])->name('create');
         Route::post('/', [PesananController::class, 'store'])->name('store');
-        Route::delete('/{id}', [PesananController::class, 'destroy'])->name('destroy');
         Route::put('/{id}/status', [PesananController::class, 'updateStatus'])->name('updateStatus');
 
         Route::patch('/{id}/selesai', [PesananController::class, 'selesai'])->name('selesai');
@@ -75,6 +72,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/pesanan/{id}/hitung-ongkir', [AdminController::class, 'hitungOngkirPesanan'])->name('pesanan.hitung-ongkir');
         Route::post('/pesanan/{id}/update', [AdminController::class, 'updatePesanan'])->name('pesanan.update');
         Route::post('/pesanan/{id}/selesai', [AdminController::class, 'selesaiPesanan'])->name('pesanan.selesai');
+        Route::delete('/pesanan/{id}', [AdminController::class, 'destroyPesanan'])->name('pesanan.destroy');
+        Route::get('/pesanan/sampah', [AdminController::class, 'trashPesanan'])->name('pesanan.trash');
+        Route::patch('/pesanan/{id}/restore', [AdminController::class, 'restorePesanan'])->name('pesanan.restore');
 
         Route::resource('/pengguna', PenggunaController::class);
         Route::patch('/pengguna/toggle-status/{id}', [PenggunaController::class, 'toggleStatus'])->name('pengguna.toggle-status');

@@ -347,6 +347,32 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Pesanan berhasil diperbarui!');
     }
 
+    public function destroyPesanan($id)
+    {
+        $pesanan = Pesanan::findOrFail($id);
+        $pesanan->delete();
+
+        return redirect()->back()->with('success', 'Pesanan dipindahkan ke sampah.');
+    }
+
+    public function trashPesanan()
+    {
+        $pesanan = Pesanan::onlyTrashed()
+            ->with(['user', 'paymentHistories', 'progressPhotos'])
+            ->latest('deleted_at')
+            ->get();
+
+        return view('admin.pesanan-trash', compact('pesanan'));
+    }
+
+    public function restorePesanan($id)
+    {
+        $pesanan = Pesanan::onlyTrashed()->findOrFail($id);
+        $pesanan->restore();
+
+        return redirect()->route('admin.pesanan.trash')->with('success', 'Pesanan berhasil dipulihkan dari sampah.');
+    }
+
     // ==========================================
     // 3. SEKSI LAPORAN PESANAN (KODE TETAP)
     // ==========================================

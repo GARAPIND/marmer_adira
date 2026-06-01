@@ -140,14 +140,9 @@
                     <p class="text-muted small mb-0">Pantau status produksi dan rincian biaya pesanan Anda</p>
                 </div>
             </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('pesanan.trash') }}" class="btn btn-outline-dark rounded-pill px-4 shadow-sm fw-bold">
-                    <i class="fas fa-trash-alt me-2"></i> Sampah
-                </a>
-                <a href="{{ route('produk.index') }}" class="btn btn-dark rounded-pill px-4 shadow-sm fw-bold">
-                    <i class="fas fa-plus me-2 text-gold"></i> Buat Pesanan Baru
-                </a>
-            </div>
+            <a href="{{ route('produk.index') }}" class="btn btn-dark rounded-pill px-4 shadow-sm fw-bold">
+                <i class="fas fa-plus me-2 text-gold"></i> Buat Pesanan Baru
+            </a>
         </div>
 
         <div class="row g-4">
@@ -225,14 +220,8 @@
                                             </div>
                                          </td>
                                         <td class="text-end pe-4">
-                                            <div class="d-flex justify-content-end gap-2">
-                                                <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold"
-                                                    onclick="showDetail({{ json_encode($item) }})">Detail</button>
-                                                <button class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold"
-                                                    onclick="konfirmasiBatal({{ $item->id }}, '{{ $item->nama_produk }}')">
-                                                    <i class="fas fa-trash-alt me-1"></i> Hapus
-                                                </button>
-                                            </div>
+                                            <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold"
+                                                onclick="showDetail({{ json_encode($item) }})">Detail</button>
                                         </td>
                                     </tr>
                                 @empty
@@ -273,15 +262,8 @@
                                                 class="badge badge-status-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Menunggu</span>
                                         </td>
                                         <td class="text-end pe-4">
-                                            <div class="d-flex justify-content-end gap-2">
-                                                <button class="btn btn-dark btn-sm rounded-pill px-3 fw-bold"
-                                                    onclick="showDetail({{ json_encode($item) }})">Lihat</button>
-                                                {{-- Tombol Batal Langsung di Tabel --}}
-                                                <button class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold"
-                                                    onclick="konfirmasiBatal({{ $item->id }}, '{{ $item->nama_produk }}')">
-                                                    <i class="fas fa-times me-1"></i> Batal
-                                                </button>
-                                            </div>
+                                            <button class="btn btn-dark btn-sm rounded-pill px-3 fw-bold"
+                                                onclick="showDetail({{ json_encode($item) }})">Lihat</button>
                                         </td>
                                     </tr>
                                 @empty
@@ -414,10 +396,6 @@
         @csrf @method('PATCH')
     </form>
 
-    <form id="form-batal" method="POST" style="display: none;">
-        @csrf @method('DELETE')
-    </form>
-
     <script>
         function showDetail(data) {
             document.getElementById('empty-state').style.display = 'none';
@@ -529,14 +507,10 @@
                 document.getElementById('det-ongkir-val').innerText = formatter.format(data.biaya_pengiriman || 0)
                 document.getElementById('det-total').innerText = "Verifikasi Admin";
 
-                // Tambahkan Tombol Batal di Sidebar juga agar informatif
                 labelStatus.innerHTML = `
                 <span class="badge w-100 bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 py-2 mb-2">
                     <i class="fas fa-hourglass-half me-1"></i> Sedang diperiksa Admin
                 </span>
-                <button class="btn btn-outline-danger w-100 rounded-pill fw-bold py-2 shadow-sm small" onclick="konfirmasiBatal(${data.id}, '${data.nama_produk}')">
-                    <i class="fas fa-times-circle me-1"></i> Batalkan Pesanan Ini
-                </button>
             `;
             } else {
                 document.getElementById('det-harga-produk').innerText = formatter.format(data.total_harga);
@@ -625,36 +599,6 @@
             document.querySelectorAll('tr').forEach(tr => tr.classList.remove('selected-row'));
             const activeRow = document.getElementById('row-' + data.id);
             if (activeRow) activeRow.classList.add('selected-row');
-        }
-
-        // FUNGSI PEMBATALAN (DELETE)
-        function konfirmasiBatal(id, namaProduk) {
-            Swal.fire({
-                title: '<h4 class="fw-bold mb-0" style="color: var(--adira-dark)">Pindahkan ke Sampah?</h4>',
-                html: `<p class="text-muted small">Pesanan <b>${namaProduk}</b> akan dipindahkan ke sampah dan masih bisa dipulihkan dari halaman sampah.</p>`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#2c3e50',
-                confirmButtonText: 'Ya, Pindahkan!',
-                cancelButtonText: 'Kembali',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Menghapus...',
-                        didOpen: () => {
-                            Swal.showLoading()
-                        },
-                        allowOutsideClick: false,
-                        showConfirmButton: false
-                    });
-
-                    const form = document.getElementById('form-batal');
-                    form.action = "{{ url('/') }}/pesanan/" + id;
-                    form.submit();
-                }
-            });
         }
 
         function konfirmasiSelesai(id, namaProduk) {
