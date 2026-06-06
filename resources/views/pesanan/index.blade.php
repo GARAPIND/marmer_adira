@@ -1,10 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-    {{-- Library SweetAlert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    {{-- CUSTOM CSS UNTUK ESTETIKA RIWAYAT PESANAN --}}
     <style>
         :root {
             --adira-gold: #C5A47E;
@@ -52,15 +50,6 @@
             border-bottom: 1px solid #f8f9fa;
         }
 
-        .card-detail-sidebar {
-            border: none;
-            border-radius: 20px;
-            background: #fff;
-            position: sticky;
-            top: 100px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        }
-
         .badge-status-pill {
             padding: 0.5em 1.2em;
             border-radius: 50px;
@@ -69,36 +58,6 @@
             text-transform: uppercase;
         }
 
-        .selected-row {
-            background-color: #fdfbf8 !important;
-            border-left: 4px solid var(--adira-gold) !important;
-        }
-
-        .price-breakdown-box {
-            background: #fdfbf8;
-            border: 1px dashed var(--adira-gold);
-            border-radius: 12px;
-        }
-
-        .progress-photo-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
-        }
-
-        .progress-photo-grid a {
-            display: block;
-        }
-
-        .progress-photo-grid img {
-            width: 100%;
-            height: 110px;
-            object-fit: cover;
-            border-radius: 12px;
-            border: 1px solid #eee;
-        }
-
-        /* Custom SweetAlert Style */
         .swal2-popup {
             border-radius: 25px !important;
             font-family: 'Inter', sans-serif !important;
@@ -111,10 +70,150 @@
         .swal2-cancel {
             border-radius: 50px !important;
         }
+
+        .accordion-row>td {
+            padding: 0 !important;
+            background: #fafafa;
+        }
+
+        .accordion-inner {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease;
+        }
+
+        .accordion-inner.open {
+            max-height: 3000px;
+        }
+
+        .accordion-content {
+            border-top: 3px solid var(--adira-gold);
+            padding: 1.5rem 1.75rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .acc-block label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #6c757d;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .acc-block .val {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .acc-block .val-lg {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .acc-block .val-muted {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .price-box {
+            background: #fdfbf8;
+            border: 1px dashed var(--adira-gold);
+            border-radius: 12px;
+            padding: 1rem;
+            grid-column: span 2;
+        }
+
+        @media (max-width: 576px) {
+            .price-box {
+                grid-column: span 1;
+            }
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            color: #6c757d;
+        }
+
+        .price-row .pval {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .price-row.total-row {
+            border-top: 1px solid #dee2e6;
+            margin-top: 8px;
+            padding-top: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .price-row.total-row .pval {
+            font-size: 1.15rem;
+        }
+
+        .payment-history-entry {
+            font-size: 0.75rem;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 6px 0;
+        }
+
+        .payment-history-entry:last-child {
+            border-bottom: none;
+        }
+
+        .progress-photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .progress-photo-grid img {
+            width: 100%;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #eee;
+        }
+
+        .btn-detail-acc {
+            transition: all 0.15s;
+        }
+
+        .btn-detail-acc .chevron-icon {
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+
+        .btn-detail-acc.active {
+            background: var(--adira-dark) !important;
+            color: #fff !important;
+            border-color: var(--adira-dark) !important;
+        }
+
+        .btn-detail-acc.active .chevron-icon {
+            transform: rotate(180deg);
+        }
+
+        .selected-row {
+            background-color: #fdfbf8 !important;
+            border-left: 4px solid var(--adira-gold) !important;
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
-        {{-- ALERT SUCCESS --}}
+
         @if (session('success'))
             <script>
                 Swal.fire({
@@ -128,15 +227,14 @@
             </script>
         @endif
 
-        {{-- HEADER HALAMAN --}}
-        <div class="page-header-elegant d-flex justify-content-between align-items-center">
+        <div class="page-header-elegant d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div class="d-flex align-items-center">
                 <div class="marble-icon-box me-3 shadow-sm">
                     <i class="fas fa-history"></i>
                 </div>
                 <div>
-                    <h2 class="fw-bold mb-0 text-dark" style="border-left: 5px solid #000; padding-left: 15px;">Riwayat
-                        Pesanan</h2>
+                    <h2 class="fw-bold mb-0 text-dark" style="border-left:5px solid #000;padding-left:15px;">Riwayat Pesanan
+                    </h2>
                     <p class="text-muted small mb-0">Pantau status produksi dan rincian biaya pesanan Anda</p>
                 </div>
             </div>
@@ -145,465 +243,287 @@
             </a>
         </div>
 
-        <div class="row g-4">
-            {{-- SISI KIRI: TABEL PESANAN --}}
-            <div class="col-lg-8">
-                {{-- TABEL PESANAN PROSES --}}
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-5">
-                    <div class="table-responsive">
-                        <table class="table table-elegant hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="ps-4">ID Pesanan</th>
-                                    <th>Tanggal</th>
-                                    <th>Produk</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-end pe-4">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($pesanan->whereNotIn('status', ['Menunggu Verifikasi Admin']) as $item)
-                                    <tr id="row-{{ $item->id }}">
-                                        <td class="ps-4 fw-bold text-primary small">
-                                            ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
-                                        <td class="text-muted small">{{ $item->created_at->format('d M Y') }}</td>
-                                        <td class="fw-semibold text-dark">{{ $item->nama_produk }}</td>
-                                        <td class="text-center">
-                                            @if ($item->is_menunggu_pelunasan)
-                                                <span
-                                                    class="badge badge-status-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"><i
-                                                        class="fas fa-wallet me-1"></i> {{ $item->status_label_pembeli }}</span>
-                                            @elseif($item->status == 'Selesai')
-                                                <span
-                                                    class="badge badge-status-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i
-                                                        class="fas fa-check-circle me-1"></i> {{ $item->status }}</span>
-                                            @elseif($item->status == 'diekspedisi')
-                                                <span
-                                                    class="badge badge-status-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25"><i
-                                                        class="fas fa-bus me-1"></i> Dikirim</span>
-                                            @elseif($item->status == 'Ditolak')
-                                                <span
-                                                    class="badge badge-status-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">{{ $item->status }}</span>
-                                            @elseif($item->status == 'Diverifikasi' && $item->status_pembayaran == 'paid')
-                                                <div>
-                                                    <span
-                                                        class="badge badge-status-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25">
-                                                        Telah Diverifikasi
-                                                    </span>
-                                                    <div class="text-success small"><b>Sudah Dibayar</b></div>
-                                                </div>
-                                            @elseif($item->status == 'Diverifikasi' && $item->status_pembayaran == 'dp')
-                                                <div>
-                                                    <span
-                                                        class="badge badge-status-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">
-                                                        Telah Diverifikasi
-                                                    </span>
-                                                    <div class="text-warning small"><b>Dibayar DP</b></div>
-                                                </div>
-                                            @elseif($item->status == 'Diverifikasi')
-                                                <div>
-                                                    <span
-                                                        class="badge badge-status-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
-                                                        Telah Diverifikasi
-                                                    </span>
-                                                    <div class="text-danger small"><b>Menunggu Pembayaran</b></div>
-                                                </div>
-                                         @else
-                                             <span
-                                                 class="badge badge-status-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ $item->status }}</span>
-                                         @endif
-                                            <div class="small mt-1 text-muted">
-                                                {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar') }}
-                                                @if ($item->midtrans_bank || $item->midtrans_payment_type)
-                                                    &middot; {{ strtoupper($item->midtrans_bank ?? $item->midtrans_payment_type) }}
-                                                @endif
-                                            </div>
-                                         </td>
-                                        <td class="text-end pe-4">
-                                            <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold"
-                                                onclick="showDetail({{ json_encode($item) }})">Detail</button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4 text-muted italic small">Belum ada
-                                            riwayat transaksi.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {{-- TABEL MENUNGGU VERIFIKASI (DENGAN FITUR BATAL) --}}
-                <h5 class="fw-bold mb-3"><i class="fas fa-hourglass-half me-2 text-warning"></i>Menunggu Verifikasi Admin
-                </h5>
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-                    <div class="table-responsive">
-                        <table class="table table-elegant hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr class="text-muted">
-                                    <th class="ps-4">ID Pesanan</th>
-                                    <th>Tanggal</th>
-                                    <th>Produk</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-end pe-4">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($pesanan->where('status', 'Menunggu Verifikasi Admin') as $item)
-                                    <tr id="row-{{ $item->id }}">
-                                        <td class="ps-4 text-muted small">
-                                            ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
-                                        <td class="text-muted small">{{ $item->created_at->format('d M Y') }}</td>
-                                        <td class="fw-semibold text-dark">{{ $item->nama_produk }}</td>
-                                        <td class="text-center">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-5">
+            <div class="table-responsive">
+                <table class="table table-elegant align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">ID Pesanan</th>
+                            <th>Tanggal</th>
+                            <th>Produk</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-end pe-4">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($pesanan->whereNotIn('status', ['Menunggu Verifikasi Admin']) as $item)
+                            <tr id="row-{{ $item->id }}">
+                                <td class="ps-4 fw-bold text-primary small">
+                                    ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
+                                <td class="text-muted small">{{ $item->created_at->format('d M Y') }}</td>
+                                <td class="fw-semibold text-dark">{{ $item->nama_produk }}</td>
+                                <td class="text-center">
+                                    @if ($item->is_menunggu_pelunasan)
+                                        <span
+                                            class="badge badge-status-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"><i
+                                                class="fas fa-wallet me-1"></i> {{ $item->status_label_pembeli }}</span>
+                                    @elseif($item->status == 'Selesai')
+                                        <span
+                                            class="badge badge-status-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i
+                                                class="fas fa-check-circle me-1"></i> {{ $item->status }}</span>
+                                    @elseif($item->status == 'diekspedisi')
+                                        <span
+                                            class="badge badge-status-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25"><i
+                                                class="fas fa-bus me-1"></i> Dikirim</span>
+                                    @elseif($item->status == 'Ditolak')
+                                        <span
+                                            class="badge badge-status-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">{{ $item->status }}</span>
+                                    @elseif($item->status == 'Diverifikasi' && $item->status_pembayaran == 'paid')
+                                        <div>
                                             <span
-                                                class="badge badge-status-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Menunggu</span>
-                                        </td>
-                                        <td class="text-end pe-4">
-                                            <button class="btn btn-dark btn-sm rounded-pill px-3 fw-bold"
-                                                onclick="showDetail({{ json_encode($item) }})">Lihat</button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4 text-muted small italic">Tidak ada
-                                            pesanan yang sedang diverifikasi.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            {{-- SISI KANAN: SIDEBAR DETAIL --}}
-            <div class="col-lg-4">
-                <div class="card card-detail-sidebar animate__animated animate__fadeInRight">
-                    <div class="card-body p-4">
-                        <div id="empty-state" class="text-center py-5">
-                            <div class="marble-icon-box mx-auto mb-3 opacity-50">
-                                <i class="fas fa-search"></i>
-                            </div>
-                            <p class="text-muted small px-3">Pilih salah satu pesanan untuk melihat rincian lengkap &
-                                instruksi pembayaran.</p>
-                        </div>
-
-                        <div id="detail-content" style="display: none;">
-                            <h5 class="fw-bold border-bottom pb-2 mb-4 text-dark">Detail Pesanan <span id="det-id"
-                                    class="text-gold"></span></h5>
-
-                            <div class="mb-4">
-                                <label class="text-muted small fw-bold text-uppercase d-block mb-1">Produk &
-                                    Material</label>
-                                <p class="mb-0 fw-bold text-dark fs-5" id="det-produk"></p>
-                                <span class="badge bg-light text-dark border fw-normal" id="det-marmer"></span>
-                            </div>
-
-                            <div class="row mb-4">
-                                <div class="col-6">
-                                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Ukuran</label>
-                                    <div class="p-2 bg-light rounded text-center fw-bold small" id="det-ukuran"></div>
-                                </div>
-                                <div class="col-6">
-                                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Jumlah</label>
-                                    <div class="p-2 bg-light rounded text-center fw-bold small" id="det-jumlah"></div>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="text-muted small fw-bold text-uppercase d-block mb-1">Catatan Kustom</label>
-                                <div class="p-3 bg-light rounded-3 small fst-italic" id="det-catatan"></div>
-                            </div>
-
-                            <div class="mb-4 p-3 price-breakdown-box shadow-sm">
-                                <label class="text-gold small fw-bold text-uppercase d-block mb-2"><i
-                                        class="fas fa-receipt me-1"></i> Rincian Pembayaran</label>
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span class="small text-muted">Harga Produk:</span>
-                                    <span id="det-harga-produk" class="small fw-bold text-dark"></span>
-                                </div>
-                                <div id="det-ongkir-row" class="d-flex justify-content-between mb-2 text-danger">
-                                    <span class="small">Ongkos Kirim:</span>
-                                    <span id="det-ongkir-val" class="small fw-bold"></span>
-                                </div>
-                                <hr class="my-2 border-secondary opacity-25">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <label class="small fw-bold text-uppercase m-0">Total Pembayaran</label>
-                                    <h4 class="fw-bold text-dark m-0" id="det-total"></h4>
-                                </div>
-                                <div class="d-flex justify-content-between mt-2">
-                                    <span class="small text-muted">Metode Bayar:</span>
-                                    <span id="det-metode-bayar" class="small fw-bold text-dark">-</span>
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <span class="small text-muted">Status Pembayaran:</span>
-                                    <span id="det-status-bayar" class="small fw-bold text-dark">-</span>
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <span class="small text-muted">Waktu Bayar Pertama:</span>
-                                    <span id="det-waktu-bayar" class="small fw-bold text-dark">-</span>
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <span class="small text-muted">Waktu Pelunasan:</span>
-                                    <span id="det-waktu-lunas" class="small fw-bold text-dark">-</span>
-                                </div>
-
-                                <div id="det-label-status" class="mt-3"></div>
-
-                                <div id="det-alasan-penolakan" class="mt-2"></div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="text-muted small fw-bold text-uppercase d-block mb-2">Riwayat Pembayaran</label>
-                                <div id="det-payment-history" class="p-2 bg-light rounded-3 small text-muted">
-                                    Belum ada riwayat pembayaran.
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="text-muted small fw-bold text-uppercase d-block mb-2">Foto Saat Dikerjakan</label>
-                                <div id="det-foto-dikerjakan" class="progress-photo-grid">
-                                    <span class="text-muted small">Belum ada foto progres.</span>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="text-muted small fw-bold text-uppercase d-block mb-2">Foto Saat Selesai</label>
-                                <div id="det-foto-selesai" class="progress-photo-grid">
-                                    <span class="text-muted small">Belum ada foto hasil.</span>
-                                </div>
-                            </div>
-
-                            <div class="alert alert-secondary border-0 py-2 small d-flex align-items-center rounded-3">
-                                <i class="fas fa-truck me-2 text-dark"></i>
-                                <div>
-                                    <span class="d-block small">Metode: <strong id="det-metode"></strong></span>
-                                    <div id="det-alamat-full" class="fw-bold text-dark" style="font-size: 0.75rem;">
+                                                class="badge badge-status-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25">Telah
+                                                Diverifikasi</span>
+                                            <div class="text-success small"><b>Sudah Dibayar</b></div>
+                                        </div>
+                                    @elseif($item->status == 'Diverifikasi' && $item->status_pembayaran == 'dp')
+                                        <div>
+                                            <span
+                                                class="badge badge-status-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Telah
+                                                Diverifikasi</span>
+                                            <div class="text-warning small"><b>Dibayar DP</b></div>
+                                        </div>
+                                    @elseif($item->status == 'Diverifikasi')
+                                        <div>
+                                            <span
+                                                class="badge badge-status-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">Telah
+                                                Diverifikasi</span>
+                                            <div class="text-danger small"><b>Menunggu Pembayaran</b></div>
+                                        </div>
+                                    @else
+                                        <span
+                                            class="badge badge-status-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ $item->status }}</span>
+                                    @endif
+                                    <div class="small mt-1 text-muted">
+                                        {{ $item->status_pembayaran === 'paid' ? 'Lunas' : ($item->status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar') }}
+                                        @if ($item->midtrans_bank || $item->midtrans_payment_type)
+                                            &middot; {{ strtoupper($item->midtrans_bank ?? $item->midtrans_payment_type) }}
+                                        @endif
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold btn-detail-acc"
+                                        onclick="toggleDetail('acc-{{ $item->id }}', this, {{ json_encode($item) }})">
+                                        Detail <span class="chevron-icon"><i class="fas fa-chevron-down ms-1"
+                                                style="font-size:0.65rem;"></i></span>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="accordion-row">
+                                <td colspan="5">
+                                    <div class="accordion-inner" id="acc-{{ $item->id }}">
+                                        <div class="accordion-content">
+                                            @include('pesanan._accordion_detail', ['item' => $item])
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted small fst-italic">Belum ada riwayat
+                                    transaksi.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
+
+        <h5 class="fw-bold mb-3"><i class="fas fa-hourglass-half me-2 text-warning"></i>Menunggu Verifikasi Admin</h5>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-elegant align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">ID Pesanan</th>
+                            <th>Tanggal</th>
+                            <th>Produk</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-end pe-4">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($pesanan->where('status', 'Menunggu Verifikasi Admin') as $item)
+                            <tr id="row-{{ $item->id }}">
+                                <td class="ps-4 text-muted small">ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
+                                <td class="text-muted small">{{ $item->created_at->format('d M Y') }}</td>
+                                <td class="fw-semibold text-dark">{{ $item->nama_produk }}</td>
+                                <td class="text-center">
+                                    <span
+                                        class="badge badge-status-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Menunggu</span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-dark btn-sm rounded-pill px-3 fw-bold btn-detail-acc"
+                                        onclick="toggleDetail('acc-{{ $item->id }}', this, {{ json_encode($item) }})">
+                                        Lihat <span class="chevron-icon"><i class="fas fa-chevron-down ms-1"
+                                                style="font-size:0.65rem;"></i></span>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="accordion-row">
+                                <td colspan="5">
+                                    <div class="accordion-inner" id="acc-{{ $item->id }}">
+                                        <div class="accordion-content">
+                                            @include('pesanan._accordion_detail', ['item' => $item])
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted small fst-italic">Tidak ada pesanan
+                                    yang sedang diverifikasi.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
-    {{-- FORM TERSEMBUNYI --}}
-    <form id="form-selesai" method="POST" style="display: none;">
+    <form id="form-selesai" method="POST" style="display:none;">
         @csrf @method('PATCH')
     </form>
 
     <script>
-        function showDetail(data) {
-            document.getElementById('empty-state').style.display = 'none';
-            document.getElementById('detail-content').style.display = 'block';
+        function toggleDetail(accId, btn, data) {
+            const inner = document.getElementById(accId);
+            const isOpen = inner.classList.contains('open');
 
-            document.getElementById('det-id').innerText = 'ORD-' + data.id.toString().padStart(3, '0');
-            document.getElementById('det-produk').innerText = data.nama_produk;
-            document.getElementById('det-marmer').innerText = 'Material: ' + (data.jenis_marmer || 'Teraso');
-            document.getElementById('det-ukuran').innerText = data.ukuran;
-            document.getElementById('det-jumlah').innerText = data.jumlah + ' Pcs';
-            document.getElementById('det-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan tambahan.';
-            document.getElementById('det-metode').innerText = data.metode_pengambilan === 'dikirim' ?
-                ('Dikirim (' + (data.jenis_pengiriman ? data.jenis_pengiriman.toUpperCase() : 'Pengiriman') + ')') :
-                'Ambil di Rumah';
+            document.querySelectorAll('.accordion-inner.open').forEach(el => el.classList.remove('open'));
+            document.querySelectorAll('.btn-detail-acc.active').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('tr.selected-row').forEach(tr => tr.classList.remove('selected-row'));
 
-            const alamatFull = document.getElementById('det-alamat-full');
-            const ongkirRow = document.getElementById('det-ongkir-row');
-            if (data.metode_pengambilan === 'dikirim') {
-                alamatFull.innerText = "Tujuan: " + (data.alamat_pengiriman || '-');
-                ongkirRow.classList.remove('d-none');
-            } else {
-                alamatFull.innerText = "";
-                ongkirRow.classList.add('d-none');
+            if (!isOpen) {
+                inner.classList.add('open');
+                btn.classList.add('active');
+
+                const row = document.getElementById('row-' + data.id);
+                if (row) row.classList.add('selected-row');
+
+                renderDynamicAccordion(accId, data);
+
+                setTimeout(() => inner.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest'
+                }), 50);
             }
+        }
 
-            const labelStatus = document.getElementById('det-label-status');
-            const metodeBayar = document.getElementById('det-metode-bayar');
-            const statusBayar = document.getElementById('det-status-bayar');
-            const waktuBayar = document.getElementById('det-waktu-bayar');
-            const waktuLunas = document.getElementById('det-waktu-lunas');
-            const paymentHistory = document.getElementById('det-payment-history');
-            const fotoDikerjakan = document.getElementById('det-foto-dikerjakan');
-            const fotoSelesai = document.getElementById('det-foto-selesai');
+        function renderDynamicAccordion(accId, data) {
+            const labelEl = document.getElementById(accId + '-label');
+            const historyEl = document.getElementById(accId + '-history');
+            if (!labelEl) return;
+
             const formatter = new Intl.NumberFormat('id-ID', {
                 style: 'currency',
                 currency: 'IDR',
                 minimumFractionDigits: 0
             });
 
-            metodeBayar.innerText = (data.midtrans_bank || data.midtrans_payment_type || '-').toString().toUpperCase();
-            statusBayar.innerText = data.status_pembayaran === 'paid' ? 'Lunas' : (data.status_pembayaran === 'dp' ? 'Dibayar DP' : 'Belum Bayar');
-            waktuBayar.innerText = data.tanggal_bayar ? new Date(data.tanggal_bayar).toLocaleString('id-ID') : '-';
-            waktuLunas.innerText = data.tanggal_lunas ? new Date(data.tanggal_lunas).toLocaleString('id-ID') : '-';
-            const alasanContainer = document.getElementById('det-alasan-penolakan');
-            alasanContainer.innerHTML = '';
-
             let events = Array.isArray(data.payment_histories) ? data.payment_histories : [];
             try {
                 if (!events.length) {
-                    const payloadObj = typeof data.midtrans_payload === 'string' ? JSON.parse(data.midtrans_payload) : data.midtrans_payload;
+                    const payloadObj = typeof data.midtrans_payload === 'string' ? JSON.parse(data.midtrans_payload) : data
+                        .midtrans_payload;
                     events = Array.isArray(payloadObj?.payment_events) ? payloadObj.payment_events : [];
                 }
             } catch (e) {
-                if (!Array.isArray(events)) {
-                    events = [];
-                }
+                events = [];
             }
 
-            if (events.length) {
+            if (historyEl) {
                 const sorted = [...events]
-                    .filter((ev) => ['paid_dp', 'paid_lunas'].includes(ev.event_type))
+                    .filter(ev => ['paid_dp', 'paid_lunas'].includes(ev.event_type))
                     .sort((a, b) => new Date(a.event_time) - new Date(b.event_time));
 
-                if (!sorted.length) {
-                    paymentHistory.innerHTML = 'Belum ada riwayat pembayaran.';
-                } else {
-                    paymentHistory.innerHTML = sorted.map((ev) => {
-                        const jenis = ev.event_type === 'paid_dp' ? 'Dibayar DP' :
-                            'Dibayar Lunas';
-                        const waktu = ev.event_time ? new Date(ev.event_time).toLocaleString('id-ID') : '-';
-                        const nominal = formatter.format(parseInt(ev.nominal || 0));
-                        const metode = (ev.payment_method || '-').toString().toUpperCase();
-                        const txid = ev.transaction_id || '-';
-                        const orderId = ev.order_id || '-';
-                        const sumber = (ev.source || '-').toString().replaceAll('_', ' ');
-                        const statusEvent = ev.status || '-';
-                        return `<div class="border-bottom pb-2 mb-2">
-                            <div class="fw-bold text-dark">${jenis}</div>
-                            <div>Waktu: ${waktu}</div>
-                            <div>Nominal: ${nominal}</div>
-                            <div>Metode: ${metode}</div>
-                            <div>Order ID: ${orderId}</div>
-                            <div>Transaction ID: ${txid}</div>
-                            <div>Status Event: ${statusEvent}</div>
-                            <div>Sumber: ${sumber}</div>
-                        </div>`;
-                    }).join('');
-                }
-            } else {
-                paymentHistory.innerHTML = 'Belum ada riwayat pembayaran.';
+                historyEl.innerHTML = sorted.length ? sorted.map(ev => {
+                    const jenis = ev.event_type === 'paid_dp' ? 'Dibayar DP' : 'Dibayar Lunas';
+                    const waktu = ev.event_time ? new Date(ev.event_time).toLocaleString('id-ID') : '-';
+                    const nominal = formatter.format(parseInt(ev.nominal || 0));
+                    const metode = (ev.payment_method || '-').toUpperCase();
+                    return `<div class="payment-history-entry">
+                        <div class="fw-bold text-dark">${jenis}</div>
+                        <div>Waktu: ${waktu}</div>
+                        <div>Nominal: ${nominal}</div>
+                        <div>Metode: ${metode}</div>
+                        <div>Order ID: ${ev.order_id || '-'}</div>
+                        <div>Transaction ID: ${ev.transaction_id || '-'}</div>
+                    </div>`;
+                }).join('') : '<span class="text-muted small">Belum ada riwayat pembayaran.</span>';
             }
 
-            const renderPhotos = (container, photos, emptyText) => {
-                if (!Array.isArray(photos) || !photos.length) {
-                    container.innerHTML = `<span class="text-muted small">${emptyText}</span>`;
-                    return;
-                }
-
-                container.innerHTML = photos.map((photo) =>
-                    `<a href="/storage/${photo}" target="_blank"><img src="/storage/${photo}" alt="Foto progres pesanan"></a>`
-                ).join('');
-            };
-
-            renderPhotos(fotoDikerjakan, data.foto_dikerjakan || [], 'Belum ada foto progres.');
-            renderPhotos(fotoSelesai, data.foto_selesai || [], 'Belum ada foto hasil.');
-
-            if (data.status == 'Menunggu Verifikasi Admin') {
-                document.getElementById('det-harga-produk').innerText = formatter.format(data.total_harga);
-                document.getElementById('det-ongkir-val').innerText = formatter.format(data.biaya_pengiriman || 0)
-                document.getElementById('det-total').innerText = "Verifikasi Admin";
-
-                labelStatus.innerHTML = `
-                <span class="badge w-100 bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 py-2 mb-2">
-                    <i class="fas fa-hourglass-half me-1"></i> Sedang diperiksa Admin
-                </span>
-            `;
+            let html = '';
+            if (data.status === 'Menunggu Verifikasi Admin') {
+                html = `<span class="badge w-100 bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 py-2">
+                    <i class="fas fa-hourglass-half me-1"></i> Sedang diperiksa Admin</span>`;
+            } else if (data.status === 'Ditolak') {
+                html = `<span class="badge w-100 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 py-2">
+                    <i class="fas fa-times-circle me-1"></i> Pesanan Ditolak</span>
+                    <div class="alert alert-danger border-0 small mt-2 py-2" style="border-radius:12px;">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        <b>Alasan Penolakan:</b><br>${data.alasan_penolakan || '-'}
+                    </div>`;
+            } else if (data.status === 'Selesai' && data.status_pembayaran !== 'paid') {
+                html = `<div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
+                    <i class="fas fa-exclamation-circle me-1"></i> Pengerjaan selesai. Lunasi terlebih dahulu agar pesanan bisa dikirim.
+                </div>
+                <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="bayarSekarang(${data.id},'lunas')">
+                    <i class="fas fa-money-check-dollar me-2"></i> Bayar Pelunasan</button>`;
+            } else if (data.status === 'Selesai') {
+                html = `<span class="badge w-100 bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2">
+                    <i class="fas fa-check-circle me-1"></i> Pesanan Selesai</span>`;
+            } else if (data.status === 'diekspedisi') {
+                html = `<div class="alert alert-info border-0 small mb-2 py-2" style="border-radius:12px;">
+                    <i class="fas fa-info-circle me-1"></i> Pesanan dalam perjalanan via Bus.</div>
+                <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="konfirmasiSelesai(${data.id},'${data.nama_produk}')">
+                    <i class="fas fa-box-open me-2"></i> Konfirmasi Barang Diterima</button>`;
+            } else if (data.status === 'Diverifikasi' && data.status_pembayaran === 'no_paid') {
+                html = `<div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
+                    <i class="fas fa-exclamation-circle me-1"></i> Pesanan diverifikasi. Pilih metode pembayaran.</div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-warning w-100 rounded-pill fw-bold shadow-sm py-2 text-dark" onclick="bayarSekarang(${data.id},'dp')">
+                        <i class="fas fa-credit-card me-2"></i> Bayar DP 50%</button>
+                    <button class="btn btn-warning w-100 rounded-pill fw-bold shadow-sm py-2 text-dark" onclick="bayarSekarang(${data.id},'lunas')">
+                        <i class="fas fa-wallet me-2"></i> Bayar Lunas</button>
+                </div>`;
+            } else if (data.status === 'Diverifikasi' && data.status_pembayaran === 'dp') {
+                html = `<div class="alert alert-info border-0 small mb-2 py-2" style="border-radius:12px;">
+                    <i class="fas fa-check-circle me-1"></i> DP 50% sudah dibayar. Lanjutkan pelunasan.</div>
+                <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="bayarSekarang(${data.id},'lunas')">
+                    <i class="fas fa-money-check-dollar me-2"></i> Bayar Pelunasan</button>`;
+            } else if ((data.status === 'Diproses' || data.status === 'Dikerjakan') && data.status_pembayaran !== 'paid') {
+                html = `<div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
+                    <i class="fas fa-exclamation-circle me-1"></i> Pesanan sedang dikerjakan. Lunasi agar pesanan bisa dikirim.</div>
+                <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="bayarSekarang(${data.id},'lunas')">
+                    <i class="fas fa-money-check-dollar me-2"></i> Bayar Pelunasan</button>`;
+            } else if (data.status === 'Dikerjakan' && data.status_pembayaran === 'paid') {
+                html =
+                    `<span class="badge w-100 bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 py-2">
+                    <i class="fas fa-hammer me-1"></i> Sedang dikerjakan. Akan dikirim setelah selesai produksi.</span>`;
+            } else if (data.status_pembayaran === 'paid') {
+                html = `<span class="badge w-100 bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2">
+                    <i class="fas fa-check-circle me-1"></i> Sudah Dibayar</span>`;
             } else {
-                document.getElementById('det-harga-produk').innerText = formatter.format(data.total_harga);
-                document.getElementById('det-ongkir-val').innerText = formatter.format(data.biaya_pengiriman || 0);
-
-                const totalAkhir = parseInt(data.total_harga) + parseInt(data.biaya_pengiriman || 0);
-                document.getElementById('det-total').innerText = formatter.format(totalAkhir);
-
-                if (data.status === 'Ditolak') {
-                    labelStatus.innerHTML =
-                        '<span class="badge w-100 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 py-2"><i class="fas fa-times-circle me-1"></i> Pesanan Ditolak</span>';
-
-                    alasanContainer.innerHTML = `
-                        <div class="alert alert-danger border-0 small mt-2 py-2" style="border-radius:12px;">
-                            <i class="fas fa-exclamation-circle me-1"></i>
-                            <b>Alasan Penolakan:</b><br>
-                            ${data.alasan_penolakan || '-'}
-                        </div>
-                    `;
-                } else if (data.status === 'Selesai' && data.status_pembayaran !== 'paid') {
-                    labelStatus.innerHTML = `
-                    <div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
-                        <i class="fas fa-exclamation-circle me-1"></i> Pengerjaan sudah selesai, tetapi pembeli harus melunasi terlebih dahulu agar pesanan bisa dikirim.
-                    </div>
-                    <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="bayarSekarang(${data.id}, 'lunas')">
-                        <i class="fas fa-money-check-dollar me-2"></i> Bayar Pelunasan
-                    </button>
-                `;
-                } else if (data.status === 'Selesai') {
-                    labelStatus.innerHTML =
-                        '<span class="badge w-100 bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2"><i class="fas fa-check-circle me-1"></i> Pesanan Selesai</span>';
-                } else if (data.status === 'diekspedisi') {
-                    labelStatus.innerHTML = `
-                    <div class="alert alert-info border-0 small mb-2 py-2" style="border-radius:12px;">
-                        <i class="fas fa-info-circle me-1"></i> Pesanan dalam perjalanan via Bus.
-                    </div>
-                    <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="konfirmasiSelesai(${data.id}, '${data.nama_produk}')">
-                        <i class="fas fa-box-open me-2"></i> Konfirmasi Barang Diterima
-                    </button>
-                `;
-                } else if (data.status === 'Diverifikasi' && data.status_pembayaran === 'no_paid') {
-                    labelStatus.innerHTML = `
-                            <div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
-                                <i class="fas fa-exclamation-circle me-1"></i> Pesanan diverifikasi. Pilih metode pembayaran.
-                            </div>
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-outline-warning w-100 rounded-pill fw-bold shadow-sm py-2 text-dark" onclick="bayarSekarang(${data.id}, 'dp')">
-                                    <i class="fas fa-credit-card me-2"></i> Bayar DP 50%
-                                </button>
-                                <button class="btn btn-warning w-100 rounded-pill fw-bold shadow-sm py-2 text-dark" onclick="bayarSekarang(${data.id}, 'lunas')">
-                                    <i class="fas fa-wallet me-2"></i> Bayar Lunas
-                                </button>
-                            </div>
-                        `;
-                } else if (data.status === 'Diverifikasi' && data.status_pembayaran === 'dp') {
-                    labelStatus.innerHTML = `
-                    <div class="alert alert-info border-0 small mb-2 py-2" style="border-radius:12px;">
-                        <i class="fas fa-check-circle me-1"></i> DP 50% sudah dibayar. Lanjutkan pelunasan.
-                    </div>
-                    <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="bayarSekarang(${data.id}, 'lunas')">
-                        <i class="fas fa-money-check-dollar me-2"></i> Bayar Pelunasan
-                    </button>
-                `;
-                } else if ((data.status === 'Diproses' || data.status === 'Dikerjakan') && data.status_pembayaran !== 'paid') {
-                    labelStatus.innerHTML = `
-                    <div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
-                        <i class="fas fa-exclamation-circle me-1"></i> Pesanan sedang dikerjakan. Pembeli harus melunasi terlebih dahulu agar pesanan bisa dikirim.
-                    </div>
-                    <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="bayarSekarang(${data.id}, 'lunas')">
-                        <i class="fas fa-money-check-dollar me-2"></i> Bayar Pelunasan
-                    </button>
-                `;
-                } else if (data.status === 'Dikerjakan' && data.status_pembayaran === 'paid') {
-                    labelStatus.innerHTML =
-                        '<span class="badge w-100 bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 py-2"><i class="fas fa-hammer me-1"></i> Sedang dikerjakan. Pesanan akan dikirim setelah produksi selesai.</span>';
-                } else if (data.status_pembayaran === 'paid') {
-                    labelStatus.innerHTML =
-                        '<span class="badge w-100 bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2"><i class="fas fa-check-circle me-1"></i> Sudah Dibayar</span>';
-                } else {
-                    labelStatus.innerHTML =
-                        '<span class="badge w-100 bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 py-2"><i class="fas fa-tools me-1"></i> ' +
-                        (data.status_label_pembeli || data.status) + '</span>';
-                }
+                html = `<span class="badge w-100 bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 py-2">
+                    <i class="fas fa-tools me-1"></i> ${data.status_label_pembeli || data.status}</span>`;
             }
-
-            document.querySelectorAll('tr').forEach(tr => tr.classList.remove('selected-row'));
-            const activeRow = document.getElementById('row-' + data.id);
-            if (activeRow) activeRow.classList.add('selected-row');
+            labelEl.innerHTML = html;
         }
 
         function konfirmasiSelesai(id, namaProduk) {
             Swal.fire({
-                title: '<h4 class="fw-bold mb-0" style="color: var(--adira-dark)">Konfirmasi Penerimaan</h4>',
+                title: '<h4 class="fw-bold mb-0" style="color:var(--adira-dark)">Konfirmasi Penerimaan</h4>',
                 html: `<p class="text-muted small">Apakah Anda yakin barang <b>${namaProduk}</b> sudah diterima?</p>`,
                 icon: 'question',
                 showCancelButton: true,
@@ -612,7 +532,7 @@
                 confirmButtonText: 'Ya, Diterima!',
                 cancelButtonText: 'Batal',
                 reverseButtons: true
-            }).then((result) => {
+            }).then(result => {
                 if (result.isConfirmed) {
                     const form = document.getElementById('form-selesai');
                     form.action = "{{ url('/') }}/pesanan/" + id + "/selesai";
@@ -624,9 +544,7 @@
         function bayarSekarang(pesananId, paymentStep = 'lunas') {
             Swal.fire({
                 title: 'Memproses...',
-                didOpen: () => {
-                    Swal.showLoading();
-                },
+                didOpen: () => Swal.showLoading(),
                 allowOutsideClick: false,
                 showConfirmButton: false
             });
@@ -639,76 +557,63 @@
                 })
                 .then(async res => {
                     const data = await res.json();
-                    if (!res.ok) {
-                        throw new Error(data.message || 'Gagal membuat transaksi pembayaran.');
-                    }
+                    if (!res.ok) throw new Error(data.message || 'Gagal membuat transaksi pembayaran.');
                     return data;
                 })
                 .then(data => {
-                    if (!data.snap_token) {
-                        throw new Error(data.message || 'Snap token tidak tersedia.');
-                    }
+                    if (!data.snap_token) throw new Error(data.message || 'Snap token tidak tersedia.');
                     Swal.close();
                     snap.pay(data.snap_token, {
-                        onSuccess: function(result) {
+                        onSuccess: result => {
                             fetch(`/pesanan/${pesananId}/payment-success`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Accept': 'application/json',
-                                        'Content-Type': 'application/json',
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                        'X-Requested-With': 'XMLHttpRequest'
-                                    },
-                                    body: JSON.stringify(result)
-                                })
-                                .finally(() => {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Pembayaran Berhasil!',
-                                        text: 'Status pembayaran telah diperbarui.',
-                                        timer: 2500,
-                                        showConfirmButton: false
-                                    });
-                                    setTimeout(() => location.reload(), 2600);
+                                method: 'POST',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify(result)
+                            }).finally(() => {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Pembayaran Berhasil!',
+                                    text: 'Status pembayaran telah diperbarui.',
+                                    timer: 2500,
+                                    showConfirmButton: false
                                 });
-                        },
-                        onPending: function(result) {
-                            Swal.fire({
-                                icon: 'info',
-                                title: 'Menunggu Pembayaran',
-                                text: 'Selesaikan pembayaran Anda sesuai instruksi.',
-                                timer: 2500,
-                                showConfirmButton: false
+                                setTimeout(() => location.reload(), 2600);
                             });
                         },
-                        onError: function(result) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Pembayaran Gagal',
-                                text: 'Terjadi kesalahan. Silakan coba lagi.'
-                            });
-                        },
-                        onClose: function() {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Pembayaran Dibatalkan',
-                                text: 'Anda menutup jendela pembayaran.',
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                        }
+                        onPending: () => Swal.fire({
+                            icon: 'info',
+                            title: 'Menunggu Pembayaran',
+                            text: 'Selesaikan pembayaran Anda sesuai instruksi.',
+                            timer: 2500,
+                            showConfirmButton: false
+                        }),
+                        onError: () => Swal.fire({
+                            icon: 'error',
+                            title: 'Pembayaran Gagal',
+                            text: 'Terjadi kesalahan. Silakan coba lagi.'
+                        }),
+                        onClose: () => Swal.fire({
+                            icon: 'warning',
+                            title: 'Pembayaran Dibatalkan',
+                            text: 'Anda menutup jendela pembayaran.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        })
                     });
                 })
-                .catch((err) => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: err?.message || 'Gagal menghubungi server. Coba lagi.'
-                    });
-                });
+                .catch(err => Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: err?.message || 'Gagal menghubungi server. Coba lagi.'
+                }));
         }
     </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 @endsection
