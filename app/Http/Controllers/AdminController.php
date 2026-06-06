@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AlamatPembeli;
+use App\Models\PesananPaymentHistory;
 use App\Models\User;
 use App\Models\Pesanan;
 use App\Models\Bahan; // Pastikan Model Bahan diimport
@@ -153,15 +154,36 @@ class AdminController extends Controller
 
     public function dashboard()
     {
-        // REVISI: total_bayar sekarang menghitung (Harga Produk + Ongkir) dari status 'Selesai'
         $stats = [
             'baru'      => Pesanan::where('status', 'Menunggu Verifikasi Admin')->count(),
             'diproses'  => Pesanan::whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'diekspedisi'])->count(),
             'selesai'   => Pesanan::where('status', 'Selesai')->count(),
-            // tanpa where baru atau where status_pembayaran paid
             'total_bayar' => Pesanan::where('status_pembayaran', 'paid')
                 ->selectRaw('SUM(total_harga + COALESCE(biaya_pengiriman, 0)) as total')
-                ->first()->total ?? 0
+                ->first()->total ?? 0,
+            'pendapatan_harian' => PesananPaymentHistory::select(
+                DB::raw('DATE(event_time) as tanggal'),
+                DB::raw('SUM(nominal) as total_pendapatan')
+            )
+                ->where('status', 'success')
+                ->whereBetween('event_time', [
+                    Carbon::now()->subDays(6)->startOfDay(),
+                    Carbon::now()->endOfDay()
+                ])
+                ->groupBy(DB::raw('DATE(event_time)'))
+                ->orderBy('tanggal', 'asc')
+                ->get()->toArray(),
+            'produk_terlaris' => DB::table('produk as p')
+                ->leftJoin('pesanan as pd', 'p.nama_produk', '=', 'pd.nama_produk')
+                ->select(
+                    'p.nama_produk',
+                    DB::raw('COUNT(DISTINCT pd.id) as total_transaksi'),
+                    DB::raw('COALESCE(SUM(pd.jumlah), 0) as total_qty')
+                )
+                ->groupBy('p.nama_produk')
+                ->orderByDesc('total_qty')
+                ->get()
+                ->toArray()
         ];
 
         return view('admin.dashboard', compact('stats'));

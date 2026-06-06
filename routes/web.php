@@ -35,6 +35,7 @@ Route::controller(AuthController::class)->group(function () {
 });
 
 Route::post('/midtrans/callback', [PesananController::class, 'midtransCallback'])->name('midtrans.callback');
+
 // --- 3. KHUSUS USER TERAUTENTIKASI ---
 Route::middleware(['auth'])->group(function () {
     Route::get('/pesanan/{id}/snap-token', [PesananController::class, 'getSnapToken'])->name('pesanan.snapToken');
