@@ -219,7 +219,7 @@
                     <p class="small mb-2"><i class="fas fa-envelope me-2 text-gold"></i> info@adiramarmer.com</p>
                     <p class="small mb-3">
                         <i class="fas fa-map-marker-alt me-2 text-gold"></i>
-                        <a href="https://maps.app.goo.gl/unR99MdxoUc2dbLA9?g_st=ac" target="_blank"
+                        <a href="https://maps.app.goo.gl/qc8ab6rLFaEFtfmaA" target="_blank"
                             style="color: inherit; text-decoration: none; transition: color 0.3s;"
                             onmouseover="this.style.color='var(--marble-gold)'" onmouseout="this.style.color='inherit'">
                             Gedangan, Kec. Campurdarat,<br>
@@ -229,14 +229,14 @@
 
                     <div style="border-radius: 10px; overflow: hidden; border: 1px solid rgba(197, 164, 126, 0.3);">
                         <iframe
-                            src="https://www.google.com/maps?q=Gedangan,+Kec.+Campurdarat,+Kabupaten+Tulungagung,+Jawa+Timur+66272&output=embed"
+                            src="https://www.google.com/maps?q=-8.197588650130925,111.82263815756514&hl=id&z=15&output=embed"
                             width="100%" height="180"
                             style="border:0; display:block; filter: grayscale(30%) contrast(1.1);" allowfullscreen=""
-                            loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                            loading="lazy">
                         </iframe>
                     </div>
 
-                    <a href="https://maps.app.goo.gl/unR99MdxoUc2dbLA9?g_st=ac" target="_blank"
+                    <a href="https://maps.app.goo.gl/qc8ab6rLFaEFtfmaA" target="_blank"
                         class="d-inline-block mt-2 small" style="color: var(--marble-gold); letter-spacing: 1px;">
                         <i class="fas fa-directions me-1"></i> Buka di Google Maps
                     </a>
