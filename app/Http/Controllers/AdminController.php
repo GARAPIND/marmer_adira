@@ -240,12 +240,6 @@ class AdminController extends Controller
             return redirect()->back()->with('error', 'Pesanan belum lunas, nomor resi dan pengiriman belum bisa diproses.');
         }
 
-        $validated = $request->validate([
-            'nomor_resi_pengiriman' => 'required|string|max:100',
-        ], [
-            'nomor_resi_pengiriman.required' => 'Nomor resi cargo wajib diisi sebelum pesanan dikirim.',
-        ]);
-
         if ($pesanan->status !== 'Selesai' && $pesanan->tanggal_siap_dikirim === null) {
             return redirect()->back()->with('error', 'Pesanan belum selesai produksi dari pengrajin, jadi resi cargo belum bisa diproses.');
         }
