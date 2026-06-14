@@ -290,6 +290,10 @@ class PengrajinController extends Controller
             'tgl_update_proses' => now(),
         ];
 
+        if ($validated['status'] === 'Selesai') {
+            $updatePayload['tanggal_siap_dikirim'] = now();
+        }
+
         if ($validated['status'] === 'diekspedisi') {
             $updatePayload['tanggal_dikirim'] = now();
         }

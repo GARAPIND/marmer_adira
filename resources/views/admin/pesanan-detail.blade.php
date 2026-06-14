@@ -146,9 +146,10 @@
         $isVerifiable = $pesanan->status === 'Menunggu Verifikasi Admin';
         $isDeliveryOrder = $pesanan->metode_pengambilan === 'dikirim';
         $isPaidOff = $pesanan->status_pembayaran === 'paid';
-        $isReadyToShip = $pesanan->status === 'Selesai';
+        $isReadyToShip = $pesanan->status === 'Selesai' || !empty($pesanan->tanggal_siap_dikirim);
         $isAlreadyShipped = $pesanan->status === 'diekspedisi';
         $isReadOnlyDetail = $isAlreadyShipped;
+        $isVerificationStage = $pesanan->status === 'Menunggu Verifikasi Admin';
     @endphp
 
     <div class="container py-5 mt-2">
@@ -367,11 +368,21 @@
                             @endif
 
                             <div class="info-card">
-                                <div class="info-label">{{ $isReadOnlyDetail ? 'Detail Admin' : 'Keputusan Admin' }}</div>
-                                @if ($isReadOnlyDetail)
+                                <div class="info-label">{{ $isVerificationStage ? 'Keputusan Admin' : 'Detail Admin' }}</div>
+                                @if (!$isVerificationStage)
                                     <div class="alert alert-light border rounded-4 mb-0">
-                                        <div class="fw-bold text-dark mb-1">Pesanan sudah dikirim oleh admin</div>
-                                        <div class="small text-muted mb-2">Tahap admin sudah selesai. Sekarang tinggal menunggu pelanggan mengonfirmasi barang diterima.</div>
+                                        <div class="fw-bold text-dark mb-1">
+                                            {{ $isAlreadyShipped ? 'Pesanan sudah dikirim oleh admin' : 'Pesanan sudah melewati tahap verifikasi admin' }}
+                                        </div>
+                                        <div class="small text-muted mb-2">
+                                            @if ($isAlreadyShipped)
+                                                Tahap admin sudah selesai. Sekarang tinggal menunggu pelanggan mengonfirmasi barang diterima.
+                                            @elseif ($isReadyToShip)
+                                                Produksi sudah selesai dari pengrajin. Admin bisa lanjut cetak resi dan isi nomor resi cargo.
+                                            @else
+                                                Pesanan sedang berjalan dan tidak lagi memakai form verifikasi awal.
+                                            @endif
+                                        </div>
                                         <div class="small text-muted">Status saat ini: <strong>{{ $pesanan->status_label_pembeli ?? $pesanan->status }}</strong></div>
                                         @if ($pesanan->nomor_resi_pengiriman)
                                             <div class="small text-muted mt-1">Resi cargo tersimpan: <strong>{{ $pesanan->nomor_resi_pengiriman }}</strong></div>

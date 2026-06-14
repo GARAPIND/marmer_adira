@@ -246,8 +246,8 @@ class AdminController extends Controller
             'nomor_resi_pengiriman.required' => 'Nomor resi cargo wajib diisi sebelum pesanan dikirim.',
         ]);
 
-        if ($pesanan->status !== 'Selesai') {
-            return redirect()->back()->with('error', 'Pesanan belum masuk tahap selesai produksi dari pengrajin.');
+        if ($pesanan->status !== 'Selesai' && $pesanan->tanggal_siap_dikirim === null) {
+            return redirect()->back()->with('error', 'Pesanan belum selesai produksi dari pengrajin, jadi resi cargo belum bisa diproses.');
         }
 
         $pesanan = $this->ensureInternalResi($pesanan);
