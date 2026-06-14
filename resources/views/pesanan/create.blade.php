@@ -191,23 +191,7 @@
             color: white;
         }
 
-        .service-option {
-            border: 1.5px solid #f0f0f0;
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .service-option:hover {
-            border-color: var(--adira-gold);
-        }
-
-        .service-option.selected {
-            border-color: var(--adira-gold);
-            background: #fffdf9;
-        }
-
+        /* ── BENTUK TOGGLE ── */
         .bentuk-toggle-box {
             background: linear-gradient(135deg, #fffdf9, #fff8f0);
             border: 1.5px solid var(--adira-gold);
@@ -281,6 +265,112 @@
             letter-spacing: 0.5px;
             min-height: 26px;
         }
+
+        /* ── GAMBAR REFERENSI ── */
+        .upload-zone {
+            border: 2px dashed #ddd;
+            border-radius: 16px;
+            padding: 1.2rem;
+            background: var(--adira-soft-grey);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--adira-gold);
+            background: #fffdf9;
+        }
+
+        .upload-zone input[type="file"] {
+            display: none;
+        }
+
+        .upload-zone-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            color: #aaa;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .upload-zone-label i {
+            font-size: 1.6rem;
+            color: var(--adira-gold);
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .preview-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            background: #f0f0f0;
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .preview-item .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.55);
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .preview-item .remove-btn:hover {
+            background: #e74c3c;
+        }
+
+        .upload-counter {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--adira-gold);
+            margin-top: 6px;
+        }
+
+        .upload-counter.full {
+            color: #e74c3c;
+        }
+
+        /* ── DISCLAIMER ── */
+        .disclaimer-box {
+            background: linear-gradient(135deg, #fffbf4, #fff5e6);
+            border-left: 4px solid var(--adira-gold);
+            border-radius: 12px;
+            padding: 0.9rem 1.1rem;
+            margin-top: 10px;
+            font-size: 0.78rem;
+            color: #7a6040;
+            line-height: 1.6;
+        }
+
+        .disclaimer-box i {
+            color: var(--adira-gold);
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -308,6 +398,7 @@
                             <input type="hidden" name="courier" id="courier_hidden" value="">
 
                             <div class="row g-5">
+                                {{-- ══ KOLOM KIRI ══ --}}
                                 <div class="col-md-6 border-end pe-md-5">
                                     <div class="form-section-title">1. Informasi Produk</div>
 
@@ -330,6 +421,7 @@
                                     <div class="mb-4">
                                         <label class="label-aesthetic">Pilih Ukuran / Dimensi</label>
                                         @if (isset($dataProduk) && $dataProduk)
+                                            {{-- ── KATALOG: dropdown ukuran ── --}}
                                             <div class="input-group">
                                                 <span
                                                     class="input-group-text bg-white border-end-0 text-muted rounded-start-4">
@@ -363,6 +455,7 @@
                                                 </select>
                                             </div>
                                         @else
+                                            {{-- ── CUSTOM: input dimensi dinamis ── --}}
                                             <label class="bentuk-toggle-box" for="is_silinder">
                                                 <input type="checkbox" id="is_silinder" onchange="toggleBentuk()">
                                                 <span class="bentuk-toggle-label">
@@ -419,8 +512,10 @@
                                     </div>
 
                                     <div class="mb-4" id="wrapper_berat_satuan" style="display:none;">
-                                        <label class="label-aesthetic"><i class="fa-solid fa-weight-hanging me-2"
-                                                style="color:var(--adira-gold);"></i>Berat Satuan</label>
+                                        <label class="label-aesthetic">
+                                            <i class="fa-solid fa-weight-hanging me-2"
+                                                style="color:var(--adira-gold);"></i>Berat Satuan
+                                        </label>
                                         <div class="berat-info-box">
                                             <i class="fa-solid fa-cube" style="color:var(--adira-gold);"></i>
                                             <input type="text" id="display_berat_satuan"
@@ -448,6 +543,7 @@
                                     </div>
                                 </div>
 
+                                {{-- ══ KOLOM KANAN ══ --}}
                                 <div class="col-md-6 ps-md-5">
                                     <div class="form-section-title">2. Detail Kustomisasi</div>
 
@@ -457,10 +553,41 @@
                                             placeholder="Gambarkan keinginan detail Anda..."></textarea>
                                     </div>
 
+                                    {{-- ── GAMBAR REFERENSI MAX 5 ── --}}
                                     <div class="mb-4">
-                                        <label class="label-aesthetic">Gambar Acuan / Referensi (Penting)</label>
-                                        <input type="file" name="gambar_referensi"
-                                            class="form-control input-aesthetic">
+                                        <label class="label-aesthetic">
+                                            Gambar Acuan / Referensi
+                                            <span class="text-muted fw-normal" style="font-size:0.78rem;">(Maks. 5
+                                                foto)</span>
+                                        </label>
+
+                                        <div class="upload-zone" id="uploadZone"
+                                            onclick="document.getElementById('gambar_referensi_input').click()">
+                                            <input type="file" id="gambar_referensi_input" name="gambar_referensi[]"
+                                                accept="image/jpeg,image/png,image/jpg" multiple>
+                                            <label class="upload-zone-label" for="gambar_referensi_input"
+                                                onclick="event.stopPropagation()">
+                                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                                <span>Klik untuk pilih gambar</span>
+                                                <span class="text-muted" style="font-weight:400;">JPG / PNG · maks. 2MB
+                                                    per foto</span>
+                                            </label>
+                                        </div>
+
+                                        {{-- Preview grid --}}
+                                        <div class="preview-grid" id="previewGrid" style="display:none;"></div>
+
+                                        {{-- Counter --}}
+                                        <div class="upload-counter" id="uploadCounter" style="display:none;"></div>
+
+                                        {{-- Disclaimer --}}
+                                        <div class="disclaimer-box mt-3">
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                            <strong>Catatan:</strong> Gambar di atas hanya sampel visual corak dan warna
+                                            dasar.
+                                            Karena marmer merupakan batu alam murni, motif asli produk tidak akan bisa
+                                            100% sama persis dengan sampel.
+                                        </div>
                                     </div>
 
                                     <div class="row g-3 mb-4">
@@ -480,6 +607,7 @@
                                         </div>
                                     </div>
 
+                                    {{-- SECTION PENGIRIMAN --}}
                                     <div id="section_pengiriman" style="display:none;">
                                         <div class="shipping-box-highlight">
                                             <label class="label-aesthetic mb-3">Jenis Pengiriman</label>
@@ -491,8 +619,9 @@
                                             </div>
 
                                             <div id="section_bus" style="display:none;">
-                                                <label class="label-aesthetic"><i class="fa-solid fa-bus me-2"></i>Pilih
-                                                    Terminal Tujuan</label>
+                                                <label class="label-aesthetic">
+                                                    <i class="fa-solid fa-bus me-2"></i>Pilih Terminal Tujuan
+                                                </label>
                                                 <select name="terminal_id" id="terminal_id"
                                                     class="form-select input-aesthetic" onchange="handleTerminalChange()">
                                                     <option value="" data-tarif-per-kg="0" selected disabled>--
@@ -515,8 +644,9 @@
                                             </div>
 
                                             <div id="section_cargo" style="display:none;">
-                                                <label class="label-aesthetic mb-2"><i
-                                                        class="fa-solid fa-location-dot me-2"></i>Alamat Pengiriman</label>
+                                                <label class="label-aesthetic mb-2">
+                                                    <i class="fa-solid fa-location-dot me-2"></i>Alamat Pengiriman
+                                                </label>
 
                                                 @if ($listAlamat->isEmpty())
                                                     <div class="text-center py-3">
@@ -555,7 +685,8 @@
                                                                 </p>
                                                                 <p class="mb-0 small text-muted">
                                                                     {{ Str::limit($a->alamat_lengkap, 55) }},
-                                                                    {{ $a->kecamatan_nama }}, {{ $a->kota_nama }}</p>
+                                                                    {{ $a->kecamatan_nama }}, {{ $a->kota_nama }}
+                                                                </p>
                                                             </div>
                                                         @endforeach
                                                     </div>
@@ -565,11 +696,12 @@
                                                         @foreach (['jne', 'tiki', 'pos', 'jnt', 'sicepat'] as $kurir)
                                                             <div class="courier-btn" data-kurir="{{ $kurir }}"
                                                                 onclick="pilihKurir('{{ $kurir }}')">
-                                                                {{ strtoupper($kurir) }}</div>
+                                                                {{ strtoupper($kurir) }}
+                                                            </div>
                                                         @endforeach
                                                     </div>
-                                                    <small class="text-muted d-block">Ongkir akan dihitung admin
-                                                        setelah pesanan diverifikasi.</small>
+                                                    <small class="text-muted d-block">Ongkir akan dihitung admin setelah
+                                                        pesanan diverifikasi.</small>
                                                 @endif
                                             </div>
                                         </div>
@@ -621,6 +753,82 @@
         let selectedKecamatanId = null;
         let selectedKurir = null;
 
+        // ── FILE LIST untuk gambar referensi ──────────────────────
+        let fileList = []; // array of File objects, max 5
+
+        const MAX_FILES = 5;
+        const inputEl = document.getElementById('gambar_referensi_input');
+        const previewGrid = document.getElementById('previewGrid');
+        const counter = document.getElementById('uploadCounter');
+
+        inputEl.addEventListener('change', function() {
+            const incoming = Array.from(this.files);
+
+            incoming.forEach(file => {
+                if (fileList.length >= MAX_FILES) return;
+                // Hindari duplikat nama+size
+                const isDup = fileList.some(f => f.name === file.name && f.size === file.size);
+                if (!isDup) fileList.push(file);
+            });
+
+            // Reset value supaya event change bisa trigger lagi untuk file yg sama
+            this.value = '';
+
+            renderPreviews();
+            syncFilesToInput();
+        });
+
+        function renderPreviews() {
+            previewGrid.innerHTML = '';
+
+            if (fileList.length === 0) {
+                previewGrid.style.display = 'none';
+                counter.style.display = 'none';
+                return;
+            }
+
+            previewGrid.style.display = 'grid';
+            counter.style.display = 'block';
+            counter.className = 'upload-counter' + (fileList.length >= MAX_FILES ? ' full' : '');
+            counter.innerText = fileList.length + ' / ' + MAX_FILES + ' foto dipilih';
+
+            fileList.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const item = document.createElement('div');
+                    item.className = 'preview-item';
+                    item.innerHTML = `
+                        <img src="${e.target.result}" alt="preview">
+                        <button type="button" class="remove-btn" onclick="removeFile(${idx})">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>`;
+                    previewGrid.appendChild(item);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Sembunyikan upload zone jika sudah penuh
+            document.getElementById('uploadZone').style.opacity = fileList.length >= MAX_FILES ? '0.5' : '1';
+            document.getElementById('uploadZone').style.pointerEvents = fileList.length >= MAX_FILES ? 'none' : 'auto';
+        }
+
+        function removeFile(idx) {
+            fileList.splice(idx, 1);
+            renderPreviews();
+            syncFilesToInput();
+        }
+
+        /**
+         * Sync fileList (array of File) ke <input type="file">
+         * menggunakan DataTransfer API agar file benar-benar terkirim via form
+         */
+        function syncFilesToInput() {
+            const dt = new DataTransfer();
+            fileList.forEach(f => dt.items.add(f));
+            inputEl.files = dt.files;
+        }
+
+        // ── CSRF ──────────────────────────────────────────────────
         function getCsrf() {
             return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         }
@@ -630,7 +838,7 @@
                 method,
                 headers: {
                     'X-CSRF-TOKEN': getCsrf(),
-                    'Accept': 'application/json',
+                    'Accept': 'application/json'
                 },
             };
             if (body) {
@@ -646,6 +854,7 @@
             return res.json();
         }
 
+        // ── CUSTOM DIMENSION ──────────────────────────────────────
         function toggleBentuk() {
             if (isProdukKatalog) return;
 
@@ -679,20 +888,15 @@
             if (!preview) return;
 
             let label = '';
-
             if (isSilinder) {
                 const d = document.getElementById('dim_diameter')?.value;
                 const t = document.getElementById('dim_tinggi_silinder')?.value;
-                if (d && t) {
-                    label = `diameter ${d} cm × Tinggi ${t} cm`;
-                }
+                if (d && t) label = `diameter ${d} cm × Tinggi ${t} cm`;
             } else {
                 const p = document.getElementById('dim_panjang')?.value;
                 const l = document.getElementById('dim_lebar')?.value;
                 const t = document.getElementById('dim_tinggi_persegi')?.value;
-                if (p && l && t) {
-                    label = `${p} × ${l} × ${t} cm`;
-                }
+                if (p && l && t) label = `${p} × ${l} × ${t} cm`;
             }
 
             if (label) {
@@ -731,6 +935,7 @@
             return true;
         }
 
+        // ── HARGA & BERAT (katalog only) ──────────────────────────
         function updateHarga() {
             if (!isProdukKatalog) {
                 hargaProdukGlobal = 0;
@@ -752,6 +957,7 @@
             const qty = parseInt(document.getElementById('input_qty').value) || 1;
 
             document.getElementById('jenis_marmer').value = bahanId;
+
             const wrapperBerat = document.getElementById('wrapper_berat_satuan');
             if (beratSatuanGlobal > 0 && opt && !opt.disabled) {
                 document.getElementById('display_berat_satuan').value = beratSatuanGlobal + ' kg';
@@ -771,6 +977,7 @@
             refreshGrandTotal();
         }
 
+        // ── METODE & PENGIRIMAN ───────────────────────────────────
         function toggleMetode() {
             const metode = document.getElementById('metode_pengambilan').value;
             document.getElementById('section_pengiriman').style.display = metode === 'dikirim' ? 'block' : 'none';
@@ -831,6 +1038,7 @@
             document.getElementById('biaya_pengiriman_hidden').value = ongkirGlobal;
         }
 
+        // ── EVENT LISTENERS ───────────────────────────────────────
         document.getElementById('input_qty').addEventListener('input', updateHarga);
 
         document.getElementById('orderForm').addEventListener('submit', function(e) {

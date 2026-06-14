@@ -59,6 +59,7 @@ class Pesanan extends Model
         'tanggal_lunas' => 'datetime',
         'midtrans_payload' => 'array',
         'deleted_at' => 'datetime',
+        'gambar_referensi' => 'array',
     ];
 
     protected $appends = [
@@ -117,21 +118,21 @@ class Pesanan extends Model
     protected function fotoDikerjakan(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->resolveProgressPhotoPaths('Dikerjakan')
+            get: fn() => $this->resolveProgressPhotoPaths('Dikerjakan')
         );
     }
 
     protected function fotoSelesai(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->resolveProgressPhotoPaths('Selesai')
+            get: fn() => $this->resolveProgressPhotoPaths('Selesai')
         );
     }
 
     protected function isMenungguPelunasan(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->status === 'Selesai' && $this->status_pembayaran !== 'paid'
+            get: fn() => $this->status === 'Selesai' && $this->status_pembayaran !== 'paid'
         );
     }
 

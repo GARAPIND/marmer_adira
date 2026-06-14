@@ -196,6 +196,25 @@
         .upload-hidden {
             display: none;
         }
+
+        .gambar-referensi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .gambar-referensi-grid a {
+            display: block;
+        }
+
+        .gambar-referensi-grid img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #eee;
+            cursor: pointer;
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -271,12 +290,21 @@
                                         <td>{{ $item->jenis_marmer }}</td>
 
                                         <td>
-                                            @if ($item->gambar_referensi)
-                                                <img src="{{ asset('storage/' . $item->gambar_referensi) }}" alt="gambar"
+                                            @php
+                                                $gambarList = $item->gambar_referensi ?? [];
+                                                $gambarFirst =
+                                                    is_array($gambarList) && count($gambarList) ? $gambarList[0] : null;
+                                            @endphp
+                                            @if ($gambarFirst)
+                                                <img src="{{ asset('storage/' . $gambarFirst) }}" alt="gambar"
                                                     width="100" class="rounded shadow-sm img-preview"
                                                     style="cursor: pointer" data-bs-toggle="modal"
                                                     data-bs-target="#modalGambar"
-                                                    data-img="{{ asset('storage/' . $item->gambar_referensi) }}">
+                                                    data-img="{{ asset('storage/' . $gambarFirst) }}">
+                                                @if (count($gambarList) > 1)
+                                                    <span
+                                                        class="badge bg-dark rounded-pill ms-1">+{{ count($gambarList) - 1 }}</span>
+                                                @endif
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
@@ -304,6 +332,7 @@
                                                 data-payment-status="{{ $item->status_pembayaran }}"
                                                 data-foto-dikerjakan='@json($item->foto_dikerjakan ?? [])'
                                                 data-foto-selesai='@json($item->foto_selesai ?? [])'
+                                                data-gambar-referensi='@json($item->gambar_referensi ?? [])'
                                                 data-action="{{ route('pengrajin.update.status', $item->id) }}">
                                                 Lihat Detail
                                             </button>
@@ -326,6 +355,13 @@
             <div class="col-lg-4">
                 <div class="card detail-card p-4 shadow-sm" id="detail-panel">
                     <h5 class="fw-bold mb-4">Detail Pesanan <span id="display-id">-</span></h5>
+
+                    <div class="mb-4">
+                        <h6 class="small fw-bold text-uppercase text-muted mb-3">Gambar Referensi:</h6>
+                        <div id="preview-gambar-referensi" class="gambar-referensi-grid">
+                            <span class="text-muted small">Belum ada gambar referensi.</span>
+                        </div>
+                    </div>
 
                     <h6 class="small fw-bold text-uppercase text-muted mb-4">Timeline Status:</h6>
 
@@ -362,8 +398,8 @@
                             <span class="text-muted small">Belum ada foto.</span>
                         </div>
                         <button type="button" id="btn-foto-dikerjakan"
-                            class="btn btn-outline-dark btn-sm rounded-pill mt-3"
-                            data-bs-toggle="modal" data-bs-target="#modalFotoProgres">
+                            class="btn btn-outline-dark btn-sm rounded-pill mt-3" data-bs-toggle="modal"
+                            data-bs-target="#modalFotoProgres">
                             Kelola Foto Dikerjakan
                         </button>
                     </div>
@@ -373,8 +409,7 @@
                         <div id="preview-foto-selesai" class="photo-grid">
                             <span class="text-muted small">Belum ada foto.</span>
                         </div>
-                        <button type="button" id="btn-foto-selesai"
-                            class="btn btn-outline-dark btn-sm rounded-pill mt-3"
+                        <button type="button" id="btn-foto-selesai" class="btn btn-outline-dark btn-sm rounded-pill mt-3"
                             data-bs-toggle="modal" data-bs-target="#modalFotoProgres">
                             Kelola Foto Selesai
                         </button>
@@ -386,7 +421,8 @@
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
                                 <input type="hidden" name="status" value="Dikerjakan">
-                                <button type="submit" class="btn btn-outline-dark w-100 py-2 fw-bold small rounded-pill" disabled>
+                                <button type="submit" class="btn btn-outline-dark w-100 py-2 fw-bold small rounded-pill"
+                                    disabled>
                                     Mulai Pengerjaan
                                 </button>
                             </form>
@@ -396,7 +432,8 @@
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
                                 <input type="hidden" name="status" value="Selesai">
-                                <button type="submit" class="btn btn-gold w-100 py-2 fw-bold small rounded-pill shadow-sm" disabled>
+                                <button type="submit"
+                                    class="btn btn-gold w-100 py-2 fw-bold small rounded-pill shadow-sm" disabled>
                                     Tandai Selesai
                                 </button>
                             </form>
@@ -423,7 +460,8 @@
                 <div class="modal-header border-0 pb-0">
                     <div>
                         <h5 class="fw-bold mb-1" id="modal-foto-title">Kelola Foto Progres</h5>
-                        <p class="text-muted small mb-0" id="modal-foto-subtitle">Upload dan kelola foto progres pesanan.</p>
+                        <p class="text-muted small mb-0" id="modal-foto-subtitle">Upload dan kelola foto progres pesanan.
+                        </p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -435,17 +473,22 @@
                             <div class="photo-manager-dropzone mb-4">
                                 <div class="row g-3 align-items-end">
                                     <div class="col-md-8">
-                                        <label class="form-label small fw-bold text-uppercase text-muted">Pilih Foto</label>
-                                        <input type="file" id="modal-photo-input" name="foto_progres[]" class="form-control" multiple>
-                                        <div id="modal-photo-helper" class="form-text">Bisa pilih 1 foto atau beberapa foto sekaligus.</div>
+                                        <label class="form-label small fw-bold text-uppercase text-muted">Pilih
+                                            Foto</label>
+                                        <input type="file" id="modal-photo-input" name="foto_progres[]"
+                                            class="form-control" multiple>
+                                        <div id="modal-photo-helper" class="form-text">Bisa pilih 1 foto atau beberapa
+                                            foto sekaligus.</div>
                                     </div>
                                     <div class="col-md-4">
-                                        <button type="submit" id="btn-save-photo-list" class="btn btn-dark w-100 rounded-pill">
+                                        <button type="submit" id="btn-save-photo-list"
+                                            class="btn btn-dark w-100 rounded-pill">
                                             Upload Foto
                                         </button>
                                     </div>
                                 </div>
-                                <p class="text-muted small mb-0 mt-3">Upload satu per satu atau banyak sekaligus. Foto yang sudah tersimpan tetap tampil di bawah dan bisa dihapus satu per satu.</p>
+                                <p class="text-muted small mb-0 mt-3">Upload satu per satu atau banyak sekaligus. Foto yang
+                                    sudah tersimpan tetap tampil di bawah dan bisa dihapus satu per satu.</p>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -484,9 +527,11 @@
                 const paymentStatus = this.getAttribute('data-payment-status');
                 const fotoDikerjakan = JSON.parse(this.getAttribute('data-foto-dikerjakan') || '[]');
                 const fotoSelesai = JSON.parse(this.getAttribute('data-foto-selesai') || '[]');
+                const gambarReferensi = JSON.parse(this.getAttribute('data-gambar-referensi') || '[]');
                 const paymentBadge = document.getElementById('payment-badge');
                 const fotoDikerjakanContainer = document.getElementById('preview-foto-dikerjakan');
                 const fotoSelesaiContainer = document.getElementById('preview-foto-selesai');
+                const previewGambarReferensi = document.getElementById('preview-gambar-referensi');
                 const tombolSelesai = document.querySelector('#form-selesai button[type="submit"]');
                 const tombolDikerjakan = document.querySelector('#form-dikerjakan button[type="submit"]');
                 const statusActionHint = document.getElementById('status-action-hint');
@@ -560,8 +605,32 @@
                     ).join('');
                 };
 
+                const renderGambarReferensi = (container, images) => {
+                    if (!Array.isArray(images) || !images.length) {
+                        container.innerHTML =
+                            '<span class="text-muted small">Belum ada gambar referensi.</span>';
+                        return;
+                    }
+
+                    container.innerHTML = images.map((img) =>
+                        `<a href="#" class="gambar-referensi-link" data-img="/storage/${img}"><img src="/storage/${img}" alt="Gambar referensi"></a>`
+                    ).join('');
+
+                    container.querySelectorAll('.gambar-referensi-link').forEach(link => {
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            document.getElementById('previewGambar').src = this
+                                .getAttribute('data-img');
+                            const modalGambar = new bootstrap.Modal(document
+                                .getElementById('modalGambar'));
+                            modalGambar.show();
+                        });
+                    });
+                };
+
                 renderPhotos(fotoDikerjakanContainer, fotoDikerjakan);
                 renderPhotos(fotoSelesaiContainer, fotoSelesai);
+                renderGambarReferensi(previewGambarReferensi, gambarReferensi);
 
                 const renderPhotoTable = (photos, statusTarget) => {
                     photoListCounter.innerText = `${Array.isArray(photos) ? photos.length : 0} foto`;
@@ -605,8 +674,10 @@
                 const configureModal = (statusTarget, photos) => {
                     modalStatusTarget.value = statusTarget;
                     uploadForm.action = `/pengrajin/pesanan/${actionUrl.split('/').pop()}/foto-progres`;
-                    modalTitle.innerText = statusTarget === 'Dikerjakan' ? 'Kelola Foto Dikerjakan' : 'Kelola Foto Selesai';
-                    modalSubtitle.innerText = `${id} - ${statusTarget === 'Dikerjakan' ? 'Foto tahap produksi' : 'Foto hasil akhir pesanan'}`;
+                    modalTitle.innerText = statusTarget === 'Dikerjakan' ? 'Kelola Foto Dikerjakan' :
+                        'Kelola Foto Selesai';
+                    modalSubtitle.innerText =
+                        `${id} - ${statusTarget === 'Dikerjakan' ? 'Foto tahap produksi' : 'Foto hasil akhir pesanan'}`;
                     modalPhotoInput.value = '';
                     modalPhotoHelper.innerText = 'Bisa pilih 1 foto atau beberapa foto sekaligus.';
                     renderPhotoTable(photos, statusTarget);
@@ -617,9 +688,9 @@
 
                 modalPhotoInput.addEventListener('change', () => {
                     const totalFiles = modalPhotoInput.files.length;
-                    modalPhotoHelper.innerText = totalFiles > 0
-                        ? `${totalFiles} foto siap diupload.`
-                        : 'Bisa pilih 1 foto atau beberapa foto sekaligus.';
+                    modalPhotoHelper.innerText = totalFiles > 0 ?
+                        `${totalFiles} foto siap diupload.` :
+                        'Bisa pilih 1 foto atau beberapa foto sekaligus.';
                 });
 
                 // Reset Timeline Classes

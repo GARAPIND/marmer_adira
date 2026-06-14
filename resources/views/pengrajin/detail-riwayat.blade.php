@@ -172,20 +172,22 @@
                     <h5 class="section-subtitle"><i class="fas fa-tools me-2"></i> Detail Pekerjaan / Produk</h5>
 
                     <div class="info-label mb-2">Gambar Referensi / Acuan Desain</div>
-                    <div class="img-referensi-wrapper">
-                        @if ($pesanan->gambar_referensi)
-                            <a href="{{ asset('storage/' . $pesanan->gambar_referensi) }}" target="_blank"
-                                title="Klik untuk memperbesar">
-                                <img src="{{ asset('storage/' . $pesanan->gambar_referensi) }}" class="img-referensi"
-                                    alt="Referensi Marmer">
-                            </a>
-                        @else
+                    @if (!empty($pesanan->gambar_referensi))
+                        <div class="progress-gallery mb-4">
+                            @foreach ($pesanan->gambar_referensi as $gambar)
+                                <a href="{{ asset('storage/' . $gambar) }}" target="_blank" title="Klik untuk memperbesar">
+                                    <img src="{{ asset('storage/' . $gambar) }}" alt="Referensi Marmer">
+                                </a>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="img-referensi-wrapper">
                             <div class="py-5 text-muted">
                                 <i class="fas fa-image fa-3x mb-3 opacity-25"></i>
                                 <p class="small mb-0">Tidak ada gambar referensi yang diunggah.</p>
                             </div>
-                        @endif
-                    </div>
+                        </div>
+                    @endif
 
                     <div class="row">
                         <div class="col-md-6">

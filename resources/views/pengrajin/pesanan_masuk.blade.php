@@ -114,6 +114,28 @@
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(197, 164, 126, 0.4);
         }
+
+        .gambar-referensi-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            justify-content: center;
+        }
+
+        .img-referensi-thumb {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            cursor: zoom-in;
+            border: 1px solid #eee;
+            transition: 0.3s;
+        }
+
+        .img-referensi-thumb:hover {
+            transform: scale(1.05);
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -157,7 +179,7 @@
                                                 data-bahan="{{ $item->jenis_marmer }}"
                                                 data-status_pembayaran="{{ $item->status_pembayaran }}"
                                                 data-catatan="{{ $item->catatan_khusus }}"
-                                                data-gambar="{{ $item->gambar_referensi ? asset('storage/' . $item->gambar_referensi) : '' }}"
+                                                data-gambar="{{ json_encode($item->gambar_referensi ?? []) }}"
                                                 data-action="{{ route('pengrajin.update.status', $item->id) }}">
                                                 <i class="fas fa-eye me-1"></i> Detail
                                             </button>
@@ -185,9 +207,7 @@
                         <span class="info-label text-center">Gambar Referensi / Acuan</span>
                         <div class="gambar-referensi-wrapper" id="gambar-wrapper">
                             <p class="text-muted small mb-0" id="no-image-text">Pilih pesanan untuk melihat gambar</p>
-                            <a id="image-link" href="#" target="_blank" style="display:none;">
-                                <img src="" id="detail-gambar" class="img-referensi">
-                            </a>
+                            <div class="gambar-referensi-grid" id="gambar-grid" style="display:none;"></div>
                         </div>
                     </div>
 
@@ -252,18 +272,31 @@
                 document.getElementById('detail-ukuran').innerText = this.getAttribute('data-ukuran');
                 document.getElementById('detail-bahan').innerText = this.getAttribute('data-bahan');
 
-                const gambarUrl = this.getAttribute('data-gambar');
-                const imgLink = document.getElementById('image-link');
+                const gambarJson = this.getAttribute('data-gambar');
+                const gambarGrid = document.getElementById('gambar-grid');
                 const noImageText = document.getElementById('no-image-text');
 
-                if (gambarUrl) {
-                    document.getElementById('detail-gambar').src = gambarUrl;
-                    imgLink.href = gambarUrl;
-                    imgLink.style.display = 'block';
+                let gambarList = [];
+                try {
+                    gambarList = JSON.parse(gambarJson);
+                } catch (e) {
+                    gambarList = [];
+                }
+
+                if (Array.isArray(gambarList) && gambarList.length > 0) {
+                    gambarGrid.innerHTML = gambarList.map(img => `
+                        <a href="/storage/${img}" target="_blank">
+                            <img src="/storage/${img}" class="img-referensi-thumb">
+                        </a>
+                    `).join('');
+                    gambarGrid.style.display = 'flex';
                     noImageText.style.display = 'none';
                 } else {
-                    imgLink.style.display = 'none';
+                    gambarGrid.style.display = 'none';
+                    gambarGrid.innerHTML = '';
                     noImageText.style.display = 'block';
+                    4
+                    noImageText.innerText = 'Tidak ada gambar referensi.';
                 }
 
                 const catatan = this.getAttribute('data-catatan');

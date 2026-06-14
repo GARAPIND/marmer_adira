@@ -245,7 +245,7 @@ class PesananController extends Controller
         if ($pesanan->relationLoaded('paymentHistories')) {
             $paidFromHistory = (int) $pesanan->paymentHistories
                 ->whereIn('event_type', ['paid_dp', 'paid_lunas'])
-                ->sum(fn ($item) => (int) ($item->nominal ?? 0));
+                ->sum(fn($item) => (int) ($item->nominal ?? 0));
         } else {
             $paidFromHistory = (int) PesananPaymentHistory::query()
                 ->where('pesanan_id', $pesanan->id)
@@ -278,8 +278,7 @@ class PesananController extends Controller
         array $payload,
         string $paymentStep = 'lunas',
         string $source = 'unknown'
-    ): string
-    {
+    ): string {
         $transactionStatus = $payload['transaction_status'] ?? null;
         $fraudStatus       = $payload['fraud_status'] ?? null;
         $statusPembayaran  = $pesanan->status_pembayaran ?? 'no_paid';
@@ -384,7 +383,8 @@ class PesananController extends Controller
             'jumlah'             => 'required|integer|min:1',
             'berat_satuan'       => 'nullable|numeric|min:0',
             'metode_pengambilan' => 'required|in:dirumah,dikirim',
-            'gambar_referensi'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'gambar_referensi'   => 'nullable|array|max:5',
+            'gambar_referensi.*' => 'image|mimes:jpeg,png,jpg|max:2048',
             'total_harga'        => 'nullable|numeric|min:0',
             'biaya_pengiriman'   => 'nullable|numeric|min:0',
         ];
@@ -401,15 +401,19 @@ class PesananController extends Controller
 
             if ($request->jenis_pengiriman === 'cargo') {
                 $rules['alamat_pembeli_id'] = 'required|integer';
-                $rules['courier'] = 'required|string|max:50';
+                $rules['courier']           = 'required|string|max:50';
             }
         }
 
         $request->validate($rules, [
-            'berat_satuan.numeric' => 'Berat satuan harus berupa angka, bisa memakai koma atau titik.',
+            'berat_satuan.numeric'      => 'Berat satuan harus berupa angka, bisa memakai koma atau titik.',
+            'gambar_referensi.max'      => 'Maksimal 5 gambar referensi yang dapat diunggah.',
+            'gambar_referensi.*.image'  => 'Setiap file harus berupa gambar.',
+            'gambar_referensi.*.mimes'  => 'Format gambar harus jpeg, png, atau jpg.',
+            'gambar_referensi.*.max'    => 'Ukuran setiap gambar maksimal 2MB.',
         ]);
 
-        $alamatFinal = 'Ambil di Tempat (Tulungagung)';
+        $alamatFinal     = 'Ambil di Tempat (Tulungagung)';
         $alamatPembeliId = null;
         $jenisPengiriman = null;
 
@@ -428,7 +432,7 @@ class PesananController extends Controller
             } elseif ($jenisPengiriman === 'cargo') {
                 $alamat = AlamatPembeli::find($request->alamat_pembeli_id);
                 if ($alamat) {
-                    $alamatFinal    = $alamat->alamat_lengkap . ', ' . $alamat->kecamatan_nama . ', ' . $alamat->kota_nama . ', ' . $alamat->provinsi_nama;
+                    $alamatFinal     = $alamat->alamat_lengkap . ', ' . $alamat->kecamatan_nama . ', ' . $alamat->kota_nama . ', ' . $alamat->provinsi_nama;
                     $alamatPembeliId = $alamat->id;
 
                     if ($request->filled('courier')) {
@@ -438,9 +442,11 @@ class PesananController extends Controller
             }
         }
 
-        $pathGambar = null;
+        $pathsGambar = [];
         if ($request->hasFile('gambar_referensi')) {
-            $pathGambar = $request->file('gambar_referensi')->store('pesanan_custom', 'public');
+            foreach ($request->file('gambar_referensi') as $file) {
+                $pathsGambar[] = $file->store('pesanan_custom', 'public');
+            }
         }
 
         $payload = [
@@ -449,7 +455,7 @@ class PesananController extends Controller
             'ukuran'             => $request->ukuran,
             'jenis_marmer'       => $request->jenis_marmer,
             'catatan_khusus'     => $request->catatan_khusus,
-            'gambar_referensi'   => $pathGambar,
+            'gambar_referensi'   => !empty($pathsGambar) ? $pathsGambar : null,
             'jumlah'             => $request->jumlah,
             'metode_pengambilan' => $request->metode_pengambilan,
             'jenis_pengiriman'   => $jenisPengiriman,

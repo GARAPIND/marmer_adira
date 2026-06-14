@@ -88,6 +88,15 @@
             text-decoration: none;
             font-weight: 600;
         }
+
+        .gambar-referensi-item {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: zoom-in;
+            border: 1px solid #eee;
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -109,7 +118,8 @@
                         <li class="breadcrumb-item active fw-bold text-dark">Pesanan Baru</li>
                     </ol>
                 </nav>
-                <a href="{{ route('admin.pesanan.trash') }}" class="btn btn-outline-dark rounded-pill px-4 shadow-sm fw-bold mt-3">
+                <a href="{{ route('admin.pesanan.trash') }}"
+                    class="btn btn-outline-dark rounded-pill px-4 shadow-sm fw-bold mt-3">
                     <i class="fas fa-trash-alt me-2"></i> Sampah Pesanan
                 </a>
             </div>
@@ -257,8 +267,8 @@
                                 <div class="mb-3">
                                     <label class="text-muted small fw-bold text-uppercase d-block mb-1">Gambar Referensi
                                         Custom</label>
-                                    <div id="md-gambar-container"
-                                        class="text-center border rounded bg-light p-2 shadow-sm"></div>
+                                    <div id="md-gambar-container" class="text-center border rounded bg-light p-2 shadow-sm">
+                                    </div>
                                 </div>
 
                                 <div id="md-alamat-section" class="alert alert-info border-0 shadow-sm py-2 mb-0"
@@ -274,21 +284,22 @@
                                     <h6 class="fw-bold text-dark mb-3"><i class="fas fa-calculator me-2 text-gold"></i>
                                         Rincian</h6>
 
-                                     <div class="mb-3">
-                                         <label class="form-label small fw-bold">Harga Produk (Rp)</label>
-                                         <div class="input-group">
-                                             <span class="input-group-text border-dark bg-dark text-white">Rp</span>
-                                             <input type="number" name="total_harga" id="input_harga"
-                                                 class="form-control border-dark" placeholder="0" required min="1">
-                                         </div>
-                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Harga Produk (Rp)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text border-dark bg-dark text-white">Rp</span>
+                                            <input type="number" name="total_harga" id="input_harga"
+                                                class="form-control border-dark" placeholder="0" required min="1">
+                                        </div>
+                                    </div>
 
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">Berat Satuan (kg)</label>
                                         <div class="input-group">
                                             <span class="input-group-text border-dark bg-dark text-white">kg</span>
                                             <input type="number" name="berat_satuan" id="input_berat_satuan"
-                                                class="form-control border-dark" placeholder="0" min="0" step="0.01">
+                                                class="form-control border-dark" placeholder="0" min="0"
+                                                step="0.01">
                                         </div>
                                     </div>
 
@@ -462,9 +473,22 @@
             document.getElementById('md-jumlah').innerText = data.jumlah + ' Pcs';
             document.getElementById('md-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan khusus.';
             const gambarContainer = document.getElementById('md-gambar-container');
-            if (data.gambar_referensi) {
-                gambarContainer.innerHTML =
-                    `<a href="/storage/${data.gambar_referensi}" target="_blank"><img src="/storage/${data.gambar_referensi}" class="img-fluid rounded-3" style="max-height: 220px; cursor: zoom-in;"></a>`;
+            let gambarList = data.gambar_referensi;
+
+            if (typeof gambarList === 'string') {
+                try {
+                    gambarList = JSON.parse(gambarList);
+                } catch (e) {
+                    gambarList = gambarList ? [gambarList] : [];
+                }
+            }
+
+            if (Array.isArray(gambarList) && gambarList.length > 0) {
+                gambarContainer.innerHTML = gambarList.map(img => `
+        <a href="/storage/${img}" target="_blank" class="d-inline-block m-1">
+            <img src="/storage/${img}" class="gambar-referensi-item">
+        </a>
+    `).join('');
             } else {
                 gambarContainer.innerHTML =
                     '<p class="text-muted small mb-0 py-3">Tidak ada gambar referensi custom.</p>';
