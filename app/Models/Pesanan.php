@@ -31,6 +31,10 @@ class Pesanan extends Model
         'alamat_pembeli_id',
         'alamat_pengiriman',
         'biaya_pengiriman',
+        'kode_resi_internal',
+        'nomor_resi_pengiriman',
+        'tanggal_siap_dikirim',
+        'tanggal_dikirim',
         'alasan_penolakan',
         'status',
         'tgl_update_proses',
@@ -57,6 +61,8 @@ class Pesanan extends Model
         'total_berat' => 'float',
         'tanggal_bayar' => 'datetime',
         'tanggal_lunas' => 'datetime',
+        'tanggal_siap_dikirim' => 'datetime',
+        'tanggal_dikirim' => 'datetime',
         'midtrans_payload' => 'array',
         'deleted_at' => 'datetime',
         'gambar_referensi' => 'array',
@@ -147,6 +153,10 @@ class Pesanan extends Model
             get: function () {
                 if ($this->status === 'diekspedisi') {
                     return 'Dikirim';
+                }
+
+                if ($this->status === 'Siap Dikirim') {
+                    return 'Siap Dikirim';
                 }
 
                 if ($this->status === 'Selesai' && $this->status_pembayaran !== 'paid') {

@@ -107,17 +107,6 @@
             color: white;
         }
 
-        .btn-bus {
-            border-color: #17a2b8;
-            color: #17a2b8;
-            background: transparent;
-        }
-
-        .btn-bus:hover {
-            background: #17a2b8;
-            color: white;
-        }
-
         /* SweetAlert Custom Style */
         .swal2-popup {
             border-radius: 25px !important;
@@ -205,29 +194,9 @@
                                     @endif
                                 </td>
                                 <td class="pe-4 text-center">
-                                    <div class="d-flex justify-content-center gap-2">
+                                    <div class="d-flex justify-content-center">
                                         <a href="{{ route('pengrajin.riwayat.detail', $item->id) }}"
                                             class="btn-action-custom btn-detail">Detail</a>
-
-                                        @if ($item->metode_pengambilan == 'dikirim' && $item->status != 'diekspedisi')
-                                            <form id="form-bus-{{ $item->id }}"
-                                                action="{{ route('pengrajin.update.status', $item->id) }}" method="POST">
-                                                @csrf
-                                                @method('PATCH')
-                                                <input type="hidden" name="status" value="diekspedisi">
-                                                <button type="button" class="btn-action-custom btn-bus"
-                                                    onclick="konfirmasiKirimBus(
-                                            '{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}', 
-                                            '{{ number_format($item->biaya_pengiriman, 0, ',', '.') }}', 
-                                            '{{ number_format($item->total_harga + $item->biaya_pengiriman, 0, ',', '.') }}', 
-                                            '{{ $item->alamat_pengiriman }}', 
-                                            {{ $item->id }},
-                                            '{{ $item->status_pembayaran }}'
-                                        )">
-                                                    <i class="fas fa-bus"></i> Kirim
-                                                </button>
-                                            </form>
-                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -241,56 +210,4 @@
             </div>
         </div>
     </div>
-
-    <script>
-        function konfirmasiKirimBus(orderId, ongkir, total, tujuan, id, statusPembayaran) {
-            if (statusPembayaran !== 'paid') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Pelunasan Diperlukan',
-                    text: 'PEMBELI HARUS MELUNASI TERLEBIH DAHULU SEBELUM PESANAN DIKIRIM.',
-                    confirmButtonColor: '#2c3e50'
-                });
-                return;
-            }
-
-            Swal.fire({
-                title: '<h4 class="fw-bold mb-0" style="color: var(--adira-dark)">Konfirmasi Pengiriman</h4>',
-                html: `
-            <div class="text-start p-3 mt-3" style="background: #f8f9fa; border-radius: 15px; border-left: 5px solid var(--adira-gold);">
-                <div class="mb-2 small">
-                    <label class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">ID Pesanan</label>
-                    <div class="fw-bold text-primary">ORD-${orderId}</div>
-                </div>
-                <div class="mb-2 small">
-                    <label class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Tujuan & Rincian</label>
-                    <div class="fw-bold text-dark">${tujuan}</div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <label class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Ongkos Kirim</label>
-                        <div class="fw-bold text-danger">Rp ${ongkir}</div>
-                    </div>
-                    <div class="col-6">
-                        <label class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Total Bayar</label>
-                        <div class="fw-bold text-success">Rp ${total}</div>
-                    </div>
-                </div>
-            </div>
-            <p class="text-muted small mt-3 mb-0 italic">Pastikan barang sudah diberikan ke eksepedisi.</p>
-        `,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#C5A47E',
-                cancelButtonColor: '#2c3e50',
-                confirmButtonText: 'Ya, Sudah Dikirim!',
-                cancelButtonText: 'Batal',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('form-bus-' + id).submit();
-                }
-            });
-        }
-    </script>
 @endsection

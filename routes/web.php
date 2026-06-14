@@ -77,8 +77,10 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/pesanan/{id}', [AdminController::class, 'showPesanan'])->whereNumber('id')->name('pesanan.show');
+        Route::get('/pesanan/{id}/resi', [AdminController::class, 'printResi'])->whereNumber('id')->name('pesanan.resi');
         Route::post('/pesanan/{id}/hitung-ongkir', [AdminController::class, 'hitungOngkirPesanan'])->name('pesanan.hitung-ongkir');
         Route::post('/pesanan/{id}/update', [AdminController::class, 'updatePesanan'])->name('pesanan.update');
+        Route::post('/pesanan/{id}/kirim', [AdminController::class, 'kirimPesanan'])->name('pesanan.kirim');
         Route::post('/pesanan/{id}/selesai', [AdminController::class, 'selesaiPesanan'])->name('pesanan.selesai');
         Route::delete('/pesanan/{id}', [AdminController::class, 'destroyPesanan'])->name('pesanan.destroy');
         Route::get('/pesanan/sampah', [AdminController::class, 'trashPesanan'])->name('pesanan.trash');

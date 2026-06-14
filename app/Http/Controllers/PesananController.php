@@ -489,7 +489,7 @@ class PesananController extends Controller
         $pesanan = Pesanan::with('items')->where('id', $id)->where('user_id', Auth::id())->firstOrFail();
         $paymentStep = request()->query('payment_step', 'lunas');
         $allowedStatusesForDp = ['Diverifikasi'];
-        $allowedStatusesForLunas = ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Selesai'];
+        $allowedStatusesForLunas = ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Siap Dikirim', 'Selesai', 'diekspedisi'];
 
         if (!in_array($paymentStep, ['dp', 'lunas'], true)) {
             return response()->json(['message' => 'Metode pembayaran tidak valid'], 422);
@@ -528,23 +528,12 @@ class PesananController extends Controller
                 'quantity' => 1,
                 'name' => 'DP 50% Pesanan ORD-' . $pesanan->id,
             ]]
-            : $pesanan->items->map(function ($item) {
-                return [
-                    'id' => 'ITEM-' . $item->id,
-                    'price' => (int) $item->harga_satuan,
-                    'quantity' => (int) $item->jumlah,
-                    'name' => substr($item->nama_produk . ' - ' . $item->ukuran, 0, 50),
-                ];
-            })->values()->all();
-
-        if ($paymentStep === 'lunas' && (int) ($pesanan->biaya_pengiriman ?? 0) > 0) {
-            $itemDetails[] = [
-                'id' => 'ONGKIR-' . $pesanan->id,
-                'price' => (int) $pesanan->biaya_pengiriman,
+            : [[
+                'id' => 'PELUNASAN-' . $pesanan->id,
+                'price' => $totalAkhir,
                 'quantity' => 1,
-                'name' => 'Ongkos Kirim',
-            ];
-        }
+                'name' => 'Pelunasan Pesanan ORD-' . $pesanan->id,
+            ]];
 
         $params = [
             'transaction_details' => [

@@ -49,10 +49,6 @@
 @endif
 
 <div class="acc-block">
-    <label>Ukuran</label>
-    <div class="val">{{ $item->ukuran }}</div>
-</div>
-<div class="acc-block">
     <label>Jumlah</label>
     <div class="val">{{ $item->jumlah }} Pcs</div>
 </div>

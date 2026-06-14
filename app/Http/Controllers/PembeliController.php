@@ -27,7 +27,7 @@ class PembeliController extends Controller
             // tetapi masih menunggu pelunasan dari pembeli.
             'proses'     => Pesanan::where('user_id', $userId)
                             ->where(function ($query) {
-                                $query->whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'diekspedisi'])
+                                $query->whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Siap Dikirim', 'diekspedisi'])
                                     ->orWhere(function ($subQuery) {
                                         $subQuery->where('status', 'Selesai')
                                             ->where('status_pembayaran', '!=', 'paid');

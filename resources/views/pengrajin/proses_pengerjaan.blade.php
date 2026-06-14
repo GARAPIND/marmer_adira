@@ -197,25 +197,6 @@
             display: none;
         }
 
-        .gambar-referensi-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 8px;
-        }
-
-        .gambar-referensi-grid a {
-            display: block;
-        }
-
-        .gambar-referensi-grid img {
-            width: 100%;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 10px;
-            border: 1px solid #eee;
-            cursor: pointer;
-        }
-
         .order-item-stack {
             overflow-x: auto;
         }
@@ -242,6 +223,31 @@
             font-size: 0.72rem;
             text-transform: uppercase;
             font-weight: 800;
+        }
+
+        .item-photo-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--adira-dark);
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .item-photo-link:hover {
+            color: var(--adira-gold);
+        }
+
+        .item-note {
+            display: inline-block;
+            background: #f8fafb;
+            border: 1px solid #edf2f7;
+            border-radius: 10px;
+            padding: 8px 10px;
+            color: #52606d;
+            font-size: 0.82rem;
+            line-height: 1.5;
         }
     </style>
 
@@ -278,7 +284,7 @@
 
         <div class="row g-4">
             {{-- SISI KIRI: TABEL PEMANTAUAN --}}
-            <div class="col-lg-8">
+            <div class="col-lg-6">
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
                     <div class="table-responsive">
                         <table class="table table-elegant mb-0">
@@ -287,10 +293,6 @@
                                     <th class="ps-4">ID Pesanan</th>
                                     <th>Nama Pembeli</th>
                                     <th>Nama Produk</th>
-                                    <th>Ukuran</th>
-                                    <th>Jumlah</th>
-                                    <th>Bahan</th>
-                                    <th>Gambar</th>
                                     <th>Pembayaran</th>
                                     <th>Status</th>
                                     <th class="pe-4 text-center">Aksi</th>
@@ -306,37 +308,6 @@
                                         <td>{{ $item->user->name ?? '-' }}</td>
 
                                         <td class="fw-semibold">{{ $item->nama_produk }}</td>
-
-                                        <td>
-                                            <span class="badge bg-light text-dark border">
-                                                {{ $item->ukuran }}
-                                            </span>
-                                        </td>
-
-                                        <td>{{ $item->jumlah }}</td>
-
-                                        <td>{{ $item->jenis_marmer }}</td>
-
-                                        <td>
-                                            @php
-                                                $gambarList = $item->gambar_referensi ?? [];
-                                                $gambarFirst =
-                                                    is_array($gambarList) && count($gambarList) ? $gambarList[0] : null;
-                                            @endphp
-                                            @if ($gambarFirst)
-                                                <img src="{{ asset('storage/' . $gambarFirst) }}" alt="gambar"
-                                                    width="100" class="rounded shadow-sm img-preview"
-                                                    style="cursor: pointer" data-bs-toggle="modal"
-                                                    data-bs-target="#modalGambar"
-                                                    data-img="{{ asset('storage/' . $gambarFirst) }}">
-                                                @if (count($gambarList) > 1)
-                                                    <span
-                                                        class="badge bg-dark rounded-pill ms-1">+{{ count($gambarList) - 1 }}</span>
-                                                @endif
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
 
                                         <td>
                                             <span
@@ -360,7 +331,6 @@
                                                 data-payment-status="{{ $item->status_pembayaran }}"
                                                 data-foto-dikerjakan='@json($item->foto_dikerjakan ?? [])'
                                                 data-foto-selesai='@json($item->foto_selesai ?? [])'
-                                                data-gambar-referensi='@json($item->gambar_referensi ?? [])'
                                                 data-items='@json($item->items ?? [])'
                                                 data-action="{{ route('pengrajin.update.status', $item->id) }}">
                                                 Lihat Detail
@@ -369,7 +339,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="10" class="text-center py-5 text-muted italic">
+                                        <td colspan="6" class="text-center py-5 text-muted italic">
                                             Tidak ada pesanan yang sedang dalam proses.
                                         </td>
                                     </tr>
@@ -381,16 +351,9 @@
             </div>
 
             {{-- SISI KANAN: PANEL TIMELINE --}}
-            <div class="col-lg-4">
+            <div class="col-lg-6">
                 <div class="card detail-card p-4 shadow-sm" id="detail-panel">
                     <h5 class="fw-bold mb-4">Detail Pesanan <span id="display-id">-</span></h5>
-
-                    <div class="mb-4">
-                        <h6 class="small fw-bold text-uppercase text-muted mb-3">Gambar Referensi:</h6>
-                        <div id="preview-gambar-referensi" class="gambar-referensi-grid">
-                            <span class="text-muted small">Belum ada gambar referensi.</span>
-                        </div>
-                    </div>
 
                     <div class="mb-4">
                         <h6 class="small fw-bold text-uppercase text-muted mb-3">Daftar Item Pesanan:</h6>
@@ -410,9 +373,9 @@
                             <p class="mb-0 fw-bold">Dikerjakan</p>
                             <small class="text-muted">Dalam tahap pembentukan/pemotongan</small>
                         </div>
-                        <div id="step-selesai" class="timeline-item">
-                            <p class="mb-0 fw-bold">Selesai</p>
-                            <small class="text-muted">Pesanan siap untuk dikirim</small>
+                        <div id="step-siap-dikirim" class="timeline-item">
+                            <p class="mb-0 fw-bold">Siap Dikirim</p>
+                            <small class="text-muted">Produksi selesai dan menunggu admin cetak resi</small>
                         </div>
                     </div>
 
@@ -467,24 +430,14 @@
                             <form id="form-selesai" method="POST" action="">
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
-                                <input type="hidden" name="status" value="Selesai">
+                                <input type="hidden" name="status" value="Siap Dikirim" id="input-status-selesai">
                                 <button type="submit"
                                     class="btn btn-gold w-100 py-2 fw-bold small rounded-pill shadow-sm" disabled>
-                                    Tandai Selesai
+                                    <span id="label-btn-selesai">Kirim Pesanan</span>
                                 </button>
                             </form>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalGambar" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 rounded-4">
-                <div class="modal-body p-2 text-center">
-                    <img id="previewGambar" src="" class="img-fluid rounded">
                 </div>
             </div>
         </div>
@@ -542,19 +495,7 @@
             </div>
         </div>
     </div>
-
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('modalGambar');
-            const preview = document.getElementById('previewGambar');
-
-            document.querySelectorAll('.img-preview').forEach(img => {
-                img.addEventListener('click', function() {
-                    preview.src = this.getAttribute('data-img');
-                });
-            });
-        });
-
         document.querySelectorAll('.btn-lihat-detail').forEach(button => {
             button.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
@@ -563,12 +504,10 @@
                 const paymentStatus = this.getAttribute('data-payment-status');
                 const fotoDikerjakan = JSON.parse(this.getAttribute('data-foto-dikerjakan') || '[]');
                 const fotoSelesai = JSON.parse(this.getAttribute('data-foto-selesai') || '[]');
-                const gambarReferensi = JSON.parse(this.getAttribute('data-gambar-referensi') || '[]');
                 const orderItems = JSON.parse(this.getAttribute('data-items') || '[]');
                 const paymentBadge = document.getElementById('payment-badge');
                 const fotoDikerjakanContainer = document.getElementById('preview-foto-dikerjakan');
                 const fotoSelesaiContainer = document.getElementById('preview-foto-selesai');
-                const previewGambarReferensi = document.getElementById('preview-gambar-referensi');
                 const previewOrderItems = document.getElementById('preview-order-items');
                 const tombolSelesai = document.querySelector('#form-selesai button[type="submit"]');
                 const tombolDikerjakan = document.querySelector('#form-dikerjakan button[type="submit"]');
@@ -587,6 +526,8 @@
                 const btnFotoDikerjakan = document.getElementById('btn-foto-dikerjakan');
                 const btnFotoSelesai = document.getElementById('btn-foto-selesai');
                 const photoListCounter = document.getElementById('photo-list-counter');
+                const inputStatusSelesai = document.getElementById('input-status-selesai');
+                const labelBtnSelesai = document.getElementById('label-btn-selesai');
 
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('form-dikerjakan').action = actionUrl;
@@ -613,10 +554,21 @@
                     colFormSelesai.classList.add('col-12');
                     sectionFotoDikerjakan.classList.remove('upload-hidden');
                     sectionFotoSelesai.classList.remove('upload-hidden');
+                    inputStatusSelesai.value = 'Siap Dikirim';
+                    labelBtnSelesai.innerText = 'Kirim Pesanan';
                     statusActionHint.classList.remove('d-none');
                     statusActionHint.className = 'alert alert-info border-0 small mb-4';
                     statusActionHint.innerHTML =
-                        '<i class="fas fa-circle-info me-1"></i> Pesanan sudah masuk tahap dikerjakan. Sekarang Anda bisa upload foto progress dan lanjut tandai selesai.';
+                        '<i class="fas fa-circle-info me-1"></i> Upload foto progres dan foto hasil selesai. Jika produksi sudah benar-benar selesai, klik <b>Kirim Pesanan</b> agar status berubah ke <b>Siap Dikirim</b>.';
+                } else if (status === 'Siap Dikirim') {
+                    colFormDikerjakan.classList.add('d-none');
+                    colFormSelesai.classList.add('upload-hidden');
+                    sectionFotoDikerjakan.classList.remove('upload-hidden');
+                    sectionFotoSelesai.classList.remove('upload-hidden');
+                    statusActionHint.classList.remove('d-none');
+                    statusActionHint.className = 'alert alert-success border-0 small mb-4';
+                    statusActionHint.innerHTML =
+                        '<i class="fas fa-box me-1"></i> Pesanan sudah siap dikirim. Admin akan mencetak resi internal lalu mengubah status menjadi <b>Dikirim</b> setelah paket diserahkan ke cargo.';
                 } else {
                     colFormDikerjakan.classList.remove('d-none');
                     colFormSelesai.classList.add('upload-hidden');
@@ -643,39 +595,16 @@
                     ).join('');
                 };
 
-                const renderGambarReferensi = (container, images) => {
-                    if (!Array.isArray(images) || !images.length) {
-                        container.innerHTML =
-                            '<span class="text-muted small">Belum ada gambar referensi.</span>';
-                        return;
-                    }
-
-                    container.innerHTML = images.map((img) =>
-                        `<a href="#" class="gambar-referensi-link" data-img="/storage/${img}"><img src="/storage/${img}" alt="Gambar referensi"></a>`
-                    ).join('');
-
-                    container.querySelectorAll('.gambar-referensi-link').forEach(link => {
-                        link.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            document.getElementById('previewGambar').src = this
-                                .getAttribute('data-img');
-                            const modalGambar = new bootstrap.Modal(document
-                                .getElementById('modalGambar'));
-                            modalGambar.show();
-                        });
-                    });
-                };
-
                 renderPhotos(fotoDikerjakanContainer, fotoDikerjakan);
                 renderPhotos(fotoSelesaiContainer, fotoSelesai);
-                renderGambarReferensi(previewGambarReferensi, gambarReferensi);
                 previewOrderItems.innerHTML = Array.isArray(orderItems) && orderItems.length ? `
                     <table class="order-item-table">
                         <thead>
                             <tr>
                                 <th>Produk</th>
                                 <th>Qty</th>
-                                <th>Ukuran / Bahan</th>
+                                <th>Detail</th>
+                                <th>Referensi</th>
                                 <th>Subtotal</th>
                             </tr>
                         </thead>
@@ -684,10 +613,20 @@
                                 <tr>
                                     <td>
                                         <strong>${item.nama_produk || '-'}</strong>
-                                        ${item.catatan_khusus ? `<div class="small fst-italic text-muted mt-1">${item.catatan_khusus}</div>` : ''}
                                     </td>
                                     <td>${item.jumlah || 0}</td>
-                                    <td>${item.ukuran || '-'}<br><span class="text-muted small">${item.jenis_marmer || '-'}</span></td>
+                                    <td>
+                                        <div class="small text-dark fw-semibold">${item.ukuran || '-'}</div>
+                                        <div class="text-muted small">${item.jenis_marmer || '-'}</div>
+                                        ${item.catatan_khusus ? `<div class="item-note mt-2">${item.catatan_khusus}</div>` : '<span class="text-muted small">Tanpa catatan.</span>'}
+                                    </td>
+                                    <td>
+                                        ${Array.isArray(item.gambar_referensi) && item.gambar_referensi.length ? item.gambar_referensi.map((img, index) => `
+                                                    <a href="/storage/${img}" target="_blank" class="item-photo-link ${index > 0 ? 'mt-1' : ''}">
+                                                        <i class="fas fa-image"></i> Foto ${index + 1}
+                                                    </a>
+                                                `).join('<br>') : '<span class="text-muted small">Tidak ada foto</span>'}
+                                    </td>
                                     <td>Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</td>
                                 </tr>
                             `).join('')}
@@ -757,7 +696,7 @@
                 });
 
                 // Reset Timeline Classes
-                const steps = ['step-diproses', 'step-dikerjakan', 'step-selesai'];
+                const steps = ['step-diproses', 'step-dikerjakan', 'step-siap-dikirim'];
                 steps.forEach(s => document.getElementById(s).classList.remove('completed', 'active'));
 
                 // Logika Update Timeline Berdasarkan Status
@@ -766,10 +705,10 @@
                 } else if (status === 'Dikerjakan') {
                     document.getElementById('step-diproses').classList.add('completed');
                     document.getElementById('step-dikerjakan').classList.add('active');
-                } else if (status === 'Selesai') {
+                } else if (status === 'Siap Dikirim' || status === 'Selesai' || status === 'diekspedisi') {
                     document.getElementById('step-diproses').classList.add('completed');
                     document.getElementById('step-dikerjakan').classList.add('completed');
-                    document.getElementById('step-selesai').classList.add('active');
+                    document.getElementById('step-siap-dikirim').classList.add('active');
                 }
             });
         });

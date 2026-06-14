@@ -122,8 +122,8 @@ class PengrajinController extends Controller
     {
         $stats = [
             'baru'    => Pesanan::where('status', 'Diverifikasi')->count(),
-            'proses'  => Pesanan::whereIn('status', ['Diproses', 'Dikerjakan'])->count(),
-            'selesai' => Pesanan::where('status', 'Selesai')->whereDate('tgl_update_proses', Carbon::today())->count(),
+            'proses'  => Pesanan::whereIn('status', ['Diproses', 'Dikerjakan', 'Siap Dikirim'])->count(),
+            'selesai' => Pesanan::where('status', 'diekspedisi')->whereDate('tgl_update_proses', Carbon::today())->count(),
         ];
         return view('pengrajin.dashboard', compact('stats'));
     }
@@ -278,7 +278,7 @@ class PengrajinController extends Controller
     {
         $pesanan = Pesanan::findOrFail($id);
         $validated = $request->validate([
-            'status' => 'required|in:Diproses,Dikerjakan,Selesai,diekspedisi',
+            'status' => 'required|in:Diproses,Dikerjakan,Siap Dikirim,diekspedisi',
         ]);
 
         if ($validated['status'] === 'diekspedisi' && $pesanan->status_pembayaran !== 'paid') {
@@ -289,6 +289,14 @@ class PengrajinController extends Controller
             'status' => $validated['status'],
             'tgl_update_proses' => now(),
         ];
+
+        if ($validated['status'] === 'Siap Dikirim') {
+            $updatePayload['tanggal_siap_dikirim'] = now();
+        }
+
+        if ($validated['status'] === 'diekspedisi') {
+            $updatePayload['tanggal_dikirim'] = now();
+        }
 
         $pesanan->update($updatePayload);
 
@@ -380,7 +388,7 @@ class PengrajinController extends Controller
 
     public function prosesPengerjaan()
     {
-        $pesananAktif = Pesanan::with(['user', 'progressPhotos', 'items'])->whereIn('status', ['Diproses', 'Dikerjakan'])->latest()->get();
+        $pesananAktif = Pesanan::with(['user', 'progressPhotos', 'items'])->whereIn('status', ['Diproses', 'Dikerjakan', 'Siap Dikirim'])->latest()->get();
         return view('pengrajin.proses_pengerjaan', compact('pesananAktif'));
     }
 

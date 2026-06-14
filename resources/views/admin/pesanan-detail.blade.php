@@ -154,6 +154,12 @@
                             <div class="text-muted small">
                                 {{ $pesanan->status_pembayaran === 'paid' ? 'Lunas' : ($pesanan->status_pembayaran === 'dp' ? 'DP 50%' : 'Belum Bayar') }}
                             </div>
+                            @if ($pesanan->kode_resi_internal)
+                                <div class="text-muted small mt-2">Resi Internal: {{ $pesanan->kode_resi_internal }}</div>
+                            @endif
+                            @if ($pesanan->nomor_resi_pengiriman)
+                                <div class="text-muted small">Resi Cargo: {{ $pesanan->nomor_resi_pengiriman }}</div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -254,6 +260,38 @@
                                     <textarea name="alasan_penolakan" rows="4" class="form-control">{{ old('alasan_penolakan', $pesanan->alasan_penolakan) }}</textarea>
                                 </div>
                             </div>
+
+                            @if ($pesanan->metode_pengambilan === 'dikirim' && in_array($pesanan->status, ['Siap Dikirim', 'diekspedisi']))
+                                <div class="info-card mt-4">
+                                    <div class="info-label">Resi & Pengiriman Cargo</div>
+                                    <div class="small text-muted mb-3">
+                                        Sistem akan generate resi internal untuk label cetak. Nomor resi cargo resmi diisi setelah paket benar-benar diserahkan ke ekspedisi.
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2 mb-3">
+                                        <a href="{{ route('admin.pesanan.resi', $pesanan->id) }}" target="_blank"
+                                            class="btn btn-outline-dark rounded-pill px-4 fw-bold">
+                                            Cetak Resi
+                                        </a>
+                                    </div>
+
+                                    @if ($pesanan->status === 'Siap Dikirim')
+                                        <form method="POST" action="{{ route('admin.pesanan.kirim', $pesanan->id) }}">
+                                            @csrf
+                                            <label class="form-label small fw-bold">Nomor Resi Cargo Resmi</label>
+                                            <input type="text" name="nomor_resi_pengiriman" class="form-control mb-3"
+                                                value="{{ old('nomor_resi_pengiriman', $pesanan->nomor_resi_pengiriman) }}"
+                                                placeholder="Contoh: JNECARGO-00123456789">
+                                            <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold">
+                                                Kirim Pesanan
+                                            </button>
+                                        </form>
+                                    @else
+                                        <div class="alert alert-success border-0 mb-0">
+                                            Pesanan sudah dikirim ke cargo.
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                         <div class="col-lg-5">
                             <div class="summary-box">

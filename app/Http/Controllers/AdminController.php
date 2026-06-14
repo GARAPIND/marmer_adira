@@ -15,6 +15,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
@@ -65,8 +66,8 @@ class AdminController extends Controller
 
         return [
             'total'         => (clone $query)->count(),
-            'diverifikasi'  => (clone $query)->whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan'])->count(),
-            'diproses'      => (clone $query)->whereIn('status', ['Diproses', 'Dikerjakan'])->count(),
+            'diverifikasi'  => (clone $query)->whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Siap Dikirim'])->count(),
+            'diproses'      => (clone $query)->whereIn('status', ['Diproses', 'Dikerjakan', 'Siap Dikirim'])->count(),
             'selesai'       => (clone $query)->where('status', 'Selesai')->count(),
             'ditolak'       => (clone $query)->where('status', 'Ditolak')->count(),
         ];
@@ -161,6 +162,19 @@ class AdminController extends Controller
             });
     }
 
+    private function ensureInternalResi(Pesanan $pesanan): Pesanan
+    {
+        if (!empty($pesanan->kode_resi_internal)) {
+            return $pesanan;
+        }
+
+        $pesanan->update([
+            'kode_resi_internal' => 'ADIRA-' . now()->format('Ymd') . '-' . str_pad((string) $pesanan->id, 4, '0', STR_PAD_LEFT),
+        ]);
+
+        return $pesanan->fresh(['user', 'items', 'alamatPembeli', 'paymentHistories']);
+    }
+
     // ==========================================
     // 2. DASHBOARD & UPDATE PESANAN
     // ==========================================
@@ -169,7 +183,7 @@ class AdminController extends Controller
     {
         $stats = [
             'baru'      => Pesanan::where('status', 'Menunggu Verifikasi Admin')->count(),
-            'diproses'  => Pesanan::whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'diekspedisi'])->count(),
+            'diproses'  => Pesanan::whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Siap Dikirim', 'diekspedisi'])->count(),
             'selesai'   => Pesanan::where('status', 'Selesai')->count(),
             'total_bayar' => Pesanan::where('status_pembayaran', 'paid')
                 ->selectRaw('SUM(total_harga + COALESCE(biaya_pengiriman, 0)) as total')
@@ -206,6 +220,41 @@ class AdminController extends Controller
     {
         $pesanan = Pesanan::with(['user', 'items', 'alamatPembeli', 'paymentHistories'])->findOrFail($id);
         return view('admin.pesanan-detail', compact('pesanan'));
+    }
+
+    public function printResi($id)
+    {
+        $pesanan = Pesanan::with(['user', 'items'])->findOrFail($id);
+        $pesanan = $this->ensureInternalResi($pesanan);
+
+        $pdf = Pdf::loadView('admin.partials.resi-cetak', compact('pesanan'))->setPaper('a5', 'portrait');
+
+        return $pdf->stream('resi-internal-ORD-' . str_pad($pesanan->id, 3, '0', STR_PAD_LEFT) . '.pdf');
+    }
+
+    public function kirimPesanan(Request $request, $id)
+    {
+        $pesanan = Pesanan::findOrFail($id);
+
+        $validated = $request->validate([
+            'nomor_resi_pengiriman' => 'required|string|max:100',
+        ], [
+            'nomor_resi_pengiriman.required' => 'Nomor resi cargo wajib diisi sebelum pesanan dikirim.',
+        ]);
+
+        if ($pesanan->status !== 'Siap Dikirim') {
+            return redirect()->back()->with('error', 'Pesanan belum masuk tahap Siap Dikirim.');
+        }
+
+        $pesanan = $this->ensureInternalResi($pesanan);
+        $pesanan->update([
+            'status' => 'diekspedisi',
+            'nomor_resi_pengiriman' => trim($validated['nomor_resi_pengiriman']),
+            'tanggal_dikirim' => now(),
+            'tgl_update_proses' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Pesanan berhasil dikirim ke cargo.');
     }
 
     public function updatePesanan(Request $request, $id)

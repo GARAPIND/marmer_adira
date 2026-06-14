@@ -75,28 +75,6 @@
             min-height: 60px;
         }
 
-        .gambar-referensi-wrapper {
-            background: #f8f9fa;
-            border-radius: 15px;
-            overflow: hidden;
-            border: 1px dashed #ddd;
-            text-align: center;
-            margin-bottom: 1rem;
-            position: relative;
-            min-height: 150px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .img-referensi {
-            max-width: 100%;
-            max-height: 250px;
-            object-fit: contain;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
         .btn-konfirmasi {
             background-color: var(--adira-gold);
             color: white;
@@ -113,28 +91,6 @@
             background-color: #b08d44;
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(197, 164, 126, 0.4);
-        }
-
-        .gambar-referensi-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding: 10px;
-            justify-content: center;
-        }
-
-        .img-referensi-thumb {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 10px;
-            cursor: zoom-in;
-            border: 1px solid #eee;
-            transition: 0.3s;
-        }
-
-        .img-referensi-thumb:hover {
-            transform: scale(1.05);
         }
 
         .order-item-stack {
@@ -163,6 +119,31 @@
             font-size: 0.72rem;
             text-transform: uppercase;
             font-weight: 800;
+        }
+
+        .item-photo-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--adira-dark);
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .item-photo-link:hover {
+            color: var(--adira-gold);
+        }
+
+        .item-note {
+            display: inline-block;
+            background: #f8fafb;
+            border: 1px solid #edf2f7;
+            border-radius: 10px;
+            padding: 8px 10px;
+            color: #52606d;
+            font-size: 0.82rem;
+            line-height: 1.5;
         }
     </style>
 
@@ -209,11 +190,7 @@
                                                 class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold btn-show-detail"
                                                 data-id="ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}"
                                                 data-pembeli="{{ $item->user->name ?? 'Pembeli' }}"
-                                                data-produk="{{ $item->nama_produk }}" data-ukuran="{{ $item->ukuran }}"
-                                                data-bahan="{{ $item->jenis_marmer }}"
                                                 data-status_pembayaran="{{ $item->status_pembayaran }}"
-                                                data-catatan="{{ $item->catatan_khusus }}"
-                                                data-gambar="{{ json_encode($item->gambar_referensi ?? []) }}"
                                                 data-items='@json($item->items ?? [])'
                                                 data-action="{{ route('pengrajin.update.status', $item->id) }}">
                                                 <i class="fas fa-eye me-1"></i> Detail
@@ -238,44 +215,9 @@
                         <span id="display-id" class="badge bg-dark px-3 py-2 rounded-pill shadow-sm">-</span>
                     </div>
 
-                    <div class="mb-3">
-                        <span class="info-label text-center">Gambar Referensi / Acuan</span>
-                        <div class="gambar-referensi-wrapper" id="gambar-wrapper">
-                            <p class="text-muted small mb-0" id="no-image-text">Pilih pesanan untuk melihat gambar</p>
-                            <div class="gambar-referensi-grid" id="gambar-grid" style="display:none;"></div>
-                        </div>
-                    </div>
-
                     <div class="info-group">
                         <span class="info-label">Nama Pembeli</span>
                         <p class="info-value" id="detail-pembeli">-</p>
-                    </div>
-
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <div class="info-group">
-                                <span class="info-label">Nama Produk</span>
-                                <p class="info-value" id="detail-produk">-</p>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="info-group">
-                                <span class="info-label">Ukuran</span>
-                                <p class="info-value" id="detail-ukuran">-</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="info-group">
-                        <span class="info-label">Jenis Marmer</span>
-                        <p class="info-value" id="detail-bahan">-</p>
-                    </div>
-
-                    <div class="mb-4">
-                        <span class="info-label">Catatan Kustom</span>
-                        <div class="catatan-box" id="detail-catatan">
-                            "Tidak ada catatan khusus."
-                        </div>
                     </div>
 
                     <div class="mb-4">
@@ -310,54 +252,23 @@
             button.addEventListener('click', function() {
                 document.getElementById('display-id').innerText = this.getAttribute('data-id');
                 document.getElementById('detail-pembeli').innerText = this.getAttribute('data-pembeli');
-                document.getElementById('detail-produk').innerText = this.getAttribute('data-produk');
-                document.getElementById('detail-ukuran').innerText = this.getAttribute('data-ukuran');
-                document.getElementById('detail-bahan').innerText = this.getAttribute('data-bahan');
                 const itemsContainer = document.getElementById('detail-items');
-
-                const gambarJson = this.getAttribute('data-gambar');
                 const itemsJson = this.getAttribute('data-items');
-                const gambarGrid = document.getElementById('gambar-grid');
-                const noImageText = document.getElementById('no-image-text');
 
-                let gambarList = [];
                 let itemsList = [];
-                try {
-                    gambarList = JSON.parse(gambarJson);
-                } catch (e) {
-                    gambarList = [];
-                }
                 try {
                     itemsList = JSON.parse(itemsJson);
                 } catch (e) {
                     itemsList = [];
                 }
-
-                if (Array.isArray(gambarList) && gambarList.length > 0) {
-                    gambarGrid.innerHTML = gambarList.map(img => `
-                        <a href="/storage/${img}" target="_blank">
-                            <img src="/storage/${img}" class="img-referensi-thumb">
-                        </a>
-                    `).join('');
-                    gambarGrid.style.display = 'flex';
-                    noImageText.style.display = 'none';
-                } else {
-                    gambarGrid.style.display = 'none';
-                    gambarGrid.innerHTML = '';
-                    noImageText.style.display = 'block';
-                    noImageText.innerText = 'Tidak ada gambar referensi.';
-                }
-
-                const catatan = this.getAttribute('data-catatan');
-                document.getElementById('detail-catatan').innerText = (catatan && catatan.trim() !== "") ?
-                    `"${catatan}"` : '"Tidak ada catatan kustomisasi."';
                 itemsContainer.innerHTML = Array.isArray(itemsList) && itemsList.length ? `
                     <table class="order-item-table">
                         <thead>
                             <tr>
                                 <th>Produk</th>
                                 <th>Qty</th>
-                                <th>Ukuran / Bahan</th>
+                                <th>Detail</th>
+                                <th>Referensi</th>
                                 <th>Subtotal</th>
                             </tr>
                         </thead>
@@ -366,10 +277,20 @@
                                 <tr>
                                     <td>
                                         <strong>${item.nama_produk || '-'}</strong>
-                                        ${item.catatan_khusus ? `<div class="small fst-italic text-muted mt-1">${item.catatan_khusus}</div>` : ''}
                                     </td>
                                     <td>${item.jumlah || 0}</td>
-                                    <td>${item.ukuran || '-'}<br><span class="text-muted small">${item.jenis_marmer || '-'}</span></td>
+                                    <td>
+                                        <div class="small text-dark fw-semibold">${item.ukuran || '-'}</div>
+                                        <div class="text-muted small">${item.jenis_marmer || '-'}</div>
+                                        ${item.catatan_khusus ? `<div class="item-note mt-2">${item.catatan_khusus}</div>` : '<span class="text-muted small">Tanpa catatan.</span>'}
+                                    </td>
+                                    <td>
+                                        ${Array.isArray(item.gambar_referensi) && item.gambar_referensi.length ? item.gambar_referensi.map((img, index) => `
+                                                    <a href="/storage/${img}" target="_blank" class="item-photo-link ${index > 0 ? 'mt-1' : ''}">
+                                                        <i class="fas fa-image"></i> Foto ${index + 1}
+                                                    </a>
+                                                `).join('<br>') : '<span class="text-muted small">Tidak ada foto</span>'}
+                                    </td>
                                     <td>Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</td>
                                 </tr>
                             `).join('')}
