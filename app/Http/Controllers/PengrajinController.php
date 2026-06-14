@@ -122,8 +122,8 @@ class PengrajinController extends Controller
     {
         $stats = [
             'baru'    => Pesanan::where('status', 'Diverifikasi')->count(),
-            'proses'  => Pesanan::whereIn('status', ['Diproses', 'Dikerjakan', 'Siap Dikirim'])->count(),
-            'selesai' => Pesanan::where('status', 'diekspedisi')->whereDate('tgl_update_proses', Carbon::today())->count(),
+            'proses'  => Pesanan::whereIn('status', ['Diproses', 'Dikerjakan', 'Siap Dikirim', 'diekspedisi'])->count(),
+            'selesai' => Pesanan::where('status', 'Selesai')->whereDate('tgl_update_proses', Carbon::today())->count(),
         ];
         return view('pengrajin.dashboard', compact('stats'));
     }
@@ -367,7 +367,7 @@ class PengrajinController extends Controller
         $tanggal   = $request->query('tanggal');
 
         $riwayat = Pesanan::with(['user', 'progressPhotos', 'items'])
-            ->whereIn('status', ['Selesai', 'Dibatalkan', 'diekspedisi'])
+            ->whereIn('status', ['Selesai', 'Dibatalkan'])
             ->when($search, function ($query, $search) {
                 return $query->where('id', 'LIKE', "%{$search}%")
                     ->orWhereHas('user', function ($u) use ($search) {
@@ -388,7 +388,7 @@ class PengrajinController extends Controller
 
     public function prosesPengerjaan()
     {
-        $pesananAktif = Pesanan::with(['user', 'progressPhotos', 'items'])->whereIn('status', ['Diproses', 'Dikerjakan', 'Siap Dikirim'])->latest()->get();
+        $pesananAktif = Pesanan::with(['user', 'progressPhotos', 'items'])->whereIn('status', ['Diproses', 'Dikerjakan', 'Siap Dikirim', 'diekspedisi'])->latest()->get();
         return view('pengrajin.proses_pengerjaan', compact('pesananAktif'));
     }
 

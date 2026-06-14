@@ -249,6 +249,13 @@
             font-size: 0.82rem;
             line-height: 1.5;
         }
+
+        .shipping-mini-card {
+            background: #f8fafb;
+            border: 1px solid rgba(44, 62, 80, 0.08);
+            border-radius: 14px;
+            padding: 12px 14px;
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -318,8 +325,8 @@
 
                                         <td>
                                             <span
-                                                class="badge {{ $item->status == 'Dikerjakan' ? 'bg-warning' : 'bg-primary' }} bg-opacity-10 {{ $item->status == 'Dikerjakan' ? 'text-warning' : 'text-primary' }} px-3 py-2 rounded-pill fw-bold">
-                                                {{ $item->status }}
+                                                class="badge {{ $item->status == 'Dikerjakan' ? 'bg-warning text-warning' : ($item->status == 'Siap Dikirim' ? 'bg-dark text-white' : ($item->status == 'diekspedisi' ? 'bg-info text-info' : 'bg-primary text-primary')) }} bg-opacity-10 px-3 py-2 rounded-pill fw-bold">
+                                                {{ $item->status == 'diekspedisi' ? 'Dikirim' : $item->status }}
                                             </span>
                                         </td>
 
@@ -331,6 +338,7 @@
                                                 data-payment-status="{{ $item->status_pembayaran }}"
                                                 data-foto-dikerjakan='@json($item->foto_dikerjakan ?? [])'
                                                 data-foto-selesai='@json($item->foto_selesai ?? [])'
+                                                data-nomor-resi="{{ $item->nomor_resi_pengiriman }}"
                                                 data-items='@json($item->items ?? [])'
                                                 data-action="{{ route('pengrajin.update.status', $item->id) }}">
                                                 Lihat Detail
@@ -389,6 +397,14 @@
                     <div class="mb-4">
                         <h6 class="small fw-bold text-uppercase text-muted mb-3">Status Pembayaran:</h6>
                         <span id="payment-badge" class="badge bg-secondary px-3 py-2 rounded-pill">-</span>
+                    </div>
+
+                    <div class="mb-4 upload-hidden" id="section-info-pengiriman">
+                        <h6 class="small fw-bold text-uppercase text-muted mb-3">Info Pengiriman:</h6>
+                        <div class="shipping-mini-card">
+                            <div class="small text-muted mb-1">Nomor Resi Cargo</div>
+                            <div id="preview-nomor-resi" class="fw-bold text-dark">-</div>
+                        </div>
                     </div>
 
                     <div class="mb-4 upload-hidden" id="section-foto-dikerjakan">
@@ -514,8 +530,10 @@
                 const statusActionHint = document.getElementById('status-action-hint');
                 const colFormDikerjakan = document.getElementById('col-form-dikerjakan');
                 const colFormSelesai = document.getElementById('col-form-selesai');
+                const sectionInfoPengiriman = document.getElementById('section-info-pengiriman');
                 const sectionFotoDikerjakan = document.getElementById('section-foto-dikerjakan');
                 const sectionFotoSelesai = document.getElementById('section-foto-selesai');
+                const previewNomorResi = document.getElementById('preview-nomor-resi');
                 const uploadForm = document.getElementById('form-upload-foto');
                 const modalStatusTarget = document.getElementById('modal-status-target');
                 const modalTitle = document.getElementById('modal-foto-title');
@@ -528,12 +546,14 @@
                 const photoListCounter = document.getElementById('photo-list-counter');
                 const inputStatusSelesai = document.getElementById('input-status-selesai');
                 const labelBtnSelesai = document.getElementById('label-btn-selesai');
+                const nomorResi = this.getAttribute('data-nomor-resi') || '-';
 
                 document.getElementById('display-id').innerText = id;
                 document.getElementById('form-dikerjakan').action = actionUrl;
                 document.getElementById('form-selesai').action = actionUrl;
                 tombolDikerjakan.disabled = false;
                 tombolSelesai.disabled = false;
+                previewNomorResi.innerText = nomorResi;
                 statusActionHint.classList.add('d-none');
                 statusActionHint.innerHTML = '';
 
@@ -552,6 +572,7 @@
                     colFormDikerjakan.classList.add('d-none');
                     colFormSelesai.classList.remove('upload-hidden', 'col-6');
                     colFormSelesai.classList.add('col-12');
+                    sectionInfoPengiriman.classList.add('upload-hidden');
                     sectionFotoDikerjakan.classList.remove('upload-hidden');
                     sectionFotoSelesai.classList.remove('upload-hidden');
                     inputStatusSelesai.value = 'Siap Dikirim';
@@ -563,17 +584,29 @@
                 } else if (status === 'Siap Dikirim') {
                     colFormDikerjakan.classList.add('d-none');
                     colFormSelesai.classList.add('upload-hidden');
+                    sectionInfoPengiriman.classList.add('upload-hidden');
                     sectionFotoDikerjakan.classList.remove('upload-hidden');
                     sectionFotoSelesai.classList.remove('upload-hidden');
                     statusActionHint.classList.remove('d-none');
                     statusActionHint.className = 'alert alert-success border-0 small mb-4';
                     statusActionHint.innerHTML =
                         '<i class="fas fa-box me-1"></i> Pesanan sudah siap dikirim. Admin akan mencetak resi internal lalu mengubah status menjadi <b>Dikirim</b> setelah paket diserahkan ke cargo.';
+                } else if (status === 'diekspedisi') {
+                    colFormDikerjakan.classList.add('d-none');
+                    colFormSelesai.classList.add('upload-hidden');
+                    sectionInfoPengiriman.classList.remove('upload-hidden');
+                    sectionFotoDikerjakan.classList.remove('upload-hidden');
+                    sectionFotoSelesai.classList.remove('upload-hidden');
+                    statusActionHint.classList.remove('d-none');
+                    statusActionHint.className = 'alert alert-info border-0 small mb-4';
+                    statusActionHint.innerHTML =
+                        '<i class="fas fa-truck-moving me-1"></i> Pesanan sudah dikirim oleh admin ke cargo dan tetap tampil di sini sampai pembeli mengonfirmasi barang diterima.';
                 } else {
                     colFormDikerjakan.classList.remove('d-none');
                     colFormSelesai.classList.add('upload-hidden');
                     colFormSelesai.classList.remove('col-12');
                     colFormSelesai.classList.add('col-6');
+                    sectionInfoPengiriman.classList.add('upload-hidden');
                     sectionFotoDikerjakan.classList.add('upload-hidden');
                     sectionFotoSelesai.classList.add('upload-hidden');
                     statusActionHint.classList.remove('d-none');
