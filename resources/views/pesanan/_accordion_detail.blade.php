@@ -63,6 +63,9 @@
     @if ($item->metode_pengambilan === 'dikirim')
         <div class="val">Dikirim ({{ strtoupper($item->jenis_pengiriman ?? 'Pengiriman') }})</div>
         <div class="val-muted">Tujuan: {{ $item->alamat_pengiriman ?? '-' }}</div>
+        @if (!empty($item->nomor_resi_pengiriman))
+            <div class="val-muted mt-1">Resi Cargo: <strong>{{ $item->nomor_resi_pengiriman }}</strong></div>
+        @endif
     @else
         <div class="val">Ambil di Rumah</div>
     @endif

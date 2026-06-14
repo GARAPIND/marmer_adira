@@ -148,9 +148,7 @@
         $isPaidOff = $pesanan->status_pembayaran === 'paid';
         $isReadyToShip = $pesanan->status === 'Siap Dikirim';
         $isAlreadyShipped = $pesanan->status === 'diekspedisi';
-        $defaultItemPayload = $pesanan->items
-            ->map(fn($item) => ['id' => $item->id, 'berat_satuan' => $item->berat_satuan ?? 0])
-            ->values();
+        $isReadOnlyDetail = $isAlreadyShipped;
     @endphp
 
     <div class="container py-5 mt-2">
@@ -249,7 +247,8 @@
                                             <input type="number" step="0.01" min="0"
                                                 class="form-control item-berat"
                                                 name="items[{{ $index }}][berat_satuan]"
-                                                value="{{ old("items.$index.berat_satuan", $item->berat_satuan) }}">
+                                                value="{{ old("items.$index.berat_satuan", $item->berat_satuan) }}"
+                                                {{ $isReadOnlyDetail ? 'readonly' : '' }}>
                                         </td>
                                         <td>
                                             <span class="fw-bold text-dark item-total-berat">{{ number_format($item->total_berat ?? 0, 2, ',', '.') }}</span>
@@ -261,7 +260,8 @@
                                                 <input type="number" min="0"
                                                     class="form-control item-harga"
                                                     name="items[{{ $index }}][harga_satuan]"
-                                                    value="{{ old("items.$index.harga_satuan", $item->harga_satuan) }}">
+                                                    value="{{ old("items.$index.harga_satuan", $item->harga_satuan) }}"
+                                                    {{ $isReadOnlyDetail ? 'readonly' : '' }}>
                                             </div>
                                         </td>
                                         <td>
@@ -355,7 +355,7 @@
                                                     @elseif (!$isPaidOff)
                                                         Belum bisa input resi karena pembeli belum lunas.
                                                     @elseif (!$isReadyToShip)
-                                                        Tunggu pengrajin menyelesaikan produksi dulu sampai status `Siap Dikirim`.
+                                                        Pengrajin belum menandai pesanan sebagai `Siap Dikirim`, jadi admin belum bisa input resi cargo.
                                                     @else
                                                         Isi setelah cargo memberikan nomor resi resmi.
                                                     @endif
@@ -367,17 +367,28 @@
                             @endif
 
                             <div class="info-card">
-                                <div class="info-label">Keputusan Admin</div>
-                                <div class="mb-3">
-                                    <select name="status" id="statusPesanan" class="form-select">
-                                        <option value="Diverifikasi" {{ old('status', $pesanan->status) === 'Diverifikasi' ? 'selected' : '' }}>Diverifikasi</option>
-                                        <option value="Ditolak" {{ old('status', $pesanan->status) === 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
-                                    </select>
-                                </div>
-                                <div id="wrapperAlasan" class="{{ old('status') === 'Ditolak' ? '' : 'd-none' }}">
-                                    <label class="form-label small fw-bold">Alasan Penolakan</label>
-                                    <textarea name="alasan_penolakan" rows="4" class="form-control">{{ old('alasan_penolakan', $pesanan->alasan_penolakan) }}</textarea>
-                                </div>
+                                <div class="info-label">{{ $isReadOnlyDetail ? 'Detail Admin' : 'Keputusan Admin' }}</div>
+                                @if ($isReadOnlyDetail)
+                                    <div class="alert alert-light border rounded-4 mb-0">
+                                        <div class="fw-bold text-dark mb-1">Pesanan sudah dikirim oleh admin</div>
+                                        <div class="small text-muted mb-2">Tahap admin sudah selesai. Sekarang tinggal menunggu pelanggan mengonfirmasi barang diterima.</div>
+                                        <div class="small text-muted">Status saat ini: <strong>{{ $pesanan->status_label_pembeli ?? $pesanan->status }}</strong></div>
+                                        @if ($pesanan->nomor_resi_pengiriman)
+                                            <div class="small text-muted mt-1">Resi cargo tersimpan: <strong>{{ $pesanan->nomor_resi_pengiriman }}</strong></div>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="mb-3">
+                                        <select name="status" id="statusPesanan" class="form-select">
+                                            <option value="Diverifikasi" {{ old('status', $pesanan->status) === 'Diverifikasi' ? 'selected' : '' }}>Diverifikasi</option>
+                                            <option value="Ditolak" {{ old('status', $pesanan->status) === 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
+                                        </select>
+                                    </div>
+                                    <div id="wrapperAlasan" class="{{ old('status') === 'Ditolak' ? '' : 'd-none' }}">
+                                        <label class="form-label small fw-bold">Alasan Penolakan</label>
+                                        <textarea name="alasan_penolakan" rows="4" class="form-control">{{ old('alasan_penolakan', $pesanan->alasan_penolakan) }}</textarea>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         <div class="col-lg-5">
@@ -396,20 +407,21 @@
                                     <strong>
                                         <input type="number" min="0" name="biaya_pengiriman" id="inputOngkir"
                                             class="form-control mt-2"
-                                            value="{{ old('biaya_pengiriman', $pesanan->biaya_pengiriman ?? 0) }}">
+                                            value="{{ old('biaya_pengiriman', $pesanan->biaya_pengiriman ?? 0) }}"
+                                            {{ $isReadOnlyDetail ? 'readonly' : '' }}>
                                     </strong>
                                 </div>
                                 <div class="summary-row">
                                     <span>Grand Total</span>
                                     <strong id="summaryGrandTotal">Rp 0</strong>
                                 </div>
-                                @if ($pesanan->metode_pengambilan === 'dikirim')
+                                @if ($pesanan->metode_pengambilan === 'dikirim' && !$isReadOnlyDetail)
                                     <button type="button" class="btn btn-outline-dark w-100 rounded-pill mt-3" id="btnHitungOngkir">
                                         Hitung Ongkir Otomatis
                                     </button>
                                     <div id="ongkirHint" class="small text-muted mt-2"></div>
                                 @endif
-                                @if ($isVerifiable)
+                                @if ($isVerifiable && !$isReadOnlyDetail)
                                     <button type="submit" class="btn btn-dark w-100 rounded-pill mt-4 py-3 fw-bold">
                                         Simpan Verifikasi Pesanan
                                     </button>

@@ -390,6 +390,11 @@
                             <div id="dashboard-det-items" class="order-item-stack"></div>
                         </div>
 
+                        <div class="detail-info-card mb-4">
+                            <div class="small text-muted text-uppercase fw-bold mb-2">Resi Pengiriman</div>
+                            <div id="dashboard-det-resi" class="small">-</div>
+                        </div>
+
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div class="small text-muted text-uppercase fw-bold">Foto Saat Dikerjakan</div>
@@ -451,6 +456,7 @@
             document.getElementById('dashboard-det-bayar').innerText = data.status_pembayaran === 'paid' ? 'Lunas' :
                 (data.status_pembayaran === 'dp' ? 'Dibayar DP 50%' : 'Belum Bayar');
             document.getElementById('dashboard-det-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan tambahan.';
+            document.getElementById('dashboard-det-resi').innerText = data.nomor_resi_pengiriman || 'Belum ada resi cargo.';
             document.getElementById('dashboard-det-items').innerHTML = Array.isArray(data.items) && data.items.length ? `
                 <table class="order-item-table">
                     <thead>

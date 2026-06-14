@@ -225,7 +225,7 @@
 
                                     <span
                                         class="badge badge-pill-custom {{ $currentStatusClass }} bg-opacity-10 border border-opacity-25">
-                                        {{ $item->status == 'Menunggu Verifikasi Admin' ? 'Menunggu Verifikasi' : $item->status }}
+                                        {{ $item->status == 'Menunggu Verifikasi Admin' ? 'Menunggu Verifikasi' : ($item->status == 'diekspedisi' ? 'Dikirim' : $item->status) }}
                                     </span>
 
                                     @if (in_array($item->status_pembayaran, ['dp', 'paid']))
@@ -240,7 +240,8 @@
                                     <div class="d-flex justify-content-center gap-2">
                                         <a href="{{ route('admin.pesanan.show', $item->id) }}"
                                             class="btn btn-gold btn-sm px-4 shadow-sm fw-bold">
-                                            <i class="fas fa-check-double me-1 text-white"></i> Verifikasi
+                                            <i class="fas {{ $item->status === 'Menunggu Verifikasi Admin' ? 'fa-check-double' : 'fa-eye' }} me-1 text-white"></i>
+                                            {{ $item->status === 'Menunggu Verifikasi Admin' ? 'Verifikasi' : 'Detail' }}
                                         </a>
                                         <button class="btn btn-outline-danger btn-sm px-3 shadow-sm fw-bold"
                                             onclick="konfirmasiHapusPesanan({{ $item->id }}, '{{ $item->nama_produk }}')">
