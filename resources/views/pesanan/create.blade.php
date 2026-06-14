@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-    {{-- CSRF & config via meta tag agar tidak expired --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
@@ -208,6 +207,80 @@
             border-color: var(--adira-gold);
             background: #fffdf9;
         }
+
+        .bentuk-toggle-box {
+            background: linear-gradient(135deg, #fffdf9, #fff8f0);
+            border: 1.5px solid var(--adira-gold);
+            border-radius: 16px;
+            padding: 0.9rem 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bentuk-toggle-box:hover {
+            box-shadow: 0 4px 14px rgba(197, 164, 126, 0.2);
+        }
+
+        .bentuk-toggle-box input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--adira-gold);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .bentuk-toggle-label {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--adira-dark);
+            user-select: none;
+            margin: 0;
+        }
+
+        .bentuk-toggle-label span {
+            color: var(--adira-gold);
+        }
+
+        .dim-input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .dim-input-item {
+            flex: 1;
+            min-width: 90px;
+        }
+
+        .dim-input-item label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .dim-input-item input {
+            width: 100%;
+        }
+
+        .dim-preview-badge {
+            display: inline-block;
+            background: var(--adira-gold-light);
+            border: 1px solid var(--adira-gold);
+            border-radius: 30px;
+            padding: 4px 14px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--adira-dark);
+            margin-top: 10px;
+            letter-spacing: 0.5px;
+            min-height: 26px;
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -235,7 +308,6 @@
                             <input type="hidden" name="courier" id="courier_hidden" value="">
 
                             <div class="row g-5">
-                                {{-- KOLOM KIRI --}}
                                 <div class="col-md-6 border-end pe-md-5">
                                     <div class="form-section-title">1. Informasi Produk</div>
 
@@ -291,11 +363,58 @@
                                                 </select>
                                             </div>
                                         @else
-                                            <input type="text" name="ukuran" id="ukuran"
-                                                class="form-control input-aesthetic"
-                                                placeholder="Contoh: 40x40 cm / custom" required>
-                                            <small class="text-muted mt-2 d-block">Produk custom akan dikonfirmasi admin
-                                                (harga, berat, dan status).</small>
+                                            <label class="bentuk-toggle-box" for="is_silinder">
+                                                <input type="checkbox" id="is_silinder" onchange="toggleBentuk()">
+                                                <span class="bentuk-toggle-label">
+                                                    <i class="fa-solid fa-circle me-1" style="color:var(--adira-gold);"></i>
+                                                    Bentuk <span>Bulat / Silinder</span>
+                                                </span>
+                                            </label>
+
+                                            <div id="input_persegi" class="dim-input-group">
+                                                <div class="dim-input-item">
+                                                    <label>Panjang (cm)</label>
+                                                    <input type="number" id="dim_panjang"
+                                                        class="form-control input-aesthetic" placeholder="cth: 40"
+                                                        min="1" step="0.1" oninput="previewUkuran()">
+                                                </div>
+                                                <div class="dim-input-item">
+                                                    <label>Lebar (cm)</label>
+                                                    <input type="number" id="dim_lebar"
+                                                        class="form-control input-aesthetic" placeholder="cth: 40"
+                                                        min="1" step="0.1" oninput="previewUkuran()">
+                                                </div>
+                                                <div class="dim-input-item">
+                                                    <label>Tinggi (cm)</label>
+                                                    <input type="number" id="dim_tinggi_persegi"
+                                                        class="form-control input-aesthetic" placeholder="cth: 10"
+                                                        min="1" step="0.1" oninput="previewUkuran()">
+                                                </div>
+                                            </div>
+
+                                            <div id="input_silinder" class="dim-input-group" style="display:none;">
+                                                <div class="dim-input-item">
+                                                    <label>Diameter (cm)</label>
+                                                    <input type="number" id="dim_diameter"
+                                                        class="form-control input-aesthetic" placeholder="cth: 30"
+                                                        min="1" step="0.1" oninput="previewUkuran()">
+                                                </div>
+                                                <div class="dim-input-item">
+                                                    <label>Tinggi (cm)</label>
+                                                    <input type="number" id="dim_tinggi_silinder"
+                                                        class="form-control input-aesthetic" placeholder="cth: 10"
+                                                        min="1" step="0.1" oninput="previewUkuran()">
+                                                </div>
+                                            </div>
+
+                                            <div id="dim_preview" class="dim-preview-badge" style="display:none;"></div>
+
+                                            <input type="hidden" name="ukuran" id="ukuran">
+
+                                            <small class="text-muted mt-2 d-block">
+                                                <i class="fa-solid fa-circle-info me-1"></i>
+                                                Produk custom akan dikonfirmasi admin (harga, berat, dan status).
+                                            </small>
                                         @endif
                                     </div>
 
@@ -317,18 +436,18 @@
                                                 class="form-control input-aesthetic"
                                                 placeholder="Otomatis terisi saat ukuran dipilih" readonly>
                                         @else
-                                            <select name="jenis_marmer" id="jenis_marmer" class="form-select input-aesthetic"
-                                                required>
+                                            <select name="jenis_marmer" id="jenis_marmer"
+                                                class="form-select input-aesthetic" required>
                                                 <option value="" selected disabled>-- Pilih Bahan Marmer --</option>
                                                 @foreach ($listBahan as $bahan)
-                                                    <option value="{{ $bahan->nama_bahan }}">{{ $bahan->nama_bahan }}</option>
+                                                    <option value="{{ $bahan->nama_bahan }}">{{ $bahan->nama_bahan }}
+                                                    </option>
                                                 @endforeach
                                             </select>
                                         @endif
                                     </div>
                                 </div>
 
-                                {{-- KOLOM KANAN --}}
                                 <div class="col-md-6 ps-md-5">
                                     <div class="form-section-title">2. Detail Kustomisasi</div>
 
@@ -361,22 +480,16 @@
                                         </div>
                                     </div>
 
-                                    {{-- SECTION PENGIRIMAN --}}
                                     <div id="section_pengiriman" style="display:none;">
                                         <div class="shipping-box-highlight">
                                             <label class="label-aesthetic mb-3">Jenis Pengiriman</label>
                                             <div class="jenis-kirim-tabs d-flex gap-2 mb-4">
-                                                {{-- <button type="button" class="btn btn-outline-secondary flex-fill"
-                                                    id="tab_bus" onclick="pilihJenisPengiriman('bus')">
-                                                    <i class="fa-solid fa-bus me-2"></i>Via Bus
-                                                </button> --}}
                                                 <button type="button" class="btn btn-outline-secondary flex-fill active"
                                                     id="tab_cargo" onclick="pilihJenisPengiriman('cargo')">
                                                     <i class="fa-solid fa-truck me-2"></i>Cargo
                                                 </button>
                                             </div>
 
-                                            {{-- BUS --}}
                                             <div id="section_bus" style="display:none;">
                                                 <label class="label-aesthetic"><i class="fa-solid fa-bus me-2"></i>Pilih
                                                     Terminal Tujuan</label>
@@ -401,7 +514,6 @@
                                                 </div>
                                             </div>
 
-                                            {{-- CARGO --}}
                                             <div id="section_cargo" style="display:none;">
                                                 <label class="label-aesthetic mb-2"><i
                                                         class="fa-solid fa-location-dot me-2"></i>Alamat Pengiriman</label>
@@ -534,6 +646,91 @@
             return res.json();
         }
 
+        function toggleBentuk() {
+            if (isProdukKatalog) return;
+
+            const isSilinder = document.getElementById('is_silinder').checked;
+            const wrapperPersegi = document.getElementById('input_persegi');
+            const wrapperSilinder = document.getElementById('input_silinder');
+
+            wrapperPersegi.style.display = isSilinder ? 'none' : 'flex';
+            wrapperSilinder.style.display = isSilinder ? 'flex' : 'none';
+
+            ['dim_panjang', 'dim_lebar', 'dim_tinggi_persegi', 'dim_diameter', 'dim_tinggi_silinder']
+            .forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+
+            const preview = document.getElementById('dim_preview');
+            if (preview) {
+                preview.style.display = 'none';
+                preview.innerText = '';
+            }
+            const hiddenUkuran = document.getElementById('ukuran');
+            if (hiddenUkuran) hiddenUkuran.value = '';
+        }
+
+        function previewUkuran() {
+            if (isProdukKatalog) return;
+
+            const isSilinder = document.getElementById('is_silinder')?.checked;
+            const preview = document.getElementById('dim_preview');
+            if (!preview) return;
+
+            let label = '';
+
+            if (isSilinder) {
+                const d = document.getElementById('dim_diameter')?.value;
+                const t = document.getElementById('dim_tinggi_silinder')?.value;
+                if (d && t) {
+                    label = `diameter ${d} cm × Tinggi ${t} cm`;
+                }
+            } else {
+                const p = document.getElementById('dim_panjang')?.value;
+                const l = document.getElementById('dim_lebar')?.value;
+                const t = document.getElementById('dim_tinggi_persegi')?.value;
+                if (p && l && t) {
+                    label = `${p} × ${l} × ${t} cm`;
+                }
+            }
+
+            if (label) {
+                preview.innerText = '📐 ' + label;
+                preview.style.display = 'inline-block';
+            } else {
+                preview.style.display = 'none';
+                preview.innerText = '';
+            }
+        }
+
+        function composeUkuran() {
+            if (isProdukKatalog) return true;
+
+            const isSilinder = document.getElementById('is_silinder')?.checked;
+            const ukuranField = document.getElementById('ukuran');
+
+            if (isSilinder) {
+                const d = document.getElementById('dim_diameter')?.value?.trim();
+                const t = document.getElementById('dim_tinggi_silinder')?.value?.trim();
+                if (!d || !t) {
+                    alert('Silakan isi Diameter dan Tinggi terlebih dahulu.');
+                    return false;
+                }
+                ukuranField.value = `Diameter ${d}cm x Tinggi ${t}cm`;
+            } else {
+                const p = document.getElementById('dim_panjang')?.value?.trim();
+                const l = document.getElementById('dim_lebar')?.value?.trim();
+                const t = document.getElementById('dim_tinggi_persegi')?.value?.trim();
+                if (!p || !l || !t) {
+                    alert('Silakan isi Panjang, Lebar, dan Tinggi terlebih dahulu.');
+                    return false;
+                }
+                ukuranField.value = `${p}x${l}x${t} cm`;
+            }
+            return true;
+        }
+
         function updateHarga() {
             if (!isProdukKatalog) {
                 hargaProdukGlobal = 0;
@@ -570,14 +767,8 @@
             document.getElementById('label_total_berat').innerText = beratTotalGlobal.toFixed(1) + ' kg';
             document.getElementById('berat_satuan_hidden').value = beratSatuanGlobal;
 
-            const metode = document.getElementById('metode_pengambilan').value;
-            if (metode === 'dikirim') {
-                ongkirGlobal = 0;
-                refreshGrandTotal();
-            } else {
-                ongkirGlobal = 0;
-                refreshGrandTotal();
-            }
+            ongkirGlobal = 0;
+            refreshGrandTotal();
         }
 
         function toggleMetode() {
@@ -623,8 +814,9 @@
         function pilihKurir(kurir) {
             selectedKurir = kurir;
             document.getElementById('courier_hidden').value = kurir;
-            document.querySelectorAll('.courier-btn').forEach(b => b.classList.toggle('selected', b.dataset.kurir ===
-                kurir));
+            document.querySelectorAll('.courier-btn').forEach(b =>
+                b.classList.toggle('selected', b.dataset.kurir === kurir)
+            );
         }
 
         function updateOngkirLabel() {
@@ -640,13 +832,19 @@
         }
 
         document.getElementById('input_qty').addEventListener('input', updateHarga);
+
         document.getElementById('orderForm').addEventListener('submit', function(e) {
+            if (!isProdukKatalog) {
+                if (!composeUkuran()) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+
             const metode = document.getElementById('metode_pengambilan').value;
             const jenisPengiriman = document.getElementById('jenis_pengiriman_hidden').value;
 
-            if (metode !== 'dikirim') {
-                return;
-            }
+            if (metode !== 'dikirim') return;
 
             if (!jenisPengiriman) {
                 e.preventDefault();
