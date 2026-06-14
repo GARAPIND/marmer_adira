@@ -132,6 +132,7 @@ class PengrajinController extends Controller
     {
         $pesanan = Pesanan::with('user')
             ->with('progressPhotos')
+            ->with('items')
             ->where('status', 'Diverifikasi')
             ->where('status_pembayaran', '!=', 'no_paid')
             ->latest()
@@ -357,7 +358,7 @@ class PengrajinController extends Controller
         $status         = $request->query('status');
         $tanggal   = $request->query('tanggal');
 
-        $riwayat = Pesanan::with(['user', 'progressPhotos'])
+        $riwayat = Pesanan::with(['user', 'progressPhotos', 'items'])
             ->whereIn('status', ['Selesai', 'Dibatalkan', 'diekspedisi'])
             ->when($search, function ($query, $search) {
                 return $query->where('id', 'LIKE', "%{$search}%")
@@ -379,13 +380,13 @@ class PengrajinController extends Controller
 
     public function prosesPengerjaan()
     {
-        $pesananAktif = Pesanan::with(['user', 'progressPhotos'])->whereIn('status', ['Diproses', 'Dikerjakan'])->latest()->get();
+        $pesananAktif = Pesanan::with(['user', 'progressPhotos', 'items'])->whereIn('status', ['Diproses', 'Dikerjakan'])->latest()->get();
         return view('pengrajin.proses_pengerjaan', compact('pesananAktif'));
     }
 
     public function detailRiwayat($id)
     {
-        $pesanan = Pesanan::with(['user', 'progressPhotos'])->findOrFail($id);
+        $pesanan = Pesanan::with(['user', 'progressPhotos', 'items'])->findOrFail($id);
         return view('pengrajin.detail-riwayat', compact('pesanan'));
     }
 }

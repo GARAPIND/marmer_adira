@@ -386,16 +386,13 @@
             <div class="col-lg-11">
                 <div class="card form-card-aesthetic">
                     <div class="card-body p-4 p-md-5">
-                        <form action="{{ route('pesanan.store') }}" method="POST" enctype="multipart/form-data"
+                        <form action="{{ route('cart.store') }}" method="POST" enctype="multipart/form-data"
                             id="orderForm">
                             @csrf
                             <input type="hidden" name="produk_id" value="{{ $dataProduk->id ?? '' }}">
-                            <input type="hidden" name="total_harga" id="total_harga_hidden" value="0">
-                            <input type="hidden" name="biaya_pengiriman" id="biaya_pengiriman_hidden" value="0">
+                            <input type="hidden" name="harga_satuan" id="harga_satuan_hidden" value="0">
+                            <input type="hidden" name="subtotal" id="subtotal_hidden" value="0">
                             <input type="hidden" name="berat_satuan" id="berat_satuan_hidden" value="0">
-                            <input type="hidden" name="jenis_pengiriman" id="jenis_pengiriman_hidden" value="">
-                            <input type="hidden" name="alamat_pembeli_id" id="alamat_pembeli_id_hidden" value="">
-                            <input type="hidden" name="courier" id="courier_hidden" value="">
 
                             <div class="row g-5">
                                 {{-- ══ KOLOM KIRI ══ --}}
@@ -718,8 +715,8 @@
                                             <span class="fw-bold" id="label_total_produk">Rp 0</span>
                                         </div>
                                         <div class="d-flex justify-content-between mt-2">
-                                            <span class="small opacity-75">Ongkos Kirim:</span>
-                                            <span class="fw-bold text-warning" id="label_ongkir">Dihitung admin</span>
+                                        <span class="small opacity-75">Status Checkout:</span>
+                                        <span class="fw-bold text-warning" id="label_ongkir">Akan dipilih di keranjang</span>
                                         </div>
                                         <hr class="bg-light">
                                         <div class="d-flex justify-content-between align-items-center">
@@ -732,7 +729,7 @@
 
                             <div class="mt-5 pt-4 text-center">
                                 <button type="submit" class="btn btn-submit-elegant w-100">
-                                    <i class="fa-solid fa-circle-check me-2"></i>AJUKAN PESANAN SEKARANG
+                                    <i class="fa-solid fa-cart-plus me-2"></i>TAMBAHKAN KE KERANJANG
                                 </button>
                             </div>
                         </form>
@@ -973,7 +970,6 @@
             document.getElementById('label_total_berat').innerText = beratTotalGlobal.toFixed(1) + ' kg';
             document.getElementById('berat_satuan_hidden').value = beratSatuanGlobal;
 
-            ongkirGlobal = 0;
             refreshGrandTotal();
         }
 
@@ -981,27 +977,11 @@
         function toggleMetode() {
             const metode = document.getElementById('metode_pengambilan').value;
             document.getElementById('section_pengiriman').style.display = metode === 'dikirim' ? 'block' : 'none';
-            ongkirGlobal = 0;
-            if (metode === 'dikirim') {
-                pilihJenisPengiriman('cargo');
-            } else {
-                document.getElementById('jenis_pengiriman_hidden').value = '';
-            }
-            updateOngkirLabel();
-            refreshGrandTotal();
+            return;
         }
 
         function pilihJenisPengiriman(jenis) {
-            document.getElementById('jenis_pengiriman_hidden').value = jenis;
-            document.getElementById('section_bus').style.display = jenis === 'bus' ? 'block' : 'none';
-            document.getElementById('section_cargo').style.display = jenis === 'cargo' ? 'block' : 'none';
-            const tabBus = document.getElementById('tab_bus');
-            const tabCargo = document.getElementById('tab_cargo');
-            if (tabBus) tabBus.classList.toggle('active', jenis === 'bus');
-            if (tabCargo) tabCargo.classList.toggle('active', jenis === 'cargo');
-            ongkirGlobal = 0;
-            updateOngkirLabel();
-            refreshGrandTotal();
+            return;
         }
 
         function handleTerminalChange() {
@@ -1027,15 +1007,15 @@
         }
 
         function updateOngkirLabel() {
-            const metode = document.getElementById('metode_pengambilan').value;
-            document.getElementById('label_ongkir').innerText = metode === 'dikirim' ? 'Dihitung admin' : 'Rp 0';
+            document.getElementById('label_ongkir').innerText = 'Akan dipilih di keranjang';
         }
 
         function refreshGrandTotal() {
-            const total = (hargaProdukGlobal || 0) + (ongkirGlobal || 0);
+            const total = (hargaProdukGlobal || 0);
             document.getElementById('label_grand_total').innerText = 'Rp ' + total.toLocaleString('id-ID');
-            document.getElementById('total_harga_hidden').value = hargaProdukGlobal;
-            document.getElementById('biaya_pengiriman_hidden').value = ongkirGlobal;
+            const qty = parseInt(document.getElementById('input_qty').value) || 1;
+            document.getElementById('harga_satuan_hidden').value = qty > 0 ? Math.round(hargaProdukGlobal / qty) : 0;
+            document.getElementById('subtotal_hidden').value = hargaProdukGlobal;
         }
 
         // ── EVENT LISTENERS ───────────────────────────────────────
@@ -1049,42 +1029,11 @@
                 }
             }
 
-            const metode = document.getElementById('metode_pengambilan').value;
-            const jenisPengiriman = document.getElementById('jenis_pengiriman_hidden').value;
-
-            if (metode !== 'dikirim') return;
-
-            if (!jenisPengiriman) {
-                e.preventDefault();
-                alert('Silakan pilih jenis pengiriman terlebih dahulu.');
-                return;
-            }
-
-            if (jenisPengiriman === 'cargo' && (!selectedKecamatanId || !selectedKurir)) {
-                e.preventDefault();
-                alert('Silakan pilih alamat dan ekspedisi cargo terlebih dahulu.');
-                return;
-            }
-
-            if (jenisPengiriman === 'bus') {
-                const terminal = document.getElementById('terminal_id');
-                if (!terminal || !terminal.value) {
-                    e.preventDefault();
-                    alert('Silakan pilih terminal tujuan terlebih dahulu.');
-                }
-            }
+            return;
         });
 
         window.onload = function() {
             updateHarga();
-            toggleMetode();
-            @if ($listAlamat->isNotEmpty())
-                const utama = document.querySelector('.alamat-card-select.selected');
-                if (utama) {
-                    selectedKecamatanId = utama.dataset.kecamatanId;
-                    document.getElementById('alamat_pembeli_id_hidden').value = utama.dataset.id;
-                }
-            @endif
         };
     </script>
 @endsection

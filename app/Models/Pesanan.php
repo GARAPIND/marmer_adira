@@ -94,6 +94,11 @@ class Pesanan extends Model
         return $this->hasMany(PesananPaymentHistory::class)->orderBy('event_time');
     }
 
+    public function items(): HasMany
+    {
+        return $this->hasMany(PesananItem::class)->orderBy('id');
+    }
+
     public function progressPhotos(): HasMany
     {
         return $this->hasMany(PhotoProsesPesanan::class)->orderBy('status_target')->orderBy('urutan')->orderBy('id');

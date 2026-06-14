@@ -13,6 +13,20 @@
     <div class="val-muted">Material: {{ $item->jenis_marmer ?? 'Teraso' }}</div>
 </div>
 
+@if ($item->relationLoaded('items') && $item->items->count())
+    <div class="acc-block" style="grid-column: span 2;">
+        <label>Daftar Item Pesanan</label>
+        <div class="val-muted">
+            @foreach ($item->items as $detailItem)
+                <div class="mb-2">
+                    <strong>{{ $detailItem->nama_produk }}</strong> - {{ $detailItem->ukuran }} - {{ $detailItem->jenis_marmer }}
+                    ({{ $detailItem->jumlah }} pcs)
+                </div>
+            @endforeach
+        </div>
+    </div>
+@endif
+
 <div class="acc-block">
     <label>Ukuran</label>
     <div class="val">{{ $item->ukuran }}</div>

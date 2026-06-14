@@ -73,7 +73,7 @@ class AdminController extends Controller
 
     private function getKeuanganData($tgl_mulai = null, $tgl_akhir = null)
     {
-        $query = Pesanan::with(['user', 'paymentHistories']);
+        $query = Pesanan::with(['user', 'paymentHistories', 'items']);
         if ($tgl_mulai && $tgl_akhir) {
             $query->whereBetween('created_at', [$tgl_mulai . " 00:00:00", $tgl_akhir . " 23:59:59"]);
         }
@@ -381,7 +381,7 @@ class AdminController extends Controller
     public function trashPesanan()
     {
         $pesanan = Pesanan::onlyTrashed()
-            ->with(['user', 'paymentHistories', 'progressPhotos'])
+            ->with(['user', 'paymentHistories', 'progressPhotos', 'items'])
             ->latest('deleted_at')
             ->get();
 
@@ -653,7 +653,7 @@ class AdminController extends Controller
 
     public function pesananBaru()
     {
-        $pesanan = Pesanan::with('user')->orderBy('created_at', 'DESC')->get();
+        $pesanan = Pesanan::with(['user', 'items'])->orderBy('created_at', 'DESC')->get();
         // dd($pesanan);
         return view('admin.pesanan-baru', compact('pesanan'));
     }

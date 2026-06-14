@@ -156,6 +156,9 @@
                                 </td>
                                 <td>
                                     <div class="fw-bold mb-0">{{ $item->nama_produk }}</div>
+                                    @if ($item->relationLoaded('items') && $item->items->count() > 1)
+                                        <small class="text-muted d-block">{{ $item->items->count() }} item dalam pesanan ini</small>
+                                    @endif
                                     <small class="text-muted">Dimensi: {{ $item->ukuran }}</small>
                                 </td>
                                 <td class="text-center">

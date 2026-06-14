@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Pesanan;
 use App\Models\PesananPaymentHistory;
+use App\Models\PesananItem;
 use App\Models\Produk;
 use App\Models\Bahan;
 use App\Models\Terminal;
 use App\Models\AlamatPembeli;
+use App\Models\CartItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
@@ -340,7 +343,7 @@ class PesananController extends Controller
 
     public function index()
     {
-        $pesanan = Pesanan::with(['paymentHistories', 'progressPhotos'])
+        $pesanan = Pesanan::with(['paymentHistories', 'progressPhotos', 'items'])
             ->where('user_id', Auth::id())
             ->latest()
             ->get();
@@ -372,21 +375,8 @@ class PesananController extends Controller
 
     public function store(Request $request)
     {
-        $request->merge([
-            'berat_satuan' => $this->normalizeDecimalInput($request->input('berat_satuan')),
-        ]);
-
         $rules = [
-            'nama_produk'        => 'required|string|max:255',
-            'ukuran'             => 'required',
-            'jenis_marmer'       => 'required',
-            'jumlah'             => 'required|integer|min:1',
-            'berat_satuan'       => 'nullable|numeric|min:0',
             'metode_pengambilan' => 'required|in:dirumah,dikirim',
-            'gambar_referensi'   => 'nullable|array|max:5',
-            'gambar_referensi.*' => 'image|mimes:jpeg,png,jpg|max:2048',
-            'total_harga'        => 'nullable|numeric|min:0',
-            'biaya_pengiriman'   => 'nullable|numeric|min:0',
         ];
 
         if ($request->metode_pengambilan === 'dikirim') {
@@ -406,12 +396,13 @@ class PesananController extends Controller
         }
 
         $request->validate($rules, [
-            'berat_satuan.numeric'      => 'Berat satuan harus berupa angka, bisa memakai koma atau titik.',
-            'gambar_referensi.max'      => 'Maksimal 5 gambar referensi yang dapat diunggah.',
-            'gambar_referensi.*.image'  => 'Setiap file harus berupa gambar.',
-            'gambar_referensi.*.mimes'  => 'Format gambar harus jpeg, png, atau jpg.',
-            'gambar_referensi.*.max'    => 'Ukuran setiap gambar maksimal 2MB.',
+            'alamat_pembeli_id.required' => 'Silakan pilih alamat pengiriman.',
         ]);
+
+        $cartItems = CartItem::where('user_id', Auth::id())->orderBy('id')->get();
+        if ($cartItems->isEmpty()) {
+            return redirect()->route('cart.index')->with('error', 'Keranjang masih kosong.');
+        }
 
         $alamatFinal     = 'Ambil di Tempat (Tulungagung)';
         $alamatPembeliId = null;
@@ -442,45 +433,65 @@ class PesananController extends Controller
             }
         }
 
-        $pathsGambar = [];
-        if ($request->hasFile('gambar_referensi')) {
-            foreach ($request->file('gambar_referensi') as $file) {
-                $pathsGambar[] = $file->store('pesanan_custom', 'public');
-            }
-        }
+        $itemPertama = $cartItems->first();
+        $totalHarga = (int) $cartItems->sum('subtotal');
+        $totalQty = (int) $cartItems->sum('jumlah');
+        $totalBerat = (float) $cartItems->sum('total_berat');
 
         $payload = [
-            'user_id'            => Auth::id(),
-            'nama_produk'        => $request->nama_produk,
-            'ukuran'             => $request->ukuran,
-            'jenis_marmer'       => $request->jenis_marmer,
-            'catatan_khusus'     => $request->catatan_khusus,
-            'gambar_referensi'   => !empty($pathsGambar) ? $pathsGambar : null,
-            'jumlah'             => $request->jumlah,
+            'user_id' => Auth::id(),
+            'nama_produk' => $itemPertama->nama_produk . ($cartItems->count() > 1 ? ' +' . ($cartItems->count() - 1) . ' item' : ''),
+            'ukuran' => $itemPertama->ukuran,
+            'jenis_marmer' => $itemPertama->jenis_marmer,
+            'catatan_khusus' => $itemPertama->catatan_khusus,
+            'gambar_referensi' => $itemPertama->gambar_referensi,
+            'jumlah' => $totalQty,
             'metode_pengambilan' => $request->metode_pengambilan,
-            'jenis_pengiriman'   => $jenisPengiriman,
-            'alamat_pembeli_id'  => $alamatPembeliId,
-            'alamat_pengiriman'  => $alamatFinal,
-            'biaya_pengiriman'   => 0,
-            'total_harga'        => (int) ($request->total_harga ?? 0),
-            'status'             => 'Menunggu Verifikasi Admin',
-            'status_pembayaran'  => 'no_paid',
+            'jenis_pengiriman' => $jenisPengiriman,
+            'alamat_pembeli_id' => $alamatPembeliId,
+            'alamat_pengiriman' => $alamatFinal,
+            'biaya_pengiriman' => 0,
+            'total_harga' => $totalHarga,
+            'status' => 'Menunggu Verifikasi Admin',
+            'status_pembayaran' => 'no_paid',
         ];
 
         if (Schema::hasColumn('pesanan', 'is_custom')) {
-            $payload['is_custom'] = !$request->filled('produk_id');
+            $payload['is_custom'] = $cartItems->every(fn($item) => (bool) $item->is_custom);
         }
         if (Schema::hasColumn('pesanan', 'berat_satuan')) {
-            $payload['berat_satuan'] = (float) ($request->berat_satuan ?? 0);
+            $payload['berat_satuan'] = (float) ($itemPertama->berat_satuan ?? 0);
         }
         if (Schema::hasColumn('pesanan', 'total_berat')) {
-            $payload['total_berat'] = (float) ($request->berat_satuan ?? 0) * (int) $request->jumlah;
+            $payload['total_berat'] = $totalBerat;
         }
         if (Schema::hasColumn('pesanan', 'jumlah_dibayar')) {
             $payload['jumlah_dibayar'] = 0;
         }
 
-        Pesanan::create($payload);
+        DB::transaction(function () use ($payload, $cartItems) {
+            $pesanan = Pesanan::create($payload);
+
+            foreach ($cartItems as $item) {
+                PesananItem::create([
+                    'pesanan_id' => $pesanan->id,
+                    'produk_id' => $item->produk_id,
+                    'is_custom' => $item->is_custom,
+                    'nama_produk' => $item->nama_produk,
+                    'ukuran' => $item->ukuran,
+                    'jenis_marmer' => $item->jenis_marmer,
+                    'catatan_khusus' => $item->catatan_khusus,
+                    'gambar_referensi' => $item->gambar_referensi,
+                    'jumlah' => $item->jumlah,
+                    'berat_satuan' => $item->berat_satuan,
+                    'total_berat' => $item->total_berat,
+                    'harga_satuan' => $item->harga_satuan,
+                    'subtotal' => $item->subtotal,
+                ]);
+            }
+
+            CartItem::where('user_id', Auth::id())->delete();
+        });
 
         return redirect()->route('pesanan.index')->with('success', 'Pesanan berhasil diajukan!');
     }
@@ -494,7 +505,7 @@ class PesananController extends Controller
 
     public function getSnapToken($id)
     {
-        $pesanan = Pesanan::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $pesanan = Pesanan::with('items')->where('id', $id)->where('user_id', Auth::id())->firstOrFail();
         $paymentStep = request()->query('payment_step', 'lunas');
         $allowedStatusesForDp = ['Diverifikasi'];
         $allowedStatusesForLunas = ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Selesai'];
@@ -529,16 +540,30 @@ class PesananController extends Controller
         if ($totalAkhir <= 0) {
             return response()->json(['message' => 'Total pembayaran belum valid. Hubungi admin untuk konfirmasi harga.'], 422);
         }
-        $itemDetails = [
-            [
-                'id'       => 'PRODUK-' . $pesanan->id,
-                'price'    => $totalAkhir,
+        $itemDetails = $paymentStep === 'dp'
+            ? [[
+                'id' => 'DP-' . $pesanan->id,
+                'price' => $totalAkhir,
                 'quantity' => 1,
-                'name'     => $paymentStep === 'dp'
-                    ? ('DP 50% - ' . $pesanan->nama_produk)
-                    : ('Pelunasan - ' . $pesanan->nama_produk),
-            ],
-        ];
+                'name' => 'DP 50% Pesanan ORD-' . $pesanan->id,
+            ]]
+            : $pesanan->items->map(function ($item) {
+                return [
+                    'id' => 'ITEM-' . $item->id,
+                    'price' => (int) $item->harga_satuan,
+                    'quantity' => (int) $item->jumlah,
+                    'name' => substr($item->nama_produk . ' - ' . $item->ukuran, 0, 50),
+                ];
+            })->values()->all();
+
+        if ($paymentStep === 'lunas' && (int) ($pesanan->biaya_pengiriman ?? 0) > 0) {
+            $itemDetails[] = [
+                'id' => 'ONGKIR-' . $pesanan->id,
+                'price' => (int) $pesanan->biaya_pengiriman,
+                'quantity' => 1,
+                'name' => 'Ongkos Kirim',
+            ];
+        }
 
         $params = [
             'transaction_details' => [

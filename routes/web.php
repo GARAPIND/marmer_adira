@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\PesananController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\PembeliController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AlamatPembeliController;
@@ -43,6 +44,11 @@ Route::middleware(['auth'])->group(function () {
 
     // --- A. ROLE PEMBELI ---
     Route::get('/dashboard', [PembeliController::class, 'dashboard'])->name('pembeli.dashboard');
+    Route::prefix('keranjang')->name('cart.')->group(function () {
+        Route::get('/', [CartController::class, 'index'])->name('index');
+        Route::post('/', [CartController::class, 'store'])->name('store');
+        Route::delete('/{id}', [CartController::class, 'destroy'])->name('destroy');
+    });
     Route::prefix('pesanan')->name('pesanan.')->group(function () {
         Route::get('/', [PesananController::class, 'index'])->name('index');
         Route::get('/create', [ProdukController::class, 'showOrderForm'])->name('create');

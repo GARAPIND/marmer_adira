@@ -165,6 +165,10 @@
                             <a class="nav-link {{ Request::is('produk*') || Request::is('katalog*') ? 'active' : '' }}"
                                 href="{{ route('produk.index') }}">Katalog Produk</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::is('keranjang*') ? 'active' : '' }}"
+                                href="{{ route('cart.index') }}">Keranjang</a>
+                        </li>
 
                         <li class="nav-item">
                             <a class="nav-link {{ Request::is('pesanan*') ? 'active' : '' }}"

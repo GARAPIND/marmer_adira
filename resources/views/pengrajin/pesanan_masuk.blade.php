@@ -159,6 +159,7 @@
                                 <tr>
                                     <th class="ps-4">ID Pesanan</th>
                                     <th>Nama Produk</th>
+                                    <th>Item</th>
                                     <th>Ukuran</th>
                                     <th class="pe-4 text-center">Aksi</th>
                                 </tr>
@@ -169,6 +170,11 @@
                                         <td class="ps-4 fw-bold text-primary">
                                             ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
                                         <td class="fw-semibold">{{ $item->nama_produk }}</td>
+                                        @if ($item->relationLoaded('items') && $item->items->count() > 1)
+                                            <td><span class="badge bg-dark">{{ $item->items->count() }} item</span></td>
+                                        @else
+                                            <td><span class="badge bg-light text-dark border">1 item</span></td>
+                                        @endif
                                         <td><span class="badge bg-light text-dark border">{{ $item->ukuran }}</span></td>
                                         <td class="pe-4 text-center">
                                             <button
@@ -187,7 +193,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center py-5 text-muted">Belum ada pesanan masuk.</td>
+                                        <td colspan="5" class="text-center py-5 text-muted">Belum ada pesanan masuk.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -295,7 +301,6 @@
                     gambarGrid.style.display = 'none';
                     gambarGrid.innerHTML = '';
                     noImageText.style.display = 'block';
-                    4
                     noImageText.innerText = 'Tidak ada gambar referensi.';
                 }
 
