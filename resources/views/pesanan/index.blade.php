@@ -276,10 +276,6 @@
                                         <span
                                             class="badge badge-status-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i
                                                 class="fas fa-check-circle me-1"></i> {{ $item->status }}</span>
-                                    @elseif($item->status == 'Siap Dikirim')
-                                        <span
-                                            class="badge badge-status-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25"><i
-                                                class="fas fa-box me-1"></i> {{ $item->status_label_pembeli }}</span>
                                     @elseif($item->status == 'diekspedisi')
                                         <span
                                             class="badge badge-status-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25"><i
@@ -488,15 +484,12 @@
                         <i class="fas fa-exclamation-circle me-1"></i>
                         <b>Alasan Penolakan:</b><br>${data.alasan_penolakan || '-'}
                     </div>`;
-            } else if ((data.status === 'Selesai' || data.status === 'Siap Dikirim') && data.status_pembayaran !== 'paid') {
+            } else if (data.status === 'Selesai' && data.status_pembayaran !== 'paid') {
                 html = `<div class="alert alert-warning border-0 small mb-2 py-2" style="border-radius:12px;">
                     <i class="fas fa-exclamation-circle me-1"></i> Pengerjaan selesai. Lunasi terlebih dahulu agar pesanan bisa dikirim.
                 </div>
                 <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm py-2" onclick="bayarSekarang(${data.id},'lunas')">
                     <i class="fas fa-money-check-dollar me-2"></i> Bayar Pelunasan</button>`;
-            } else if (data.status === 'Siap Dikirim') {
-                html = `<div class="alert alert-info border-0 small mb-2 py-2" style="border-radius:12px;">
-                    <i class="fas fa-box me-1"></i> Produksi selesai. Admin sedang menyiapkan resi dan pengiriman cargo.</div>`;
             } else if (data.status === 'Selesai') {
                 html = `<span class="badge w-100 bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-2">
                     <i class="fas fa-check-circle me-1"></i> Pesanan Selesai</span>`;

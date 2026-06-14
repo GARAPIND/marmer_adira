@@ -66,8 +66,8 @@ class AdminController extends Controller
 
         return [
             'total'         => (clone $query)->count(),
-            'diverifikasi'  => (clone $query)->whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Siap Dikirim'])->count(),
-            'diproses'      => (clone $query)->whereIn('status', ['Diproses', 'Dikerjakan', 'Siap Dikirim'])->count(),
+            'diverifikasi'  => (clone $query)->whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Selesai'])->count(),
+            'diproses'      => (clone $query)->whereIn('status', ['Diproses', 'Dikerjakan', 'Selesai'])->count(),
             'selesai'       => (clone $query)->where('status', 'Selesai')->count(),
             'ditolak'       => (clone $query)->where('status', 'Ditolak')->count(),
         ];
@@ -183,7 +183,7 @@ class AdminController extends Controller
     {
         $stats = [
             'baru'      => Pesanan::where('status', 'Menunggu Verifikasi Admin')->count(),
-            'diproses'  => Pesanan::whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Siap Dikirim', 'diekspedisi'])->count(),
+            'diproses'  => Pesanan::whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Selesai', 'diekspedisi'])->count(),
             'selesai'   => Pesanan::where('status', 'Selesai')->count(),
             'total_bayar' => Pesanan::where('status_pembayaran', 'paid')
                 ->selectRaw('SUM(total_harga + COALESCE(biaya_pengiriman, 0)) as total')
@@ -246,8 +246,8 @@ class AdminController extends Controller
             'nomor_resi_pengiriman.required' => 'Nomor resi cargo wajib diisi sebelum pesanan dikirim.',
         ]);
 
-        if ($pesanan->status !== 'Siap Dikirim') {
-            return redirect()->back()->with('error', 'Pesanan belum masuk tahap Siap Dikirim.');
+        if ($pesanan->status !== 'Selesai') {
+            return redirect()->back()->with('error', 'Pesanan belum masuk tahap selesai produksi dari pengrajin.');
         }
 
         $pesanan = $this->ensureInternalResi($pesanan);

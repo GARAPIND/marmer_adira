@@ -325,7 +325,7 @@
 
                                         <td>
                                             <span
-                                                class="badge {{ $item->status == 'Dikerjakan' ? 'bg-warning text-warning' : ($item->status == 'Siap Dikirim' ? 'bg-dark text-white' : ($item->status == 'diekspedisi' ? 'bg-info text-info' : 'bg-primary text-primary')) }} bg-opacity-10 px-3 py-2 rounded-pill fw-bold">
+                                                class="badge {{ $item->status == 'Dikerjakan' ? 'bg-warning text-warning' : ($item->status == 'diekspedisi' ? 'bg-info text-info' : ($item->status == 'Selesai' ? 'bg-success text-success' : 'bg-primary text-primary')) }} bg-opacity-10 px-3 py-2 rounded-pill fw-bold">
                                                 {{ $item->status == 'diekspedisi' ? 'Dikirim' : $item->status }}
                                             </span>
                                         </td>
@@ -381,9 +381,9 @@
                             <p class="mb-0 fw-bold">Dikerjakan</p>
                             <small class="text-muted">Dalam tahap pembentukan/pemotongan</small>
                         </div>
-                        <div id="step-siap-dikirim" class="timeline-item">
-                            <p class="mb-0 fw-bold">Siap Dikirim</p>
-                            <small class="text-muted">Produksi selesai dan menunggu admin cetak resi</small>
+                        <div id="step-selesai" class="timeline-item">
+                            <p class="mb-0 fw-bold">Selesai</p>
+                            <small class="text-muted">Produksi selesai, admin bisa lanjut proses resi dan kirim</small>
                         </div>
                     </div>
 
@@ -446,10 +446,10 @@
                             <form id="form-selesai" method="POST" action="">
                                 @csrf
                                 @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
-                                <input type="hidden" name="status" value="Siap Dikirim" id="input-status-selesai">
+                                <input type="hidden" name="status" value="Selesai" id="input-status-selesai">
                                 <button type="submit"
                                     class="btn btn-gold w-100 py-2 fw-bold small rounded-pill shadow-sm" disabled>
-                                    <span id="label-btn-selesai">Kirim Pesanan</span>
+                                    <span id="label-btn-selesai">Tandai Selesai</span>
                                 </button>
                             </form>
                         </div>
@@ -575,32 +575,12 @@
                     sectionInfoPengiriman.classList.add('upload-hidden');
                     sectionFotoDikerjakan.classList.remove('upload-hidden');
                     sectionFotoSelesai.classList.remove('upload-hidden');
-                    inputStatusSelesai.value = 'Siap Dikirim';
-                    labelBtnSelesai.innerText = 'Kirim Pesanan';
+                    inputStatusSelesai.value = 'Selesai';
+                    labelBtnSelesai.innerText = 'Tandai Selesai';
                     statusActionHint.classList.remove('d-none');
                     statusActionHint.className = 'alert alert-info border-0 small mb-4';
                     statusActionHint.innerHTML =
-                        '<i class="fas fa-circle-info me-1"></i> Upload foto progres dan foto hasil selesai. Jika produksi sudah benar-benar selesai, klik <b>Kirim Pesanan</b> agar status berubah ke <b>Siap Dikirim</b>.';
-                } else if (status === 'Siap Dikirim') {
-                    colFormDikerjakan.classList.add('d-none');
-                    colFormSelesai.classList.add('upload-hidden');
-                    sectionInfoPengiriman.classList.add('upload-hidden');
-                    sectionFotoDikerjakan.classList.remove('upload-hidden');
-                    sectionFotoSelesai.classList.remove('upload-hidden');
-                    statusActionHint.classList.remove('d-none');
-                    statusActionHint.className = 'alert alert-success border-0 small mb-4';
-                    statusActionHint.innerHTML =
-                        '<i class="fas fa-box me-1"></i> Pesanan sudah siap dikirim. Admin akan mencetak resi internal lalu mengubah status menjadi <b>Dikirim</b> setelah paket diserahkan ke cargo.';
-                } else if (status === 'diekspedisi') {
-                    colFormDikerjakan.classList.add('d-none');
-                    colFormSelesai.classList.add('upload-hidden');
-                    sectionInfoPengiriman.classList.remove('upload-hidden');
-                    sectionFotoDikerjakan.classList.remove('upload-hidden');
-                    sectionFotoSelesai.classList.remove('upload-hidden');
-                    statusActionHint.classList.remove('d-none');
-                    statusActionHint.className = 'alert alert-info border-0 small mb-4';
-                    statusActionHint.innerHTML =
-                        '<i class="fas fa-truck-moving me-1"></i> Pesanan sudah dikirim oleh admin ke cargo dan tetap tampil di sini sampai pembeli mengonfirmasi barang diterima.';
+                        '<i class="fas fa-circle-info me-1"></i> Upload foto progres dan foto hasil selesai. Jika produksi sudah benar-benar selesai, klik <b>Tandai Selesai</b>. Setelah itu pesanan masuk riwayat pengrajin dan admin bisa lanjut proses resi.';
                 } else {
                     colFormDikerjakan.classList.remove('d-none');
                     colFormSelesai.classList.add('upload-hidden');
@@ -729,7 +709,7 @@
                 });
 
                 // Reset Timeline Classes
-                const steps = ['step-diproses', 'step-dikerjakan', 'step-siap-dikirim'];
+                const steps = ['step-diproses', 'step-dikerjakan', 'step-selesai'];
                 steps.forEach(s => document.getElementById(s).classList.remove('completed', 'active'));
 
                 // Logika Update Timeline Berdasarkan Status
@@ -738,10 +718,10 @@
                 } else if (status === 'Dikerjakan') {
                     document.getElementById('step-diproses').classList.add('completed');
                     document.getElementById('step-dikerjakan').classList.add('active');
-                } else if (status === 'Siap Dikirim' || status === 'Selesai' || status === 'diekspedisi') {
+                } else if (status === 'Selesai' || status === 'diekspedisi') {
                     document.getElementById('step-diproses').classList.add('completed');
                     document.getElementById('step-dikerjakan').classList.add('completed');
-                    document.getElementById('step-siap-dikirim').classList.add('active');
+                    document.getElementById('step-selesai').classList.add('active');
                 }
             });
         });

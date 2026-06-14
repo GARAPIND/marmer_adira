@@ -146,7 +146,7 @@
         $isVerifiable = $pesanan->status === 'Menunggu Verifikasi Admin';
         $isDeliveryOrder = $pesanan->metode_pengambilan === 'dikirim';
         $isPaidOff = $pesanan->status_pembayaran === 'paid';
-        $isReadyToShip = $pesanan->status === 'Siap Dikirim';
+        $isReadyToShip = $pesanan->status === 'Selesai';
         $isAlreadyShipped = $pesanan->status === 'diekspedisi';
         $isReadOnlyDetail = $isAlreadyShipped;
     @endphp
@@ -307,7 +307,7 @@
                                         @elseif ($isReadyToShip)
                                             <span class="shipping-status-pill is-ready">Siap Input Resi</span>
                                         @else
-                                            <span class="shipping-status-pill is-blocked">Menunggu Pengrajin</span>
+                                            <span class="shipping-status-pill is-blocked">Menunggu Produksi Selesai</span>
                                         @endif
                                     </div>
 
@@ -327,7 +327,7 @@
                                                     @if ($isReadyToShip || $isAlreadyShipped)
                                                         Gunakan ini untuk label tempel paket.
                                                     @else
-                                                        Tombol aktif setelah status pesanan masuk tahap `Siap Dikirim`.
+                                                        Tombol aktif setelah pengrajin menandai pesanan `Selesai`.
                                                     @endif
                                                 </div>
                                             </div>
@@ -355,7 +355,7 @@
                                                     @elseif (!$isPaidOff)
                                                         Belum bisa input resi karena pembeli belum lunas.
                                                     @elseif (!$isReadyToShip)
-                                                        Pengrajin belum menandai pesanan sebagai `Siap Dikirim`, jadi admin belum bisa input resi cargo.
+                                                        Pengrajin belum menandai pesanan sebagai `Selesai`, jadi admin belum bisa input resi cargo.
                                                     @else
                                                         Isi setelah cargo memberikan nomor resi resmi.
                                                     @endif

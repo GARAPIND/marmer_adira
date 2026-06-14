@@ -155,10 +155,6 @@ class Pesanan extends Model
                     return 'Dikirim';
                 }
 
-                if ($this->status === 'Siap Dikirim') {
-                    return 'Siap Dikirim';
-                }
-
                 if ($this->status === 'Selesai' && $this->status_pembayaran !== 'paid') {
                     return 'Menunggu Pelunasan';
                 }
