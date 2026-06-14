@@ -261,7 +261,12 @@
                                 <td class="ps-4 fw-bold text-primary small">
                                     ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
                                 <td class="text-muted small">{{ $item->created_at->format('d M Y') }}</td>
-                                <td class="fw-semibold text-dark">{{ $item->nama_produk }}</td>
+                                <td class="fw-semibold text-dark">
+                                    {{ $item->nama_produk }}
+                                    @if ($item->relationLoaded('items') && $item->items->count() > 1)
+                                        <div class="small text-muted">{{ $item->items->count() }} item</div>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     @if ($item->is_menunggu_pelunasan)
                                         <span
@@ -356,7 +361,12 @@
                             <tr id="row-{{ $item->id }}">
                                 <td class="ps-4 text-muted small">ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}</td>
                                 <td class="text-muted small">{{ $item->created_at->format('d M Y') }}</td>
-                                <td class="fw-semibold text-dark">{{ $item->nama_produk }}</td>
+                                <td class="fw-semibold text-dark">
+                                    {{ $item->nama_produk }}
+                                    @if ($item->relationLoaded('items') && $item->items->count() > 1)
+                                        <div class="small text-muted">{{ $item->items->count() }} item</div>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     <span
                                         class="badge badge-status-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Menunggu</span>

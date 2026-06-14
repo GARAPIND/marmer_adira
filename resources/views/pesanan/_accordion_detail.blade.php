@@ -18,9 +18,13 @@
         <label>Daftar Item Pesanan</label>
         <div class="val-muted">
             @foreach ($item->items as $detailItem)
-                <div class="mb-2">
-                    <strong>{{ $detailItem->nama_produk }}</strong> - {{ $detailItem->ukuran }} - {{ $detailItem->jenis_marmer }}
-                    ({{ $detailItem->jumlah }} pcs)
+                <div class="mb-2 p-2 border rounded-3 bg-white">
+                    <strong>{{ $detailItem->nama_produk }}</strong><br>
+                    {{ $detailItem->ukuran }} - {{ $detailItem->jenis_marmer }} - {{ $detailItem->jumlah }} pcs<br>
+                    Subtotal: Rp {{ number_format($detailItem->subtotal ?? 0, 0, ',', '.') }}
+                    @if ($detailItem->catatan_khusus)
+                        <br><span class="fst-italic">{{ $detailItem->catatan_khusus }}</span>
+                    @endif
                 </div>
             @endforeach
         </div>

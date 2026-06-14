@@ -380,19 +380,9 @@ class PesananController extends Controller
         ];
 
         if ($request->metode_pengambilan === 'dikirim') {
-            $rules['jenis_pengiriman'] = 'required|in:bus,cargo';
-
-            if ($request->jenis_pengiriman === 'bus') {
-                $rules['terminal_id'] = 'required';
-                if ($request->terminal_id === 'lainnya') {
-                    $rules['alamat_manual'] = 'required|string|max:255';
-                }
-            }
-
-            if ($request->jenis_pengiriman === 'cargo') {
-                $rules['alamat_pembeli_id'] = 'required|integer';
-                $rules['courier']           = 'required|string|max:50';
-            }
+            $rules['jenis_pengiriman'] = 'required|in:cargo';
+            $rules['alamat_pembeli_id'] = 'required|integer';
+            $rules['courier'] = 'required|string|max:50';
         }
 
         $request->validate($rules, [
@@ -411,16 +401,7 @@ class PesananController extends Controller
         if ($request->metode_pengambilan === 'dikirim') {
             $jenisPengiriman = $request->jenis_pengiriman;
 
-            if ($jenisPengiriman === 'bus') {
-                if ($request->terminal_id === 'lainnya') {
-                    $alamatFinal = 'Kirim ke (Manual): ' . $request->alamat_manual;
-                } else {
-                    $terminal = Terminal::find($request->terminal_id);
-                    if ($terminal) {
-                        $alamatFinal = 'Kirim via Bus ke: ' . $terminal->nama_terminal;
-                    }
-                }
-            } elseif ($jenisPengiriman === 'cargo') {
+            if ($jenisPengiriman === 'cargo') {
                 $alamat = AlamatPembeli::find($request->alamat_pembeli_id);
                 if ($alamat) {
                     $alamatFinal     = $alamat->alamat_lengkap . ', ' . $alamat->kecamatan_nama . ', ' . $alamat->kota_nama . ', ' . $alamat->provinsi_nama;

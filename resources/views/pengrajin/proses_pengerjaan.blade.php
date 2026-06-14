@@ -215,6 +215,38 @@
             border: 1px solid #eee;
             cursor: pointer;
         }
+
+        .order-item-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .order-item-card {
+            border: 1px solid rgba(44, 62, 80, 0.08);
+            border-radius: 14px;
+            background: #fff;
+            padding: 12px;
+        }
+
+        .order-item-card .item-title {
+            font-weight: 700;
+            color: var(--adira-dark);
+        }
+
+        .order-item-card .item-meta {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .order-item-card .item-note {
+            margin-top: 6px;
+            font-size: 0.78rem;
+            color: #7b8794;
+            font-style: italic;
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -333,6 +365,7 @@
                                                 data-foto-dikerjakan='@json($item->foto_dikerjakan ?? [])'
                                                 data-foto-selesai='@json($item->foto_selesai ?? [])'
                                                 data-gambar-referensi='@json($item->gambar_referensi ?? [])'
+                                                data-items='@json($item->items ?? [])'
                                                 data-action="{{ route('pengrajin.update.status', $item->id) }}">
                                                 Lihat Detail
                                             </button>
@@ -360,6 +393,13 @@
                         <h6 class="small fw-bold text-uppercase text-muted mb-3">Gambar Referensi:</h6>
                         <div id="preview-gambar-referensi" class="gambar-referensi-grid">
                             <span class="text-muted small">Belum ada gambar referensi.</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="small fw-bold text-uppercase text-muted mb-3">Daftar Item Pesanan:</h6>
+                        <div id="preview-order-items" class="order-item-stack">
+                            <span class="text-muted small">Pilih pesanan untuk melihat daftar item.</span>
                         </div>
                     </div>
 
@@ -528,10 +568,12 @@
                 const fotoDikerjakan = JSON.parse(this.getAttribute('data-foto-dikerjakan') || '[]');
                 const fotoSelesai = JSON.parse(this.getAttribute('data-foto-selesai') || '[]');
                 const gambarReferensi = JSON.parse(this.getAttribute('data-gambar-referensi') || '[]');
+                const orderItems = JSON.parse(this.getAttribute('data-items') || '[]');
                 const paymentBadge = document.getElementById('payment-badge');
                 const fotoDikerjakanContainer = document.getElementById('preview-foto-dikerjakan');
                 const fotoSelesaiContainer = document.getElementById('preview-foto-selesai');
                 const previewGambarReferensi = document.getElementById('preview-gambar-referensi');
+                const previewOrderItems = document.getElementById('preview-order-items');
                 const tombolSelesai = document.querySelector('#form-selesai button[type="submit"]');
                 const tombolDikerjakan = document.querySelector('#form-dikerjakan button[type="submit"]');
                 const statusActionHint = document.getElementById('status-action-hint');
@@ -631,6 +673,14 @@
                 renderPhotos(fotoDikerjakanContainer, fotoDikerjakan);
                 renderPhotos(fotoSelesaiContainer, fotoSelesai);
                 renderGambarReferensi(previewGambarReferensi, gambarReferensi);
+                previewOrderItems.innerHTML = Array.isArray(orderItems) && orderItems.length ? orderItems.map(item => `
+                    <div class="order-item-card">
+                        <div class="item-title">${item.nama_produk || '-'}</div>
+                        <div class="item-meta">${item.ukuran || '-'} | ${item.jenis_marmer || '-'} | Qty ${item.jumlah || 0}</div>
+                        <div class="item-meta fw-bold text-dark mt-1">Subtotal Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</div>
+                        ${item.catatan_khusus ? `<div class="item-note">${item.catatan_khusus}</div>` : ''}
+                    </div>
+                `).join('') : '<span class="text-muted small">Detail item belum tersedia.</span>';
 
                 const renderPhotoTable = (photos, statusTarget) => {
                     photoListCounter.innerText = `${Array.isArray(photos) ? photos.length : 0} foto`;

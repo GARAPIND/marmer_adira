@@ -145,31 +145,14 @@
                                     <div id="section_pengiriman" style="display:none;">
                                         <div class="mb-3">
                                             <label class="form-label fw-semibold">Jenis Pengiriman</label>
-                                            <div class="d-flex gap-2">
-                                                <button type="button" class="btn btn-outline-dark flex-fill rounded-pill" id="tab_bus" onclick="pilihJenisPengiriman('bus')">Bus</button>
-                                                <button type="button" class="btn btn-outline-dark flex-fill rounded-pill" id="tab_cargo" onclick="pilihJenisPengiriman('cargo')">Cargo</button>
+                                            <div class="alert alert-light border rounded-4 mb-0">
+                                                <div class="fw-bold text-dark">Cargo</div>
+                                                <div class="small text-muted">Pengiriman pesanan saat ini hanya tersedia melalui cargo.</div>
                                             </div>
                                             <input type="hidden" name="jenis_pengiriman" id="jenis_pengiriman_hidden">
                                         </div>
 
-                                        <div id="section_bus" style="display:none;">
-                                            <div class="mb-3">
-                                                <label class="form-label fw-semibold">Terminal Tujuan</label>
-                                                <select name="terminal_id" id="terminal_id" class="form-select" onchange="handleTerminalChange()">
-                                                    <option value="">Pilih terminal</option>
-                                                    @foreach ($listTerminal as $terminal)
-                                                        <option value="{{ $terminal->id }}">{{ $terminal->nama_terminal }}</option>
-                                                    @endforeach
-                                                    <option value="lainnya">Lainnya</option>
-                                                </select>
-                                            </div>
-                                            <div class="mb-3" id="wrapper_alamat_manual" style="display:none;">
-                                                <label class="form-label fw-semibold">Alamat Manual</label>
-                                                <textarea name="alamat_manual" class="form-control" rows="2"></textarea>
-                                            </div>
-                                        </div>
-
-                                        <div id="section_cargo" style="display:none;">
+                                        <div id="section_cargo" style="display:block;">
                                             <div class="mb-3">
                                                 <label class="form-label fw-semibold">Pilih Alamat</label>
                                                 @forelse ($listAlamat as $alamat)
@@ -212,22 +195,11 @@
         function toggleCheckoutMetode() {
             const metode = document.getElementById('metode_pengambilan').value;
             document.getElementById('section_pengiriman').style.display = metode === 'dikirim' ? 'block' : 'none';
-            if (metode !== 'dikirim') {
-                document.getElementById('jenis_pengiriman_hidden').value = '';
-            }
+            document.getElementById('jenis_pengiriman_hidden').value = metode === 'dikirim' ? 'cargo' : '';
         }
 
         function pilihJenisPengiriman(jenis) {
-            document.getElementById('jenis_pengiriman_hidden').value = jenis;
-            document.getElementById('section_bus').style.display = jenis === 'bus' ? 'block' : 'none';
-            document.getElementById('section_cargo').style.display = jenis === 'cargo' ? 'block' : 'none';
-            document.getElementById('tab_bus').classList.toggle('active', jenis === 'bus');
-            document.getElementById('tab_cargo').classList.toggle('active', jenis === 'cargo');
-        }
-
-        function handleTerminalChange() {
-            const sel = document.getElementById('terminal_id');
-            document.getElementById('wrapper_alamat_manual').style.display = sel.value === 'lainnya' ? 'block' : 'none';
+            document.getElementById('jenis_pengiriman_hidden').value = 'cargo';
         }
 
         function pilihAlamat(el) {
@@ -241,5 +213,7 @@
             document.getElementById('courier_hidden').value = kurir;
             document.querySelectorAll('.courier-btn').forEach(btn => btn.classList.toggle('selected', btn.dataset.kurir === kurir));
         }
+
+        document.addEventListener('DOMContentLoaded', toggleCheckoutMetode);
     </script>
 @endsection

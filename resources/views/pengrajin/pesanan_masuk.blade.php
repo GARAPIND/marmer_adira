@@ -136,6 +136,38 @@
         .img-referensi-thumb:hover {
             transform: scale(1.05);
         }
+
+        .order-item-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .order-item-card {
+            background: #fff;
+            border: 1px solid rgba(44, 62, 80, 0.08);
+            border-radius: 14px;
+            padding: 12px;
+        }
+
+        .order-item-card .item-title {
+            font-weight: 700;
+            color: var(--adira-dark);
+        }
+
+        .order-item-card .item-meta {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .order-item-card .item-note {
+            font-size: 0.78rem;
+            color: #7b8794;
+            margin-top: 6px;
+            font-style: italic;
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -186,6 +218,7 @@
                                                 data-status_pembayaran="{{ $item->status_pembayaran }}"
                                                 data-catatan="{{ $item->catatan_khusus }}"
                                                 data-gambar="{{ json_encode($item->gambar_referensi ?? []) }}"
+                                                data-items='@json($item->items ?? [])'
                                                 data-action="{{ route('pengrajin.update.status', $item->id) }}">
                                                 <i class="fas fa-eye me-1"></i> Detail
                                             </button>
@@ -249,6 +282,13 @@
                         </div>
                     </div>
 
+                    <div class="mb-4">
+                        <span class="info-label">Daftar Item Pesanan</span>
+                        <div id="detail-items" class="order-item-stack">
+                            <div class="text-muted small">Pilih pesanan untuk melihat daftar item.</div>
+                        </div>
+                    </div>
+
                     <div class="info-group text-center">
                         <span class="info-label">Status Pembayaran</span>
                         <p class="info-value">
@@ -277,16 +317,24 @@
                 document.getElementById('detail-produk').innerText = this.getAttribute('data-produk');
                 document.getElementById('detail-ukuran').innerText = this.getAttribute('data-ukuran');
                 document.getElementById('detail-bahan').innerText = this.getAttribute('data-bahan');
+                const itemsContainer = document.getElementById('detail-items');
 
                 const gambarJson = this.getAttribute('data-gambar');
+                const itemsJson = this.getAttribute('data-items');
                 const gambarGrid = document.getElementById('gambar-grid');
                 const noImageText = document.getElementById('no-image-text');
 
                 let gambarList = [];
+                let itemsList = [];
                 try {
                     gambarList = JSON.parse(gambarJson);
                 } catch (e) {
                     gambarList = [];
+                }
+                try {
+                    itemsList = JSON.parse(itemsJson);
+                } catch (e) {
+                    itemsList = [];
                 }
 
                 if (Array.isArray(gambarList) && gambarList.length > 0) {
@@ -307,6 +355,14 @@
                 const catatan = this.getAttribute('data-catatan');
                 document.getElementById('detail-catatan').innerText = (catatan && catatan.trim() !== "") ?
                     `"${catatan}"` : '"Tidak ada catatan kustomisasi."';
+                itemsContainer.innerHTML = Array.isArray(itemsList) && itemsList.length ? itemsList.map(item => `
+                    <div class="order-item-card">
+                        <div class="item-title">${item.nama_produk || '-'}</div>
+                        <div class="item-meta">${item.ukuran || '-'} | ${item.jenis_marmer || '-'} | Qty ${item.jumlah || 0}</div>
+                        <div class="item-meta fw-bold text-dark mt-1">Subtotal Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</div>
+                        ${item.catatan_khusus ? `<div class="item-note">${item.catatan_khusus}</div>` : ''}
+                    </div>
+                `).join('') : '<div class="text-muted small">Detail item belum tersedia.</div>';
                 document.getElementById('form-mulai').action = this.getAttribute('data-action');
 
                 const statusPembayaran = this.getAttribute('data-status_pembayaran');

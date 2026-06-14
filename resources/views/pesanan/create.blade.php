@@ -615,32 +615,7 @@
                                                 </button>
                                             </div>
 
-                                            <div id="section_bus" style="display:none;">
-                                                <label class="label-aesthetic">
-                                                    <i class="fa-solid fa-bus me-2"></i>Pilih Terminal Tujuan
-                                                </label>
-                                                <select name="terminal_id" id="terminal_id"
-                                                    class="form-select input-aesthetic" onchange="handleTerminalChange()">
-                                                    <option value="" data-tarif-per-kg="0" selected disabled>--
-                                                        Pilih Terminal --</option>
-                                                    @foreach ($listTerminal as $t)
-                                                        <option value="{{ $t->id }}"
-                                                            data-tarif-per-kg="{{ $t->tarif_per_kg ?? $t->tarif_per_km }}">
-                                                            {{ $t->nama_terminal }} (Rp
-                                                            {{ number_format($t->tarif_per_kg ?? $t->tarif_per_km, 0, ',', '.') }}/kg)
-                                                        </option>
-                                                    @endforeach
-                                                    <option value="lainnya">Lainnya (Isi Manual)</option>
-                                                </select>
-                                                <div id="wrapper_alamat_manual" class="mt-3" style="display:none;">
-                                                    <label class="label-aesthetic">Alamat Tujuan Manual</label>
-                                                    <input type="text" name="alamat_manual" id="alamat_manual"
-                                                        class="form-control input-aesthetic"
-                                                        placeholder="Nama terminal / alamat tujuan">
-                                                </div>
-                                            </div>
-
-                                            <div id="section_cargo" style="display:none;">
+                                            <div id="section_cargo" style="display:block;">
                                                 <label class="label-aesthetic mb-2">
                                                     <i class="fa-solid fa-location-dot me-2"></i>Alamat Pengiriman
                                                 </label>

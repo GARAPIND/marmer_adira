@@ -97,6 +97,46 @@
             cursor: zoom-in;
             border: 1px solid #eee;
         }
+
+        .order-item-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 240px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .order-item-card {
+            border: 1px solid rgba(44, 62, 80, 0.08);
+            border-radius: 14px;
+            background: #fff;
+            padding: 12px 14px;
+        }
+
+        .order-item-card .topline {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .order-item-card .item-name {
+            font-weight: 700;
+            color: var(--adira-dark);
+        }
+
+        .order-item-card .item-meta {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .order-item-card .item-note {
+            font-size: 0.8rem;
+            color: #7b8794;
+            margin-top: 6px;
+            font-style: italic;
+        }
     </style>
 
     <div class="container py-5 mt-2 animate__animated animate__fadeIn">
@@ -274,10 +314,16 @@
                                     </div>
                                 </div>
 
+                                <div class="mb-3">
+                                    <label class="text-muted small fw-bold text-uppercase d-block mb-2">Daftar Item
+                                        Pesanan</label>
+                                    <div id="md-items-container" class="order-item-stack"></div>
+                                </div>
+
                                 <div id="md-alamat-section" class="alert alert-info border-0 shadow-sm py-2 mb-0"
                                     style="display:none;">
                                     <i class="fas fa-truck-moving me-2"></i>
-                                    <small class="fw-bold">Tujuan Bus:</small> <span id="md-alamat"
+                                    <small class="fw-bold">Alamat Kirim:</small> <span id="md-alamat"
                                         class="small fw-bold text-primary"></span>
                                 </div>
                             </div>
@@ -476,7 +522,9 @@
             document.getElementById('md-jumlah').innerText = data.jumlah + ' Pcs';
             document.getElementById('md-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan khusus.';
             const gambarContainer = document.getElementById('md-gambar-container');
+            const itemsContainer = document.getElementById('md-items-container');
             let gambarList = data.gambar_referensi;
+            const items = Array.isArray(data.items) ? data.items : [];
 
             if (typeof gambarList === 'string') {
                 try {
@@ -496,6 +544,19 @@
                 gambarContainer.innerHTML =
                     '<p class="text-muted small mb-0 py-3">Tidak ada gambar referensi custom.</p>';
             }
+
+            itemsContainer.innerHTML = items.length ? items.map(item => `
+                <div class="order-item-card">
+                    <div class="topline">
+                        <div>
+                            <div class="item-name">${item.nama_produk || '-'}</div>
+                            <div class="item-meta">${item.ukuran || '-'} | ${item.jenis_marmer || '-'} | Qty ${item.jumlah || 0}</div>
+                        </div>
+                        <div class="text-end fw-bold text-dark">Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</div>
+                    </div>
+                    ${item.catatan_khusus ? `<div class="item-note">${item.catatan_khusus}</div>` : ''}
+                </div>
+            `).join('') : '<div class="text-muted small">Detail item belum tersedia.</div>';
 
             document.getElementById('input_harga').value = data.total_harga > 0 ? data.total_harga : '';
             document.getElementById('input_berat_satuan').value = data.berat_satuan > 0 ? data.berat_satuan : '';
