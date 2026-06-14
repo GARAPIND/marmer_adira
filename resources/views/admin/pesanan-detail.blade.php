@@ -336,19 +336,18 @@
 
                                         <div class="col-md-6">
                                             <div class="shipping-action-box h-100">
-                                                <form method="POST" action="{{ route('admin.pesanan.kirim', $pesanan->id) }}">
-                                                    @csrf
-                                                    <label class="form-label small fw-bold">Nomor Resi Cargo Resmi</label>
-                                                    <input type="text" name="nomor_resi_pengiriman" class="form-control mb-3"
-                                                        value="{{ old('nomor_resi_pengiriman', $pesanan->nomor_resi_pengiriman) }}"
-                                                        placeholder="Contoh: JNECARGO-00123456789"
-                                                        {{ !$isPaidOff || !$isReadyToShip || $isAlreadyShipped ? 'disabled' : '' }}>
+                                                <label class="form-label small fw-bold">Nomor Resi Cargo Resmi</label>
+                                                <input type="text" name="nomor_resi_pengiriman" class="form-control mb-3"
+                                                    form="formKirimPesanan"
+                                                    value="{{ old('nomor_resi_pengiriman', $pesanan->nomor_resi_pengiriman) }}"
+                                                    placeholder="Contoh: JNECARGO-00123456789"
+                                                    {{ !$isPaidOff || !$isReadyToShip || $isAlreadyShipped ? 'disabled' : '' }}>
 
-                                                    <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold w-100"
-                                                        {{ !$isPaidOff || !$isReadyToShip || $isAlreadyShipped ? 'disabled' : '' }}>
-                                                        Kirim Pesanan
-                                                    </button>
-                                                </form>
+                                                <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold w-100"
+                                                    form="formKirimPesanan"
+                                                    {{ !$isPaidOff || !$isReadyToShip || $isAlreadyShipped ? 'disabled' : '' }}>
+                                                    Kirim Pesanan
+                                                </button>
 
                                                 <div class="small text-muted mt-2">
                                                     @if ($isAlreadyShipped)
@@ -440,6 +439,10 @@
                             </div>
                         </div>
                     </div>
+                </form>
+
+                <form method="POST" action="{{ route('admin.pesanan.kirim', $pesanan->id) }}" id="formKirimPesanan">
+                    @csrf
                 </form>
             </div>
         </div>
