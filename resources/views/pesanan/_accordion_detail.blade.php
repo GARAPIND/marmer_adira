@@ -16,17 +16,34 @@
 @if ($item->relationLoaded('items') && $item->items->count())
     <div class="acc-block" style="grid-column: span 2;">
         <label>Daftar Item Pesanan</label>
-        <div class="val-muted">
-            @foreach ($item->items as $detailItem)
-                <div class="mb-2 p-2 border rounded-3 bg-white">
-                    <strong>{{ $detailItem->nama_produk }}</strong><br>
-                    {{ $detailItem->ukuran }} - {{ $detailItem->jenis_marmer }} - {{ $detailItem->jumlah }} pcs<br>
-                    Subtotal: Rp {{ number_format($detailItem->subtotal ?? 0, 0, ',', '.') }}
-                    @if ($detailItem->catatan_khusus)
-                        <br><span class="fst-italic">{{ $detailItem->catatan_khusus }}</span>
-                    @endif
-                </div>
-            @endforeach
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0 bg-white rounded-3 overflow-hidden">
+                <thead>
+                    <tr>
+                        <th>Produk</th>
+                        <th>Ukuran</th>
+                        <th>Bahan</th>
+                        <th>Qty</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($item->items as $detailItem)
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">{{ $detailItem->nama_produk }}</div>
+                                @if ($detailItem->catatan_khusus)
+                                    <div class="small fst-italic text-muted">{{ $detailItem->catatan_khusus }}</div>
+                                @endif
+                            </td>
+                            <td>{{ $detailItem->ukuran }}</td>
+                            <td>{{ $detailItem->jenis_marmer }}</td>
+                            <td>{{ $detailItem->jumlah }}</td>
+                            <td>Rp {{ number_format($detailItem->subtotal ?? 0, 0, ',', '.') }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
 @endif

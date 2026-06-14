@@ -172,26 +172,28 @@
         }
 
         .order-item-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            overflow-x: auto;
         }
 
-        .order-item-card {
-            background: #fff;
-            border: 1px solid rgba(44, 62, 80, 0.08);
-            border-radius: 16px;
-            padding: 12px 14px;
+        .order-item-table {
+            width: 100%;
+            min-width: 520px;
+            border-collapse: collapse;
         }
 
-        .order-item-title {
-            font-weight: 700;
-            color: var(--adira-dark);
+        .order-item-table th,
+        .order-item-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(44, 62, 80, 0.08);
+            vertical-align: top;
         }
 
-        .order-item-meta {
-            font-size: 0.8rem;
-            color: #6c757d;
+        .order-item-table th {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            color: #7b8794;
+            font-weight: 800;
+            background: #f8fafb;
         }
     </style>
 
@@ -449,13 +451,28 @@
             document.getElementById('dashboard-det-bayar').innerText = data.status_pembayaran === 'paid' ? 'Lunas' :
                 (data.status_pembayaran === 'dp' ? 'Dibayar DP 50%' : 'Belum Bayar');
             document.getElementById('dashboard-det-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan tambahan.';
-            document.getElementById('dashboard-det-items').innerHTML = Array.isArray(data.items) && data.items.length ? data.items.map(item =>
-                `<div class="order-item-card">
-                    <div class="order-item-title">${item.nama_produk || '-'}</div>
-                    <div class="order-item-meta">${item.ukuran || '-'} | ${item.jenis_marmer || '-'} | Qty ${item.jumlah || 0}</div>
-                    <div class="order-item-meta fw-bold text-dark mt-1">Subtotal Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</div>
-                </div>`
-            ).join('') : '<div class="text-muted small">Detail item belum tersedia.</div>';
+            document.getElementById('dashboard-det-items').innerHTML = Array.isArray(data.items) && data.items.length ? `
+                <table class="order-item-table">
+                    <thead>
+                        <tr>
+                            <th>Produk</th>
+                            <th>Qty</th>
+                            <th>Ukuran / Bahan</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.items.map(item => `
+                            <tr>
+                                <td><strong>${item.nama_produk || '-'}</strong></td>
+                                <td>${item.jumlah || 0}</td>
+                                <td>${item.ukuran || '-'}<br><span class="text-muted small">${item.jenis_marmer || '-'}</span></td>
+                                <td>Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            ` : '<div class="text-muted small">Detail item belum tersedia.</div>';
 
             renderPhotos('dashboard-foto-dikerjakan', data.foto_dikerjakan || [], 'Belum ada foto progres.');
             renderPhotos('dashboard-foto-selesai', data.foto_selesai || [], 'Belum ada foto hasil.');

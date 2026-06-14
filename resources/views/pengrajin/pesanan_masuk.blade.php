@@ -138,35 +138,31 @@
         }
 
         .order-item-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 220px;
-            overflow-y: auto;
+            overflow-x: auto;
         }
 
-        .order-item-card {
+        .order-item-table {
+            width: 100%;
+            min-width: 520px;
+            border-collapse: collapse;
             background: #fff;
-            border: 1px solid rgba(44, 62, 80, 0.08);
             border-radius: 14px;
-            padding: 12px;
+            overflow: hidden;
         }
 
-        .order-item-card .item-title {
-            font-weight: 700;
-            color: var(--adira-dark);
+        .order-item-table th,
+        .order-item-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(44, 62, 80, 0.08);
+            vertical-align: top;
         }
 
-        .order-item-card .item-meta {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-
-        .order-item-card .item-note {
-            font-size: 0.78rem;
+        .order-item-table th {
+            background: #f8fafb;
             color: #7b8794;
-            margin-top: 6px;
-            font-style: italic;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            font-weight: 800;
         }
     </style>
 
@@ -355,14 +351,31 @@
                 const catatan = this.getAttribute('data-catatan');
                 document.getElementById('detail-catatan').innerText = (catatan && catatan.trim() !== "") ?
                     `"${catatan}"` : '"Tidak ada catatan kustomisasi."';
-                itemsContainer.innerHTML = Array.isArray(itemsList) && itemsList.length ? itemsList.map(item => `
-                    <div class="order-item-card">
-                        <div class="item-title">${item.nama_produk || '-'}</div>
-                        <div class="item-meta">${item.ukuran || '-'} | ${item.jenis_marmer || '-'} | Qty ${item.jumlah || 0}</div>
-                        <div class="item-meta fw-bold text-dark mt-1">Subtotal Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</div>
-                        ${item.catatan_khusus ? `<div class="item-note">${item.catatan_khusus}</div>` : ''}
-                    </div>
-                `).join('') : '<div class="text-muted small">Detail item belum tersedia.</div>';
+                itemsContainer.innerHTML = Array.isArray(itemsList) && itemsList.length ? `
+                    <table class="order-item-table">
+                        <thead>
+                            <tr>
+                                <th>Produk</th>
+                                <th>Qty</th>
+                                <th>Ukuran / Bahan</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsList.map(item => `
+                                <tr>
+                                    <td>
+                                        <strong>${item.nama_produk || '-'}</strong>
+                                        ${item.catatan_khusus ? `<div class="small fst-italic text-muted mt-1">${item.catatan_khusus}</div>` : ''}
+                                    </td>
+                                    <td>${item.jumlah || 0}</td>
+                                    <td>${item.ukuran || '-'}<br><span class="text-muted small">${item.jenis_marmer || '-'}</span></td>
+                                    <td>Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                ` : '<div class="text-muted small">Detail item belum tersedia.</div>';
                 document.getElementById('form-mulai').action = this.getAttribute('data-action');
 
                 const statusPembayaran = this.getAttribute('data-status_pembayaran');

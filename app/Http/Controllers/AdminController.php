@@ -6,6 +6,7 @@ use App\Models\AlamatPembeli;
 use App\Models\PesananPaymentHistory;
 use App\Models\User;
 use App\Models\Pesanan;
+use App\Models\PesananItem;
 use App\Models\Bahan; // Pastikan Model Bahan diimport
 use App\Models\Produk;
 use App\Models\Terminal;
@@ -120,6 +121,18 @@ class AdminController extends Controller
         return str_replace(',', '.', $value);
     }
 
+    private function calculateOrderWeightFromItems(Pesanan $pesanan, ?array $itemsPayload = null): float
+    {
+        $items = $pesanan->relationLoaded('items') ? $pesanan->items : $pesanan->items()->get();
+        $payloadById = collect($itemsPayload ?? [])->keyBy(fn($item) => (int) ($item['id'] ?? 0));
+
+        return (float) $items->sum(function (PesananItem $item) use ($payloadById) {
+            $incoming = $payloadById->get((int) $item->id, []);
+            $beratSatuan = (float) ($incoming['berat_satuan'] ?? $item->berat_satuan ?? 0);
+            return max($beratSatuan, 0) * (int) ($item->jumlah ?? 0);
+        });
+    }
+
     private function resolvePesananCourier(Pesanan $pesanan): ?string
     {
         if (!is_string($pesanan->alamat_pengiriman) || $pesanan->alamat_pengiriman === '') {
@@ -189,49 +202,86 @@ class AdminController extends Controller
         return view('admin.dashboard', compact('stats'));
     }
 
+    public function showPesanan($id)
+    {
+        $pesanan = Pesanan::with(['user', 'items', 'alamatPembeli', 'paymentHistories'])->findOrFail($id);
+        return view('admin.pesanan-detail', compact('pesanan'));
+    }
+
     public function updatePesanan(Request $request, $id)
     {
-        $pesanan = Pesanan::findOrFail($id);
+        $pesanan = Pesanan::with('items')->findOrFail($id);
+        $itemsPayload = collect($request->input('items', []))
+            ->map(function ($item) {
+                $item['berat_satuan'] = $this->normalizeDecimalInput($item['berat_satuan'] ?? null);
+                $item['harga_satuan'] = $this->normalizeDecimalInput($item['harga_satuan'] ?? null);
+                return $item;
+            })
+            ->values()
+            ->all();
 
-        $request->merge([
-            'berat_satuan' => $this->normalizeDecimalInput($request->input('berat_satuan')),
-        ]);
+        $request->merge(['items' => $itemsPayload]);
 
         $rules = [
-            'total_harga' => 'required|numeric|min:0',
+            'status' => 'required|in:Diverifikasi,Ditolak',
             'biaya_pengiriman' => 'nullable|numeric|min:0',
-            'berat_satuan' => 'nullable|numeric|min:0',
-            'status' => 'required|string',
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|integer',
+            'items.*.berat_satuan' => 'nullable|numeric|min:0',
+            'items.*.harga_satuan' => 'nullable|numeric|min:0',
         ];
+
+        if ($request->status === 'Diverifikasi') {
+            $rules['items.*.harga_satuan'] = 'required|numeric|min:0';
+        }
+        if ($request->status === 'Ditolak') {
+            $rules['alasan_penolakan'] = 'required|string|max:1000';
+        }
 
         if ($pesanan->metode_pengambilan === 'dikirim') {
             $rules['biaya_pengiriman'] = 'required|numeric|min:0';
         }
 
-        $request->validate([
-            ...$rules,
-        ], [
+        $validated = $request->validate($rules, [
             'biaya_pengiriman.required' => 'Ongkir wajib diisi untuk pesanan yang dikirim.',
-            'biaya_pengiriman.numeric' => 'Ongkir harus berupa angka.',
-            'berat_satuan.numeric' => 'Berat satuan harus berupa angka, bisa memakai koma atau titik.',
+            'items.*.harga_satuan.required' => 'Harga satuan per item wajib diisi saat pesanan diverifikasi.',
         ]);
 
-        // Pastikan admin mengisi rincian pengiriman jika metode pengirimannya via bus
-        $rincianOngkir = $pesanan->alamat_pengiriman; // default tetap yang lama
-        if ($request->filled('jarak_final')) {
-            $rincianOngkir = "Kirim via Bus (Perhitungan: " . ($request->jarak_final ?? 0) . " KM x Rp " . number_format($request->tarif_final ?? 0, 0, ',', '.') . "/KM)";
+        $itemsById = collect($validated['items'])->keyBy(fn($item) => (int) $item['id']);
+        $totalHarga = 0;
+        $totalBerat = 0;
+
+        foreach ($pesanan->items as $item) {
+            $incoming = $itemsById->get((int) $item->id);
+            if (!$incoming) {
+                continue;
+            }
+
+            $beratSatuan = (float) ($incoming['berat_satuan'] ?? 0);
+            $hargaSatuan = (int) round((float) ($incoming['harga_satuan'] ?? 0));
+            $subtotal = $hargaSatuan * (int) $item->jumlah;
+            $itemTotalBerat = $beratSatuan * (int) $item->jumlah;
+
+            $item->update([
+                'berat_satuan' => $beratSatuan,
+                'total_berat' => $itemTotalBerat,
+                'harga_satuan' => $hargaSatuan,
+                'subtotal' => $subtotal,
+            ]);
+
+            $totalHarga += $subtotal;
+            $totalBerat += $itemTotalBerat;
         }
 
-        $beratSatuan = (float) ($request->berat_satuan ?? $pesanan->berat_satuan ?? 0);
+        $firstItem = $pesanan->items()->orderBy('id')->first();
 
         $pesanan->update([
-            'total_harga'      => $request->total_harga,
-            'biaya_pengiriman' => $request->biaya_pengiriman ?? 0,
-            'berat_satuan'     => $beratSatuan,
-            'total_berat'      => $beratSatuan * (int) $pesanan->jumlah,
-            'alamat_pengiriman' => $rincianOngkir,
-            'status'           => $request->status,
-            'alasan_penolakan' => $request->alasan_penolakan
+            'total_harga' => $totalHarga,
+            'biaya_pengiriman' => (int) ($validated['biaya_pengiriman'] ?? 0),
+            'berat_satuan' => (float) ($firstItem->berat_satuan ?? 0),
+            'total_berat' => $totalBerat,
+            'status' => $validated['status'],
+            'alasan_penolakan' => $validated['status'] === 'Ditolak' ? $request->alasan_penolakan : null,
         ]);
 
         return redirect()->back()->with('success', 'Pesanan berhasil diperbarui!');
@@ -239,17 +289,26 @@ class AdminController extends Controller
 
     public function hitungOngkirPesanan(Request $request, $id)
     {
-        $pesanan = Pesanan::with('alamatPembeli')->findOrFail($id);
+        $pesanan = Pesanan::with(['alamatPembeli', 'items'])->findOrFail($id);
 
-        $request->merge([
-            'berat_satuan' => $this->normalizeDecimalInput($request->input('berat_satuan')),
-        ]);
+        $itemsPayload = collect($request->input('items', []))
+            ->map(function ($item) {
+                $item['berat_satuan'] = $this->normalizeDecimalInput($item['berat_satuan'] ?? null);
+                return $item;
+            })
+            ->values()
+            ->all();
+
+        $request->merge(['items' => $itemsPayload]);
 
         $validated = $request->validate([
-            'berat_satuan' => 'required|numeric|min:0',
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|integer',
+            'items.*.berat_satuan' => 'required|numeric|min:0',
         ], [
-            'berat_satuan.required' => 'Berat satuan wajib diisi.',
-            'berat_satuan.numeric' => 'Berat satuan harus berupa angka, bisa memakai koma atau titik.',
+            'items.required' => 'Minimal ada satu item untuk menghitung ongkir.',
+            'items.*.berat_satuan.required' => 'Berat satuan semua item wajib diisi.',
+            'items.*.berat_satuan.numeric' => 'Berat satuan harus berupa angka, bisa memakai koma atau titik.',
         ]);
 
         if ($pesanan->metode_pengambilan !== 'dikirim') {
@@ -261,8 +320,7 @@ class AdminController extends Controller
             ]);
         }
 
-        $beratSatuan = (float) $validated['berat_satuan'];
-        $totalBerat = max($beratSatuan * (int) $pesanan->jumlah, 0);
+        $totalBerat = max($this->calculateOrderWeightFromItems($pesanan, $validated['items']), 0);
 
         if ($totalBerat <= 0) {
             return response()->json([
@@ -270,31 +328,6 @@ class AdminController extends Controller
                 'total_berat' => 0,
                 'summary' => 'Isi berat satuan untuk menghitung ongkir otomatis.',
                 'calculation' => null,
-            ]);
-        }
-
-        if ($pesanan->jenis_pengiriman === 'bus') {
-            $terminal = $this->resolveBusTerminal($pesanan);
-            if (!$terminal) {
-                return response()->json([
-                    'message' => 'Terminal tujuan tidak ditemukan dari rincian pesanan. Ongkir perlu diisi manual.',
-                ], 422);
-            }
-
-            $tarifPerKg = (int) ($terminal->tarif_per_kg ?? $terminal->tarif_per_km ?? 0);
-            $ongkir = (int) ceil($totalBerat * $tarifPerKg);
-
-            return response()->json([
-                'biaya_pengiriman' => $ongkir,
-                'total_berat' => $totalBerat,
-                'summary' => 'Ongkir bus dihitung otomatis dari tarif terminal.',
-                'calculation' => [
-                    'jenis_pengiriman' => 'bus',
-                    'terminal' => $terminal->nama_terminal,
-                    'tarif_per_kg' => $tarifPerKg,
-                    'berat_total' => $totalBerat,
-                    'formula' => 'ceil(total_berat x tarif_per_kg)',
-                ],
             ]);
         }
 

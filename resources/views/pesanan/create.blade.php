@@ -595,86 +595,9 @@
                                                 required>
                                         </div>
                                         <div class="col-6">
-                                            <label class="label-aesthetic">Metode Ambil</label>
-                                            <select name="metode_pengambilan" id="metode_pengambilan"
-                                                class="form-select input-aesthetic" onchange="toggleMetode()" required>
-                                                <option value="dirumah">Ambil di Rumah</option>
-                                                <option value="dikirim">Dikirim</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {{-- SECTION PENGIRIMAN --}}
-                                    <div id="section_pengiriman" style="display:none;">
-                                        <div class="shipping-box-highlight">
-                                            <label class="label-aesthetic mb-3">Jenis Pengiriman</label>
-                                            <div class="jenis-kirim-tabs d-flex gap-2 mb-4">
-                                                <button type="button" class="btn btn-outline-secondary flex-fill active"
-                                                    id="tab_cargo" onclick="pilihJenisPengiriman('cargo')">
-                                                    <i class="fa-solid fa-truck me-2"></i>Cargo
-                                                </button>
-                                            </div>
-
-                                            <div id="section_cargo" style="display:block;">
-                                                <label class="label-aesthetic mb-2">
-                                                    <i class="fa-solid fa-location-dot me-2"></i>Alamat Pengiriman
-                                                </label>
-
-                                                @if ($listAlamat->isEmpty())
-                                                    <div class="text-center py-3">
-                                                        <p class="text-muted small mb-2">Belum ada alamat tersimpan.</p>
-                                                        <a href="{{ route('alamat.index') }}" target="_blank"
-                                                            class="btn btn-sm"
-                                                            style="background:var(--adira-gold);color:white;border-radius:10px;">
-                                                            <i class="fa-solid fa-plus me-1"></i>Tambah Alamat
-                                                        </a>
-                                                    </div>
-                                                @else
-                                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                                        <span class="small text-muted">Pilih alamat terdaftar</span>
-                                                        <a href="{{ route('alamat.index') }}" target="_blank"
-                                                            class="btn btn-sm"
-                                                            style="background:var(--adira-gold);color:white;border-radius:8px;font-size:0.78rem;">
-                                                            <i class="fa-solid fa-plus me-1"></i>Kelola Alamat
-                                                        </a>
-                                                    </div>
-                                                    <div id="list_alamat_cargo" class="d-flex flex-column gap-2 mb-3">
-                                                        @foreach ($listAlamat as $a)
-                                                            <div class="alamat-card-select {{ $a->is_utama ? 'selected' : '' }}"
-                                                                data-id="{{ $a->id }}"
-                                                                data-kecamatan-id="{{ $a->kecamatan_id }}"
-                                                                onclick="pilihAlamat(this)">
-                                                                <div
-                                                                    class="d-flex justify-content-between align-items-start">
-                                                                    <span
-                                                                        class="fw-semibold small">{{ $a->label }}</span>
-                                                                    @if ($a->is_utama)
-                                                                        <span class="badge-utama-sm">Utama</span>
-                                                                    @endif
-                                                                </div>
-                                                                <p class="mb-0 small text-muted mt-1">
-                                                                    {{ $a->nama_penerima }} &middot; {{ $a->no_telepon }}
-                                                                </p>
-                                                                <p class="mb-0 small text-muted">
-                                                                    {{ Str::limit($a->alamat_lengkap, 55) }},
-                                                                    {{ $a->kecamatan_nama }}, {{ $a->kota_nama }}
-                                                                </p>
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-
-                                                    <label class="label-aesthetic mb-2">Pilih Ekspedisi</label>
-                                                    <div class="d-flex flex-wrap gap-2 mb-3" id="courier_list">
-                                                        @foreach (['jne', 'tiki', 'pos', 'jnt', 'sicepat'] as $kurir)
-                                                            <div class="courier-btn" data-kurir="{{ $kurir }}"
-                                                                onclick="pilihKurir('{{ $kurir }}')">
-                                                                {{ strtoupper($kurir) }}
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                    <small class="text-muted d-block">Ongkir akan dihitung admin setelah
-                                                        pesanan diverifikasi.</small>
-                                                @endif
+                                            <label class="label-aesthetic">Alur Checkout</label>
+                                            <div class="p-3 rounded-4 border bg-light small text-muted h-100 d-flex align-items-center">
+                                                Metode ambil dan pengiriman dipilih nanti saat checkout di keranjang.
                                             </div>
                                         </div>
                                     </div>
@@ -721,9 +644,6 @@
         let hargaProdukGlobal = 0;
         let beratSatuanGlobal = 0;
         let beratTotalGlobal = 0;
-        let ongkirGlobal = 0;
-        let selectedKecamatanId = null;
-        let selectedKurir = null;
 
         // ── FILE LIST untuk gambar referensi ──────────────────────
         let fileList = []; // array of File objects, max 5
@@ -949,38 +869,6 @@
         }
 
         // ── METODE & PENGIRIMAN ───────────────────────────────────
-        function toggleMetode() {
-            const metode = document.getElementById('metode_pengambilan').value;
-            document.getElementById('section_pengiriman').style.display = metode === 'dikirim' ? 'block' : 'none';
-            return;
-        }
-
-        function pilihJenisPengiriman(jenis) {
-            return;
-        }
-
-        function handleTerminalChange() {
-            const sel = document.getElementById('terminal_id');
-            const opt = sel.options[sel.selectedIndex];
-            document.getElementById('wrapper_alamat_manual').style.display =
-                (opt && opt.value === 'lainnya') ? 'block' : 'none';
-        }
-
-        function pilihAlamat(el) {
-            document.querySelectorAll('.alamat-card-select').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            selectedKecamatanId = el.dataset.kecamatanId;
-            document.getElementById('alamat_pembeli_id_hidden').value = el.dataset.id;
-        }
-
-        function pilihKurir(kurir) {
-            selectedKurir = kurir;
-            document.getElementById('courier_hidden').value = kurir;
-            document.querySelectorAll('.courier-btn').forEach(b =>
-                b.classList.toggle('selected', b.dataset.kurir === kurir)
-            );
-        }
-
         function updateOngkirLabel() {
             document.getElementById('label_ongkir').innerText = 'Akan dipilih di keranjang';
         }

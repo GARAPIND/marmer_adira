@@ -217,35 +217,31 @@
         }
 
         .order-item-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 240px;
-            overflow-y: auto;
+            overflow-x: auto;
         }
 
-        .order-item-card {
-            border: 1px solid rgba(44, 62, 80, 0.08);
-            border-radius: 14px;
+        .order-item-table {
+            width: 100%;
+            min-width: 540px;
+            border-collapse: collapse;
             background: #fff;
-            padding: 12px;
+            border-radius: 14px;
+            overflow: hidden;
         }
 
-        .order-item-card .item-title {
-            font-weight: 700;
-            color: var(--adira-dark);
+        .order-item-table th,
+        .order-item-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(44, 62, 80, 0.08);
+            vertical-align: top;
         }
 
-        .order-item-card .item-meta {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-
-        .order-item-card .item-note {
-            margin-top: 6px;
-            font-size: 0.78rem;
+        .order-item-table th {
+            background: #f8fafb;
             color: #7b8794;
-            font-style: italic;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            font-weight: 800;
         }
     </style>
 
@@ -673,14 +669,31 @@
                 renderPhotos(fotoDikerjakanContainer, fotoDikerjakan);
                 renderPhotos(fotoSelesaiContainer, fotoSelesai);
                 renderGambarReferensi(previewGambarReferensi, gambarReferensi);
-                previewOrderItems.innerHTML = Array.isArray(orderItems) && orderItems.length ? orderItems.map(item => `
-                    <div class="order-item-card">
-                        <div class="item-title">${item.nama_produk || '-'}</div>
-                        <div class="item-meta">${item.ukuran || '-'} | ${item.jenis_marmer || '-'} | Qty ${item.jumlah || 0}</div>
-                        <div class="item-meta fw-bold text-dark mt-1">Subtotal Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</div>
-                        ${item.catatan_khusus ? `<div class="item-note">${item.catatan_khusus}</div>` : ''}
-                    </div>
-                `).join('') : '<span class="text-muted small">Detail item belum tersedia.</span>';
+                previewOrderItems.innerHTML = Array.isArray(orderItems) && orderItems.length ? `
+                    <table class="order-item-table">
+                        <thead>
+                            <tr>
+                                <th>Produk</th>
+                                <th>Qty</th>
+                                <th>Ukuran / Bahan</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orderItems.map(item => `
+                                <tr>
+                                    <td>
+                                        <strong>${item.nama_produk || '-'}</strong>
+                                        ${item.catatan_khusus ? `<div class="small fst-italic text-muted mt-1">${item.catatan_khusus}</div>` : ''}
+                                    </td>
+                                    <td>${item.jumlah || 0}</td>
+                                    <td>${item.ukuran || '-'}<br><span class="text-muted small">${item.jenis_marmer || '-'}</span></td>
+                                    <td>Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                ` : '<span class="text-muted small">Detail item belum tersedia.</span>';
 
                 const renderPhotoTable = (photos, statusTarget) => {
                     photoListCounter.innerText = `${Array.isArray(photos) ? photos.length : 0} foto`;
