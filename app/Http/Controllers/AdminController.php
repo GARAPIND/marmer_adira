@@ -236,6 +236,10 @@ class AdminController extends Controller
     {
         $pesanan = Pesanan::findOrFail($id);
 
+        if ($pesanan->status_pembayaran !== 'paid') {
+            return redirect()->back()->with('error', 'Pesanan belum lunas, nomor resi dan pengiriman belum bisa diproses.');
+        }
+
         $validated = $request->validate([
             'nomor_resi_pengiriman' => 'required|string|max:100',
         ], [
