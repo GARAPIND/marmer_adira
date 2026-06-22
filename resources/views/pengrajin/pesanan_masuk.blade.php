@@ -191,6 +191,7 @@
                                                 data-id="ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}"
                                                 data-pembeli="{{ $item->user->name ?? 'Pembeli' }}"
                                                 data-status_pembayaran="{{ $item->status_pembayaran }}"
+                                                data-estimasi="{{ $item->estimasi_selesai }}"
                                                 data-items='@json($item->items ?? [])'
                                                 data-action="{{ route('pengrajin.update.status', $item->id) }}">
                                                 <i class="fas fa-eye me-1"></i> Detail
@@ -225,6 +226,12 @@
                         <div id="detail-items" class="order-item-stack">
                             <div class="text-muted small">Pilih pesanan untuk melihat daftar item.</div>
                         </div>
+                    </div>
+
+                    <div class="info-group text-center">
+                        <span class="info-label">Estimasi Selesai</span>
+                        <p class="info-value mb-0" id="detail-estimasi">-</p>
+                        <small id="detail-estimasi-sisa" class="text-muted"></small>
                     </div>
 
                     <div class="info-group text-center">
@@ -274,26 +281,26 @@
                         </thead>
                         <tbody>
                             ${itemsList.map(item => `
-                                <tr>
-                                    <td>
-                                        <strong>${item.nama_produk || '-'}</strong>
-                                    </td>
-                                    <td>${item.jumlah || 0}</td>
-                                    <td>
-                                        <div class="small text-dark fw-semibold">${item.ukuran || '-'}</div>
-                                        <div class="text-muted small">${item.jenis_marmer || '-'}</div>
-                                        ${item.catatan_khusus ? `<div class="item-note mt-2">${item.catatan_khusus}</div>` : '<span class="text-muted small">Tanpa catatan.</span>'}
-                                    </td>
-                                    <td>
-                                        ${Array.isArray(item.gambar_referensi) && item.gambar_referensi.length ? item.gambar_referensi.map((img, index) => `
+                                            <tr>
+                                                <td>
+                                                    <strong>${item.nama_produk || '-'}</strong>
+                                                </td>
+                                                <td>${item.jumlah || 0}</td>
+                                                <td>
+                                                    <div class="small text-dark fw-semibold">${item.ukuran || '-'}</div>
+                                                    <div class="text-muted small">${item.jenis_marmer || '-'}</div>
+                                                    ${item.catatan_khusus ? `<div class="item-note mt-2">${item.catatan_khusus}</div>` : '<span class="text-muted small">Tanpa catatan.</span>'}
+                                                </td>
+                                                <td>
+                                                    ${Array.isArray(item.gambar_referensi) && item.gambar_referensi.length ? item.gambar_referensi.map((img, index) => `
                                                     <a href="/storage/${img}" target="_blank" class="item-photo-link ${index > 0 ? 'mt-1' : ''}">
                                                         <i class="fas fa-image"></i> Foto ${index + 1}
                                                     </a>
                                                 `).join('<br>') : '<span class="text-muted small">Tidak ada foto</span>'}
-                                    </td>
-                                    <td>Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</td>
-                                </tr>
-                            `).join('')}
+                                                </td>
+                                                <td>Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</td>
+                                            </tr>
+                                        `).join('')}
                         </tbody>
                     </table>
                 ` : '<div class="text-muted small">Detail item belum tersedia.</div>';
@@ -311,6 +318,43 @@
                 } else {
                     statusElement.innerText = 'Belum Dibayar';
                     statusElement.className = 'badge bg-danger px-3 py-2';
+                }
+
+                const estimasi = this.getAttribute('data-estimasi');
+                const estimasiEl = document.getElementById('detail-estimasi');
+                const sisaEl = document.getElementById('detail-estimasi-sisa');
+
+                if (estimasi) {
+                    const tglEstimasi = new Date(estimasi);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    tglEstimasi.setHours(0, 0, 0, 0);
+
+                    const selisihMs = tglEstimasi - today;
+                    const selisihHari = Math.round(selisihMs / (1000 * 60 * 60 * 24));
+
+                    // Format tanggal → "15 Juli 2025"
+                    const formatted = tglEstimasi.toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    estimasiEl.innerText = formatted;
+
+                    if (selisihHari > 0) {
+                        sisaEl.innerText = `${selisihHari} hari lagi`;
+                        sisaEl.className = selisihHari <= 3 ? 'text-danger fw-semibold small' :
+                            'text-muted small';
+                    } else if (selisihHari === 0) {
+                        sisaEl.innerText = 'Hari ini!';
+                        sisaEl.className = 'text-warning fw-bold small';
+                    } else {
+                        sisaEl.innerText = `Terlambat ${Math.abs(selisihHari)} hari`;
+                        sisaEl.className = 'text-danger fw-bold small';
+                    }
+                } else {
+                    estimasiEl.innerText = 'Belum ditentukan';
+                    sisaEl.innerText = '';
                 }
             });
         });

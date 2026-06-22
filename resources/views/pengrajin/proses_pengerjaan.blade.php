@@ -334,6 +334,7 @@
                                             <button
                                                 class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold btn-lihat-detail"
                                                 data-id="ORD-{{ str_pad($item->id, 3, '0', STR_PAD_LEFT) }}"
+                                                data-estimasi="{{ $item->estimasi_selesai }}"
                                                 data-status="{{ $item->status }}"
                                                 data-payment-status="{{ $item->status_pembayaran }}"
                                                 data-foto-dikerjakan='@json($item->foto_dikerjakan ?? [])'
@@ -399,6 +400,17 @@
                         <span id="payment-badge" class="badge bg-secondary px-3 py-2 rounded-pill">-</span>
                     </div>
 
+                    <div class="mb-4" id="section-estimasi">
+                        <h6 class="small fw-bold text-uppercase text-muted mb-2">Estimasi Selesai:</h6>
+                        <div class="shipping-mini-card d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="small text-muted mb-1">Target Penyelesaian</div>
+                                <div id="preview-estimasi-tanggal" class="fw-bold text-dark">-</div>
+                            </div>
+                            <span id="preview-estimasi-sisa" class="badge bg-secondary px-3 py-2 rounded-pill">-</span>
+                        </div>
+                    </div>
+
                     <div class="mb-4 upload-hidden" id="section-info-pengiriman">
                         <h6 class="small fw-bold text-uppercase text-muted mb-3">Info Pengiriman:</h6>
                         <div class="shipping-mini-card">
@@ -424,8 +436,9 @@
                         <div id="preview-foto-selesai" class="photo-grid">
                             <span class="text-muted small">Belum ada foto.</span>
                         </div>
-                        <button type="button" id="btn-foto-selesai" class="btn btn-outline-dark btn-sm rounded-pill mt-3"
-                            data-bs-toggle="modal" data-bs-target="#modalFotoProgres">
+                        <button type="button" id="btn-foto-selesai"
+                            class="btn btn-outline-dark btn-sm rounded-pill mt-3" data-bs-toggle="modal"
+                            data-bs-target="#modalFotoProgres">
                             Kelola Foto Selesai
                         </button>
                     </div>
@@ -557,6 +570,42 @@
                 statusActionHint.classList.add('d-none');
                 statusActionHint.innerHTML = '';
 
+                const estimasi = this.getAttribute('data-estimasi');
+                const estimasiTanggalEl = document.getElementById('preview-estimasi-tanggal');
+                const estimasiSisaEl = document.getElementById('preview-estimasi-sisa');
+
+                if (estimasi) {
+                    const tglEstimasi = new Date(estimasi);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    tglEstimasi.setHours(0, 0, 0, 0);
+
+                    const selisihHari = Math.round((tglEstimasi - today) / (1000 * 60 * 60 * 24));
+
+                    estimasiTanggalEl.innerText = tglEstimasi.toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+
+                    if (selisihHari > 0) {
+                        estimasiSisaEl.innerText = `${selisihHari} hari lagi`;
+                        estimasiSisaEl.className = selisihHari <= 3 ?
+                            'badge bg-danger px-3 py-2 rounded-pill' :
+                            'badge bg-success px-3 py-2 rounded-pill';
+                    } else if (selisihHari === 0) {
+                        estimasiSisaEl.innerText = 'Hari ini!';
+                        estimasiSisaEl.className = 'badge bg-warning text-dark px-3 py-2 rounded-pill';
+                    } else {
+                        estimasiSisaEl.innerText = `Terlambat ${Math.abs(selisihHari)} hari`;
+                        estimasiSisaEl.className = 'badge bg-danger px-3 py-2 rounded-pill';
+                    }
+                } else {
+                    estimasiTanggalEl.innerText = 'Belum ditentukan';
+                    estimasiSisaEl.innerText = '-';
+                    estimasiSisaEl.className = 'badge bg-secondary px-3 py-2 rounded-pill';
+                }
+
                 if (paymentStatus === 'paid') {
                     paymentBadge.innerText = 'Lunas';
                     paymentBadge.className = 'badge bg-success px-3 py-2 rounded-pill';
@@ -623,26 +672,26 @@
                         </thead>
                         <tbody>
                             ${orderItems.map(item => `
-                                <tr>
-                                    <td>
-                                        <strong>${item.nama_produk || '-'}</strong>
-                                    </td>
-                                    <td>${item.jumlah || 0}</td>
-                                    <td>
-                                        <div class="small text-dark fw-semibold">${item.ukuran || '-'}</div>
-                                        <div class="text-muted small">${item.jenis_marmer || '-'}</div>
-                                        ${item.catatan_khusus ? `<div class="item-note mt-2">${item.catatan_khusus}</div>` : '<span class="text-muted small">Tanpa catatan.</span>'}
-                                    </td>
-                                    <td>
-                                        ${Array.isArray(item.gambar_referensi) && item.gambar_referensi.length ? item.gambar_referensi.map((img, index) => `
+                                            <tr>
+                                                <td>
+                                                    <strong>${item.nama_produk || '-'}</strong>
+                                                </td>
+                                                <td>${item.jumlah || 0}</td>
+                                                <td>
+                                                    <div class="small text-dark fw-semibold">${item.ukuran || '-'}</div>
+                                                    <div class="text-muted small">${item.jenis_marmer || '-'}</div>
+                                                    ${item.catatan_khusus ? `<div class="item-note mt-2">${item.catatan_khusus}</div>` : '<span class="text-muted small">Tanpa catatan.</span>'}
+                                                </td>
+                                                <td>
+                                                    ${Array.isArray(item.gambar_referensi) && item.gambar_referensi.length ? item.gambar_referensi.map((img, index) => `
                                                     <a href="/storage/${img}" target="_blank" class="item-photo-link ${index > 0 ? 'mt-1' : ''}">
                                                         <i class="fas fa-image"></i> Foto ${index + 1}
                                                     </a>
                                                 `).join('<br>') : '<span class="text-muted small">Tidak ada foto</span>'}
-                                    </td>
-                                    <td>Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</td>
-                                </tr>
-                            `).join('')}
+                                                </td>
+                                                <td>Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</td>
+                                            </tr>
+                                        `).join('')}
                         </tbody>
                     </table>
                 ` : '<span class="text-muted small">Detail item belum tersedia.</span>';

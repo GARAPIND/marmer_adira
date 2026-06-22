@@ -277,16 +277,18 @@ class AdminController extends Controller
         $request->merge(['items' => $itemsPayload]);
 
         $rules = [
-            'status' => 'required|in:Diverifikasi,Ditolak',
+            'status'           => 'required|in:Diverifikasi,Ditolak',
             'biaya_pengiriman' => 'nullable|numeric|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.id' => 'required|integer',
+            'estimasi_selesai' => 'nullable|date|after:today',
+            'items'            => 'required|array|min:1',
+            'items.*.id'           => 'required|integer',
             'items.*.berat_satuan' => 'nullable|numeric|min:0',
             'items.*.harga_satuan' => 'nullable|numeric|min:0',
         ];
 
         if ($request->status === 'Diverifikasi') {
             $rules['items.*.harga_satuan'] = 'required|numeric|min:0';
+            $rules['estimasi_selesai']     = 'required|date|after:today';
         }
         if ($request->status === 'Ditolak') {
             $rules['alasan_penolakan'] = 'required|string|max:1000';
@@ -297,8 +299,10 @@ class AdminController extends Controller
         }
 
         $validated = $request->validate($rules, [
-            'biaya_pengiriman.required' => 'Ongkir wajib diisi untuk pesanan yang dikirim.',
-            'items.*.harga_satuan.required' => 'Harga satuan per item wajib diisi saat pesanan diverifikasi.',
+            'biaya_pengiriman.required'          => 'Ongkir wajib diisi untuk pesanan yang dikirim.',
+            'items.*.harga_satuan.required'      => 'Harga satuan per item wajib diisi saat pesanan diverifikasi.',
+            'estimasi_selesai.required'          => 'Estimasi tanggal selesai wajib diisi saat pesanan diverifikasi.',
+            'estimasi_selesai.after'             => 'Estimasi tanggal selesai harus setelah hari ini.',
         ]);
 
         $itemsById = collect($validated['items'])->keyBy(fn($item) => (int) $item['id']);
@@ -311,16 +315,16 @@ class AdminController extends Controller
                 continue;
             }
 
-            $beratSatuan = (float) ($incoming['berat_satuan'] ?? 0);
-            $hargaSatuan = (int) round((float) ($incoming['harga_satuan'] ?? 0));
-            $subtotal = $hargaSatuan * (int) $item->jumlah;
+            $beratSatuan    = (float) ($incoming['berat_satuan'] ?? 0);
+            $hargaSatuan    = (int) round((float) ($incoming['harga_satuan'] ?? 0));
+            $subtotal       = $hargaSatuan * (int) $item->jumlah;
             $itemTotalBerat = $beratSatuan * (int) $item->jumlah;
 
             $item->update([
                 'berat_satuan' => $beratSatuan,
-                'total_berat' => $itemTotalBerat,
+                'total_berat'  => $itemTotalBerat,
                 'harga_satuan' => $hargaSatuan,
-                'subtotal' => $subtotal,
+                'subtotal'     => $subtotal,
             ]);
 
             $totalHarga += $subtotal;
@@ -330,12 +334,13 @@ class AdminController extends Controller
         $firstItem = $pesanan->items()->orderBy('id')->first();
 
         $pesanan->update([
-            'total_harga' => $totalHarga,
-            'biaya_pengiriman' => (int) ($validated['biaya_pengiriman'] ?? 0),
-            'berat_satuan' => (float) ($firstItem->berat_satuan ?? 0),
-            'total_berat' => $totalBerat,
-            'status' => $validated['status'],
-            'alasan_penolakan' => $validated['status'] === 'Ditolak' ? $request->alasan_penolakan : null,
+            'total_harga'       => $totalHarga,
+            'biaya_pengiriman'  => (int) ($validated['biaya_pengiriman'] ?? 0),
+            'berat_satuan'      => (float) ($firstItem->berat_satuan ?? 0),
+            'total_berat'       => $totalBerat,
+            'status'            => $validated['status'],
+            'alasan_penolakan'  => $validated['status'] === 'Ditolak' ? $request->alasan_penolakan : null,
+            'estimasi_selesai'  => $validated['status'] === 'Diverifikasi' ? $validated['estimasi_selesai'] : null,
         ]);
 
         return redirect()->back()->with('success', 'Pesanan berhasil diperbarui!');

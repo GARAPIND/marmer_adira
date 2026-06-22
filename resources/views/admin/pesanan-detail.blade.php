@@ -165,7 +165,8 @@
                 <div>
                     <div class="small text-white-50 mb-2">Verifikasi Pesanan</div>
                     <h2 class="fw-bold mb-1">ORD-{{ str_pad($pesanan->id, 3, '0', STR_PAD_LEFT) }}</h2>
-                    <div class="text-white-50">{{ $pesanan->user->name }} | {{ $pesanan->created_at->format('d M Y H:i') }}</div>
+                    <div class="text-white-50">{{ $pesanan->user->name }} | {{ $pesanan->created_at->format('d M Y H:i') }}
+                    </div>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ route('admin.pesanan.baru') }}" class="btn btn-light rounded-pill px-4 fw-bold">Kembali</a>
@@ -186,7 +187,8 @@
                         <div class="info-card">
                             <div class="info-label">Pengiriman</div>
                             <div class="fw-bold text-dark">{{ $isDeliveryOrder ? 'Dikirim' : 'Ambil di Tempat' }}</div>
-                            <div class="text-muted small">{{ $pesanan->alamat_pengiriman ?? 'Tidak ada alamat kirim' }}</div>
+                            <div class="text-muted small">{{ $pesanan->alamat_pengiriman ?? 'Tidak ada alamat kirim' }}
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -229,20 +231,25 @@
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
                                         <td>
-                                            <span class="badge {{ $item->is_custom ? 'bg-warning text-dark' : 'bg-dark' }}">
+                                            <span
+                                                class="badge {{ $item->is_custom ? 'bg-warning text-dark' : 'bg-dark' }}">
                                                 {{ $item->is_custom ? 'Custom' : 'Katalog' }}
                                             </span>
                                         </td>
                                         <td>
                                             <div class="fw-bold text-dark">{{ $item->nama_produk }}</div>
-                                            <div class="small text-muted">{{ $item->ukuran }} | {{ $item->jenis_marmer }}</div>
+                                            <div class="small text-muted">{{ $item->ukuran }} | {{ $item->jenis_marmer }}
+                                            </div>
                                             @if ($item->catatan_khusus)
-                                                <div class="small fst-italic text-secondary mt-1">{{ $item->catatan_khusus }}</div>
+                                                <div class="small fst-italic text-secondary mt-1">
+                                                    {{ $item->catatan_khusus }}</div>
                                             @endif
-                                            <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
+                                            <input type="hidden" name="items[{{ $index }}][id]"
+                                                value="{{ $item->id }}">
                                         </td>
                                         <td>
-                                            <span class="fw-bold item-qty" data-qty="{{ $item->jumlah }}">{{ $item->jumlah }}</span>
+                                            <span class="fw-bold item-qty"
+                                                data-qty="{{ $item->jumlah }}">{{ $item->jumlah }}</span>
                                         </td>
                                         <td style="min-width: 130px;">
                                             <input type="number" step="0.01" min="0"
@@ -252,29 +259,29 @@
                                                 {{ $isReadOnlyDetail ? 'readonly' : '' }}>
                                         </td>
                                         <td>
-                                            <span class="fw-bold text-dark item-total-berat">{{ number_format($item->total_berat ?? 0, 2, ',', '.') }}</span>
+                                            <span
+                                                class="fw-bold text-dark item-total-berat">{{ number_format($item->total_berat ?? 0, 2, ',', '.') }}</span>
                                             <div class="small text-muted">kg</div>
                                         </td>
                                         <td style="min-width: 150px;">
                                             <div class="input-group">
                                                 <span class="input-group-text">Rp</span>
-                                                <input type="number" min="0"
-                                                    class="form-control item-harga"
+                                                <input type="number" min="0" class="form-control item-harga"
                                                     name="items[{{ $index }}][harga_satuan]"
                                                     value="{{ old("items.$index.harga_satuan", $item->harga_satuan) }}"
                                                     {{ $isReadOnlyDetail ? 'readonly' : '' }}>
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="fw-bold text-dark item-subtotal">Rp {{ number_format($item->subtotal ?? 0, 0, ',', '.') }}</span>
+                                            <span class="fw-bold text-dark item-subtotal">Rp
+                                                {{ number_format($item->subtotal ?? 0, 0, ',', '.') }}</span>
                                         </td>
                                         <td>
                                             @php $images = is_array($item->gambar_referensi) ? $item->gambar_referensi : []; @endphp
                                             @if (count($images))
                                                 <button type="button"
                                                     class="btn btn-outline-dark btn-sm rounded-pill btn-open-images"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#modalReferensi"
+                                                    data-bs-toggle="modal" data-bs-target="#modalReferensi"
                                                     data-product="{{ $item->nama_produk }}"
                                                     data-images='@json($images)'>
                                                     Lihat Foto ({{ count($images) }})
@@ -297,7 +304,8 @@
                                         <div>
                                             <div class="info-label mb-2">Resi & Pengiriman Cargo</div>
                                             <div class="small text-muted">
-                                                Resi internal dicetak dari sistem. Nomor resi cargo resmi diisi setelah paket benar-benar diterima ekspedisi.
+                                                Resi internal dicetak dari sistem. Nomor resi cargo resmi diisi setelah
+                                                paket benar-benar diterima ekspedisi.
                                             </div>
                                         </div>
 
@@ -343,7 +351,8 @@
                                                     placeholder="Contoh: JNECARGO-00123456789"
                                                     {{ !$isPaidOff || !$isReadyToShip || $isAlreadyShipped ? 'disabled' : '' }}>
 
-                                                <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold w-100"
+                                                <button type="submit"
+                                                    class="btn btn-dark rounded-pill px-4 fw-bold w-100"
                                                     form="formKirimPesanan"
                                                     {{ !$isPaidOff || !$isReadyToShip || $isAlreadyShipped ? 'disabled' : '' }}>
                                                     Kirim Pesanan
@@ -355,7 +364,8 @@
                                                     @elseif (!$isPaidOff)
                                                         Belum bisa input resi karena pembeli belum lunas.
                                                     @elseif (!$isReadyToShip)
-                                                        Pengrajin belum menandai pesanan sebagai `Selesai`, jadi admin belum bisa input resi cargo.
+                                                        Pengrajin belum menandai pesanan sebagai `Selesai`, jadi admin belum
+                                                        bisa input resi cargo.
                                                     @else
                                                         Isi setelah cargo memberikan nomor resi resmi.
                                                     @endif
@@ -367,7 +377,8 @@
                             @endif
 
                             <div class="info-card">
-                                <div class="info-label">{{ $isVerificationStage ? 'Keputusan Admin' : 'Detail Admin' }}</div>
+                                <div class="info-label">{{ $isVerificationStage ? 'Keputusan Admin' : 'Detail Admin' }}
+                                </div>
                                 @if (!$isVerificationStage)
                                     <div class="alert alert-light border rounded-4 mb-0">
                                         <div class="fw-bold text-dark mb-1">
@@ -375,28 +386,52 @@
                                         </div>
                                         <div class="small text-muted mb-2">
                                             @if ($isAlreadyShipped)
-                                                Tahap admin sudah selesai. Sekarang tinggal menunggu pelanggan mengonfirmasi barang diterima.
+                                                Tahap admin sudah selesai. Sekarang tinggal menunggu pelanggan mengonfirmasi
+                                                barang diterima.
                                             @elseif ($isReadyToShip)
-                                                Produksi sudah selesai dari pengrajin. Admin bisa lanjut cetak resi dan isi nomor resi cargo.
+                                                Produksi sudah selesai dari pengrajin. Admin bisa lanjut cetak resi dan isi
+                                                nomor resi cargo.
                                             @else
                                                 Pesanan sedang berjalan dan tidak lagi memakai form verifikasi awal.
                                             @endif
                                         </div>
-                                        <div class="small text-muted">Status saat ini: <strong>{{ $pesanan->status_label_pembeli ?? $pesanan->status }}</strong></div>
+                                        <div class="small text-muted">Status saat ini:
+                                            <strong>{{ $pesanan->status_label_pembeli ?? $pesanan->status }}</strong>
+                                        </div>
                                         @if ($pesanan->nomor_resi_pengiriman)
-                                            <div class="small text-muted mt-1">Resi cargo tersimpan: <strong>{{ $pesanan->nomor_resi_pengiriman }}</strong></div>
+                                            <div class="small text-muted mt-1">Resi cargo tersimpan:
+                                                <strong>{{ $pesanan->nomor_resi_pengiriman }}</strong>
+                                            </div>
+                                        @endif
+                                        @if ($pesanan->estimasi_selesai)
+                                            <div class="small text-muted mt-1">Estimasi tanggal selesai:
+                                                <strong>{{ $pesanan->estimasi_selesai->format('d M Y') }}</strong>
+                                            </div>
                                         @endif
                                     </div>
                                 @else
                                     <div class="mb-3">
                                         <select name="status" id="statusPesanan" class="form-select">
-                                            <option value="Diverifikasi" {{ old('status', $pesanan->status) === 'Diverifikasi' ? 'selected' : '' }}>Diverifikasi</option>
-                                            <option value="Ditolak" {{ old('status', $pesanan->status) === 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
+                                            <option value="Diverifikasi"
+                                                {{ old('status', $pesanan->status) === 'Diverifikasi' ? 'selected' : '' }}>
+                                                Diverifikasi</option>
+                                            <option value="Ditolak"
+                                                {{ old('status', $pesanan->status) === 'Ditolak' ? 'selected' : '' }}>
+                                                Ditolak</option>
                                         </select>
                                     </div>
                                     <div id="wrapperAlasan" class="{{ old('status') === 'Ditolak' ? '' : 'd-none' }}">
                                         <label class="form-label small fw-bold">Alasan Penolakan</label>
                                         <textarea name="alasan_penolakan" rows="4" class="form-control">{{ old('alasan_penolakan', $pesanan->alasan_penolakan) }}</textarea>
+                                    </div>
+                                    <div id="wrapperEstimasi"
+                                        class="{{ old('status') === 'Ditolak' ? 'd-none' : '' }} mt-3">
+                                        <label class="form-label small fw-bold">Estimasi Tanggal Selesai</label>
+                                        <input type="date" name="estimasi_selesai" class="form-control"
+                                            value="{{ old('estimasi_selesai', optional($pesanan->estimasi_selesai)->format('Y-m-d')) }}"
+                                            min="{{ now()->addDay()->format('Y-m-d') }}">
+                                        <div class="form-text text-muted">Perkiraan tanggal pesanan selesai diproduksi
+                                            pengrajin.</div>
                                     </div>
                                 @endif
                             </div>
@@ -406,11 +441,14 @@
                                 <div class="info-label">Ringkasan Hitungan</div>
                                 <div class="summary-row">
                                     <span>Total Berat</span>
-                                    <strong id="summaryTotalBerat">{{ number_format($pesanan->total_berat ?? 0, 2, ',', '.') }} kg</strong>
+                                    <strong
+                                        id="summaryTotalBerat">{{ number_format($pesanan->total_berat ?? 0, 2, ',', '.') }}
+                                        kg</strong>
                                 </div>
                                 <div class="summary-row">
                                     <span>Total Produk</span>
-                                    <strong id="summaryTotalProduk">Rp {{ number_format($pesanan->total_harga ?? 0, 0, ',', '.') }}</strong>
+                                    <strong id="summaryTotalProduk">Rp
+                                        {{ number_format($pesanan->total_harga ?? 0, 0, ',', '.') }}</strong>
                                 </div>
                                 <div class="summary-row">
                                     <span>Ongkir</span>
@@ -426,7 +464,8 @@
                                     <strong id="summaryGrandTotal">Rp 0</strong>
                                 </div>
                                 @if ($pesanan->metode_pengambilan === 'dikirim' && !$isReadOnlyDetail)
-                                    <button type="button" class="btn btn-outline-dark w-100 rounded-pill mt-3" id="btnHitungOngkir">
+                                    <button type="button" class="btn btn-outline-dark w-100 rounded-pill mt-3"
+                                        id="btnHitungOngkir">
                                         Hitung Ongkir Otomatis
                                     </button>
                                     <div id="ongkirHint" class="small text-muted mt-2"></div>
@@ -497,7 +536,8 @@
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             }) + ' kg';
-            document.getElementById('summaryGrandTotal').innerText = formatRupiah(totalProduk + (Number.isFinite(ongkir) ? ongkir : 0));
+            document.getElementById('summaryGrandTotal').innerText = formatRupiah(totalProduk + (Number.isFinite(ongkir) ?
+                ongkir : 0));
         }
 
         async function hitungOngkirOtomatis() {
@@ -516,7 +556,9 @@
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ items }),
+                body: JSON.stringify({
+                    items
+                }),
             });
 
             const data = await response.json();
@@ -539,8 +581,10 @@
 
             const statusPesanan = document.getElementById('statusPesanan');
             const wrapperAlasan = document.getElementById('wrapperAlasan');
+            const wrapperEstimasi = document.getElementById('wrapperEstimasi');
             statusPesanan?.addEventListener('change', () => {
                 wrapperAlasan.classList.toggle('d-none', statusPesanan.value !== 'Ditolak');
+                wrapperEstimasi.classList.toggle('d-none', statusPesanan.value !== 'Diverifikasi');
             });
 
             document.getElementById('btnHitungOngkir')?.addEventListener('click', hitungOngkirOtomatis);
@@ -548,7 +592,8 @@
             document.querySelectorAll('.btn-open-images').forEach((button) => {
                 button.addEventListener('click', function() {
                     const images = JSON.parse(this.dataset.images || '[]');
-                    document.getElementById('referensiTitle').innerText = this.dataset.product || 'Referensi Item';
+                    document.getElementById('referensiTitle').innerText = this.dataset.product ||
+                        'Referensi Item';
                     document.getElementById('referensiGrid').innerHTML = images.map((img) =>
                         `<a href="/storage/${img}" target="_blank"><img src="/storage/${img}" alt="Referensi item"></a>`
                     ).join('');

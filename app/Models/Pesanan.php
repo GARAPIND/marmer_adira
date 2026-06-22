@@ -53,6 +53,7 @@ class Pesanan extends Model
         'midtrans_currency',
         'midtrans_fraud_status',
         'midtrans_payload',
+        'estimasi_selesai'
     ];
 
     protected $casts = [
@@ -66,6 +67,7 @@ class Pesanan extends Model
         'midtrans_payload' => 'array',
         'deleted_at' => 'datetime',
         'gambar_referensi' => 'array',
+        'estimasi_selesai' => 'date',
     ];
 
     protected $appends = [

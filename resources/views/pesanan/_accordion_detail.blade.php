@@ -71,6 +71,15 @@
     @endif
 </div>
 
+@if ($item->estimasi_selesai)
+    <div class="acc-block">
+        <label>Estimasi Selesai</label>
+        <div class="val">
+            {{ \Carbon\Carbon::parse($item->estimasi_selesai)->locale('id')->isoFormat('D MMMM YYYY') }}
+        </div>
+    </div>
+@endif
+
 <div class="price-box">
     <div class="d-flex align-items-center mb-2">
         <i class="fas fa-receipt me-2 text-gold"></i>
