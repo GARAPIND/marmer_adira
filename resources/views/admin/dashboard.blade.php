@@ -2,7 +2,6 @@
 
 @section('content')
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     <style>
@@ -19,14 +18,14 @@
             background: white;
             padding: 2rem;
             border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, .05);
             margin-bottom: 2rem;
         }
 
         .marble-icon-box {
             width: 60px;
             height: 60px;
-            background: rgba(197, 164, 126, 0.1);
+            background: rgba(197, 164, 126, .1);
             border-radius: 15px;
             display: flex;
             align-items: center;
@@ -39,101 +38,44 @@
         .card-stat-elegant {
             border: none;
             border-radius: 20px;
-            transition: all 0.3s ease;
+            transition: all .3s ease;
             background: #fff;
         }
 
         .card-stat-elegant:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-        }
-
-        .table-elegant thead th {
-            background-color: var(--adira-dark);
-            color: white;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 1px;
-            padding: 1.25rem;
-            border: none;
-        }
-
-        .table-elegant tbody td {
-            vertical-align: middle;
-            padding: 1.2rem 1rem;
-            border-bottom: 1px solid #f8f9fa;
-        }
-
-        .modal-content-elegant {
-            border-radius: 25px;
-            border: none;
-            overflow: hidden;
-        }
-
-        .modal-header-elegant {
-            background: var(--adira-dark);
-            color: white;
-            padding: 1.5rem 2rem;
-        }
-
-        .badge-pill-custom {
-            padding: 0.5em 1.2em;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-        }
-
-        .btn-gold {
-            background-color: var(--adira-gold);
-            border: none;
-            color: white;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-
-        .btn-gold:hover {
-            background-color: #b08d44;
-            color: white;
-        }
-
-        .info-price-box {
-            background: #fdfbf8;
-            border: 1px solid #e9ecef;
-            border-radius: 15px;
-            padding: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .1) !important;
         }
 
         .chart-card {
             background: #fff;
             border: none;
             border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, .05);
             padding: 1.75rem;
-            transition: all 0.3s ease;
+            transition: all .3s ease;
         }
 
         .chart-card:hover {
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.09);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .09);
         }
 
         .chart-card-title {
-            font-size: 0.95rem;
+            font-size: .95rem;
             font-weight: 700;
             color: #2c3e50;
             margin-bottom: 0;
         }
 
         .chart-card-subtitle {
-            font-size: 0.75rem;
+            font-size: .75rem;
             color: #adb5bd;
         }
 
         .chart-icon-box {
             width: 42px;
             height: 42px;
-            background: rgba(197, 164, 126, 0.12);
+            background: rgba(197, 164, 126, .12);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -141,6 +83,49 @@
             color: var(--adira-gold);
             font-size: 1.1rem;
             flex-shrink: 0;
+        }
+
+        .periode-btn {
+            border: 1.5px solid #dee2e6;
+            background: #fff;
+            color: #6c757d;
+            padding: .4rem 1rem;
+            border-radius: 50px;
+            font-size: .8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+        .periode-btn:hover {
+            border-color: var(--adira-gold);
+            color: var(--adira-gold);
+        }
+
+        .periode-btn.active {
+            background: var(--adira-gold);
+            border-color: var(--adira-gold);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(197, 164, 126, .35);
+        }
+
+        .stat-skeleton {
+            animation: shimmer 1.2s infinite;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            border-radius: 8px;
+            height: 36px;
+            width: 120px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0
+            }
+
+            100% {
+                background-position: -200% 0
+            }
         }
     </style>
 
@@ -152,20 +137,35 @@
             </div>
         @endif
 
-        <div class="page-header-elegant d-flex justify-content-between align-items-center">
+        {{-- Header --}}
+        <div class="page-header-elegant d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div class="d-flex align-items-center">
                 <div class="marble-icon-box me-3 shadow-sm">
                     <i class="fas fa-chart-pie"></i>
                 </div>
                 <div>
-                    <h2 class="fw-bold mb-0 text-dark" style="border-left: 5px solid #000; padding-left: 15px;">
+                    <h2 class="fw-bold mb-0 text-dark" style="border-left:5px solid #000;padding-left:15px;">
                         Ringkasan Statistik
                     </h2>
                 </div>
             </div>
-            <span class="badge bg-dark px-4 py-2 rounded-pill shadow-sm fw-bold">ADMIN PANEL</span>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                {{-- Filter Periode --}}
+                <div class="d-flex gap-2" id="periode-filter">
+                    <button class="periode-btn {{ $stats['periode'] === 'hari' ? 'active' : '' }}" data-periode="hari">Hari
+                        Ini</button>
+                    <button class="periode-btn {{ $stats['periode'] === 'minggu' ? 'active' : '' }}"
+                        data-periode="minggu">Minggu Ini</button>
+                    <button class="periode-btn {{ $stats['periode'] === 'bulan' ? 'active' : '' }}"
+                        data-periode="bulan">Bulan Ini</button>
+                    <button class="periode-btn {{ $stats['periode'] === 'tahun' ? 'active' : '' }}"
+                        data-periode="tahun">Tahun Ini</button>
+                </div>
+                <span class="badge bg-dark px-4 py-2 rounded-pill shadow-sm fw-bold">ADMIN PANEL</span>
+            </div>
         </div>
 
+        {{-- Stat Cards --}}
         <div class="row g-4 mb-5">
             <div class="col-md-3">
                 <div class="card card-stat-elegant p-4 shadow-sm border-start border-4 border-primary">
@@ -173,7 +173,7 @@
                         <p class="small fw-bold text-uppercase text-muted mb-0">Pesanan Baru</p>
                         <i class="fas fa-shopping-basket text-primary opacity-50"></i>
                     </div>
-                    <h2 class="fw-bold m-0 text-dark">{{ $stats['baru'] }}</h2>
+                    <h2 class="fw-bold m-0 text-dark" id="stat-baru">{{ $stats['baru'] }}</h2>
                 </div>
             </div>
             <div class="col-md-3">
@@ -182,7 +182,7 @@
                         <p class="small fw-bold text-uppercase text-muted mb-0">Diverifikasi</p>
                         <i class="fas fa-check-double text-warning opacity-50"></i>
                     </div>
-                    <h2 class="fw-bold m-0 text-dark">{{ $stats['diproses'] }}</h2>
+                    <h2 class="fw-bold m-0 text-dark" id="stat-diproses">{{ $stats['diproses'] }}</h2>
                 </div>
             </div>
             <div class="col-md-3">
@@ -191,7 +191,7 @@
                         <p class="small fw-bold text-uppercase text-muted mb-0">Selesai</p>
                         <i class="fas fa-clipboard-check text-success opacity-50"></i>
                     </div>
-                    <h2 class="fw-bold m-0 text-dark">{{ $stats['selesai'] }}</h2>
+                    <h2 class="fw-bold m-0 text-dark" id="stat-selesai">{{ $stats['selesai'] }}</h2>
                 </div>
             </div>
             <div class="col-md-3">
@@ -200,34 +200,33 @@
                         <p class="small fw-bold text-uppercase text-muted mb-0">Total Pendapatan</p>
                         <i class="fas fa-wallet text-info opacity-50"></i>
                     </div>
-                    <h4 class="fw-bold m-0 text-info">Rp {{ number_format($stats['total_bayar'], 0, ',', '.') }}</h4>
+                    <h4 class="fw-bold m-0 text-info" id="stat-pendapatan">
+                        Rp {{ number_format($stats['total_bayar'], 0, ',', '.') }}
+                    </h4>
                 </div>
             </div>
         </div>
 
+        {{-- Charts --}}
         <div class="row g-4 mb-5">
-
             <div class="col-lg-8">
                 <div class="chart-card">
                     <div class="d-flex align-items-center gap-3 mb-4">
-                        <div class="chart-icon-box">
-                            <i class="fas fa-chart-area"></i>
-                        </div>
+                        <div class="chart-icon-box"><i class="fas fa-chart-area"></i></div>
                         <div>
                             <p class="chart-card-title">Pendapatan Harian</p>
-                            <p class="chart-card-subtitle mb-0">7 hari terakhir</p>
+                            <p class="chart-card-subtitle mb-0" id="subtitle-pendapatan">
+                                {{ $stats['periode'] === 'hari' ? 'Hari ini' : ($stats['periode'] === 'minggu' ? '7 hari terakhir' : ($stats['periode'] === 'bulan' ? 'Bulan ini' : 'Tahun ini')) }}
+                            </p>
                         </div>
                     </div>
                     <div id="chart-pendapatan"></div>
                 </div>
             </div>
-
             <div class="col-lg-4">
                 <div class="chart-card">
                     <div class="d-flex align-items-center gap-3 mb-4">
-                        <div class="chart-icon-box">
-                            <i class="fas fa-trophy"></i>
-                        </div>
+                        <div class="chart-icon-box"><i class="fas fa-trophy"></i></div>
                         <div>
                             <p class="chart-card-title">Produk Terlaku</p>
                             <p class="chart-card-subtitle mb-0">Berdasarkan jumlah terjual</p>
@@ -236,233 +235,113 @@
                     <div id="chart-produk"></div>
                 </div>
             </div>
-
         </div>
 
     </div>
 
     <script>
-        let activeAdminOrder = null;
+        // ── Data awal dari server ──────────────────────────────────────────────
+        let pendapatanHarian = @json($stats['pendapatan_harian']);
+        let produkTerlaris = @json($stats['produk_terlaris']);
+        let currentPeriode = @json($stats['periode']);
 
-        function getAdminCsrf() {
-            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        }
+        // ── ApexCharts instances ───────────────────────────────────────────────
+        let chartPendapatan = null;
+        let chartProduk = null;
 
-        function formatAdminCurrency(value) {
-            return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(Number(value || 0));
-        }
-
-        function parseDecimalInput(value) {
-            return parseFloat(String(value ?? '').replace(',', '.'));
-        }
-
-        function updateAdminTotals() {
-            const harga = parseInt(document.getElementById('input_harga').value || 0, 10) || 0;
-            const ongkir = parseInt(document.getElementById('input_ongkir').value || 0, 10) || 0;
-            document.getElementById('display_harga_produk').innerText = formatAdminCurrency(harga);
-            document.getElementById('display_ongkir_admin').innerText = formatAdminCurrency(ongkir);
-            document.getElementById('display_total_seluruh').innerText = formatAdminCurrency(harga + ongkir);
-        }
-
-        async function recalculateAdminShipping() {
-            const hint = document.getElementById('ongkir_calc_hint');
-            const inputOngkir = document.getElementById('input_ongkir');
-
-            if (!activeAdminOrder || activeAdminOrder.metode_pengambilan !== 'dikirim') {
-                hint.innerText = '';
-                updateAdminTotals();
-                return;
-            }
-
-            const beratSatuan = parseDecimalInput(document.getElementById('input_berat_satuan').value);
-            if (!Number.isFinite(beratSatuan) || beratSatuan <= 0) {
-                inputOngkir.value = 0;
-                hint.innerText = 'Isi berat satuan agar ongkir bisa dihitung otomatis.';
-                updateAdminTotals();
-                return;
-            }
-
-            hint.innerText = 'Menghitung ongkir otomatis...';
-
-            try {
-                const response = await fetch(`/admin/pesanan/${activeAdminOrder.id}/hitung-ongkir`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': getAdminCsrf(),
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        berat_satuan: document.getElementById('input_berat_satuan').value
-                    }),
-                });
-
-                const json = await response.json();
-                if (!response.ok) throw new Error(json.message || 'Gagal menghitung ongkir otomatis.');
-
-                inputOngkir.value = parseInt(json.biaya_pengiriman || 0, 10) || 0;
-
-                const calc = json.calculation || {};
-                if (calc.jenis_pengiriman === 'cargo') {
-                    const service = calc.service ? ` ${calc.service}` : '';
-                    hint.innerText =
-                        `Otomatis via ${calc.courier || 'cargo'}${service}. Berat total ${Number(json.total_berat || 0).toFixed(2)} kg.`;
-                } else if (calc.jenis_pengiriman === 'bus') {
-                    hint.innerText =
-                        `Otomatis via bus ${calc.terminal || ''}: ${Number(json.total_berat || 0).toFixed(2)} kg x Rp ${(calc.tarif_per_kg || 0).toLocaleString('id-ID')}/kg.`;
-                } else {
-                    hint.innerText = json.summary || 'Ongkir dihitung otomatis.';
-                }
-
-                updateAdminTotals();
-            } catch (error) {
-                inputOngkir.value = parseInt(inputOngkir.value || 0, 10) || 0;
-                hint.innerText = error.message;
-                updateAdminTotals();
-            }
-        }
-
-        function showAdminDetail(data) {
-            activeAdminOrder = data;
-            const modal = new bootstrap.Modal(document.getElementById('modalDetailAdmin'));
-            const formatter = new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            });
-
-            document.getElementById('md-id').innerText = 'ORD-' + data.id.toString().padStart(3, '0');
-            document.getElementById('md-nama').innerText = data.user.name;
-            document.getElementById('md-telp').innerText = 'WA: ' + (data.user.no_telp || '-');
-            document.getElementById('md-produk').innerText = data.nama_produk;
-            document.getElementById('md-info').innerText = data.ukuran + ' | Qty: ' + data.jumlah;
-            document.getElementById('md-catatan').innerText = data.catatan_khusus || 'Tidak ada catatan tambahan.';
-            document.getElementById('input_alasan').value = data.alasan_penolakan || '';
-
-            setTimeout(() => {
-                toggleAlasan();
-            }, 100);
-
-            const gambarContainer = document.getElementById('md-gambar-container');
-            if (data.gambar_referensi) {
-                gambarContainer.innerHTML =
-                    `<a href="/storage/${data.gambar_referensi}" target="_blank">
-                        <img src="/storage/${data.gambar_referensi}" class="img-fluid rounded-3" style="max-height:200px;cursor:zoom-in;">
-                    </a>`;
-            } else {
-                gambarContainer.innerHTML = '<p class="text-muted small mb-0 py-3">Tidak ada gambar referensi.</p>';
-            }
-
-            const alamatSection = document.getElementById('md-alamat-section');
-            const ongkirRow = document.getElementById('display_ongkir_row');
-            const ongkirInputGroup = document.getElementById('group_ongkir_input');
-            const inputHarga = document.getElementById('input_harga');
-            const inputOngkir = document.getElementById('input_ongkir');
-            const inputBerat = document.getElementById('input_berat_satuan');
-            const ongkirHint = document.getElementById('ongkir_calc_hint');
-
-            if (data.metode_pengambilan === 'dikirim') {
-                alamatSection.style.display = 'block';
-                document.getElementById('md-alamat-text').innerText = data.alamat_pengiriman;
-                ongkirRow.classList.remove('d-none');
-                ongkirInputGroup.classList.remove('d-none');
-                ongkirHint.innerText = 'Isi atau ubah berat satuan untuk menghitung ongkir otomatis.';
-            } else {
-                alamatSection.style.display = 'none';
-                ongkirRow.classList.add('d-none');
-                ongkirInputGroup.classList.add('d-none');
-                ongkirHint.innerText = '';
-            }
-
-            const hrgProduk = parseInt(data.total_harga || 0);
-            const hrgOngkir = parseInt(data.biaya_pengiriman || 0);
-
-            document.getElementById('display_harga_produk').innerText = formatter.format(hrgProduk);
-            document.getElementById('display_ongkir_admin').innerText = formatter.format(hrgOngkir);
-            document.getElementById('display_total_seluruh').innerText = formatter.format(hrgProduk + hrgOngkir);
-
-            inputHarga.value = hrgProduk > 0 ? hrgProduk : '';
-            inputOngkir.value = hrgOngkir > 0 ? hrgOngkir : 0;
-            inputBerat.value = (parseFloat(data.berat_satuan || 0) > 0) ? parseFloat(data.berat_satuan) : '';
-
-            const statusSelect = document.getElementById('select_status');
-            statusSelect.value = data.status === 'Ditolak' ? 'Ditolak' : 'Diverifikasi';
-
-            const alasanForm = document.getElementById('form_alasan');
-
-            function toggleAlasan() {
-                statusSelect.value === 'Ditolak' ?
-                    alasanForm.classList.remove('d-none') :
-                    alasanForm.classList.add('d-none');
-            }
-
-            statusSelect.addEventListener('change', toggleAlasan);
-            document.getElementById('formUpdatePesanan').action = `/admin/pesanan/${data.id}/update`;
-            modal.show();
-
-            const verificationForm = document.getElementById('form_verifikasi');
-            const submitButton = document.getElementById('btn_submit');
-
-            if (data.status === 'Menunggu Verifikasi Admin') {
-                verificationForm.classList.remove('d-none');
-                submitButton.classList.remove('d-none');
-                inputHarga.readOnly = inputOngkir.readOnly = inputBerat.readOnly = false;
-            } else {
-                verificationForm.classList.add('d-none');
-                submitButton.classList.add('d-none');
-                inputHarga.readOnly = inputOngkir.readOnly = inputBerat.readOnly = true;
-            }
-
-            inputHarga.oninput = updateAdminTotals;
-            inputOngkir.oninput = updateAdminTotals;
-            inputBerat.oninput = recalculateAdminShipping;
-
-            updateAdminTotals();
-
-            if (data.metode_pengambilan === 'dikirim' && parseDecimalInput(inputBerat.value) > 0) {
-                recalculateAdminShipping();
-            }
-        }
-
-        const pendapatanHarian = @json($stats['pendapatan_harian']);
-        const produkTerlaris = @json($stats['produk_terlaris']);
-
-        (function() {
+        // ── Label helper ──────────────────────────────────────────────────────
+        function buildPendapatanSeries(data, periode) {
             const today = new Date();
             const labels = [];
             const dataMap = {};
 
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date(today);
-                d.setDate(today.getDate() - i);
-                const key = d.toISOString().slice(0, 10);
-                labels.push(key);
-                dataMap[key] = 0;
+            if (periode === 'hari') {
+                for (let h = 0; h < 24; h++) {
+                    const key = String(h).padStart(2, '0') + ':00';
+                    labels.push(key);
+                    dataMap[key] = 0;
+                }
+                data.forEach(function(row) {
+                    const key = row.tanggal ? String(row.tanggal).slice(0, 10) : null;
+                    if (key) dataMap['00:00'] = (dataMap['00:00'] || 0) + (parseFloat(row.total_pendapatan) || 0);
+                });
+
+            } else if (periode === 'tahun') {
+                const bulanNama = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+                for (let m = 0; m < 12; m++) {
+                    labels.push(bulanNama[m]);
+                    dataMap[String(m + 1).padStart(2, '0')] = 0;
+                }
+                data.forEach(function(row) {
+                    const key = row.tanggal ? String(row.tanggal).slice(5, 7) : null;
+                    if (key && Object.prototype.hasOwnProperty.call(dataMap, key)) {
+                        dataMap[key] += parseFloat(row.total_pendapatan) || 0;
+                    }
+                });
+                return {
+                    labels,
+                    values: Object.values(dataMap)
+                };
+
+            } else {
+                const startOffset = periode === 'minggu' ? 6 : (today.getDate() - 1);
+
+                for (let i = startOffset; i >= 0; i--) {
+                    const d = new Date(today);
+                    d.setDate(today.getDate() - i);
+                    const key = d.toISOString().slice(0, 10);
+                    labels.push(key);
+                    dataMap[key] = 0;
+                }
+                data.forEach(function(row) {
+                    const key = row.tanggal ? String(row.tanggal).slice(0, 10) : null;
+                    if (key && Object.prototype.hasOwnProperty.call(dataMap, key)) {
+                        dataMap[key] = parseFloat(row.total_pendapatan) || 0;
+                    }
+                });
+
+                const formattedLabels = labels.map(function(k) {
+                    return new Date(k + 'T00:00:00').toLocaleDateString('id-ID', {
+                        weekday: periode === 'minggu' ? 'short' : undefined,
+                        day: 'numeric',
+                        month: 'short'
+                    });
+                });
+                return {
+                    labels: formattedLabels,
+                    values: labels.map(k => dataMap[k])
+                };
             }
 
-            pendapatanHarian.forEach(function(row) {
-                const key = row.tanggal ? String(row.tanggal).slice(0, 10) : null;
-                if (key && Object.prototype.hasOwnProperty.call(dataMap, key)) {
-                    dataMap[key] = parseFloat(row.total_pendapatan) || 0;
-                }
-            });
+            return {
+                labels: Object.keys(dataMap),
+                values: Object.values(dataMap)
+            };
+        }
 
-            const values = labels.map(function(k) {
-                return dataMap[k];
-            });
-            const formattedLabels = labels.map(function(k) {
-                return new Date(k + 'T00:00:00').toLocaleDateString('id-ID', {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short'
-                });
-            });
+        // ── Render chart pendapatan — selalu destroy & recreate ───────────────
+        function renderChartPendapatan(data, periode) {
+            const {
+                labels,
+                values
+            } = buildPendapatanSeries(data, periode);
 
-            new ApexCharts(document.getElementById('chart-pendapatan'), {
+            const subtitleMap = {
+                hari: 'Hari ini',
+                minggu: '7 hari terakhir',
+                bulan: 'Bulan ini',
+                tahun: 'Tahun ini'
+            };
+            document.getElementById('subtitle-pendapatan').innerText = subtitleMap[periode] || '';
+
+            // Selalu destroy instance lama
+            if (chartPendapatan) {
+                chartPendapatan.destroy();
+                chartPendapatan = null;
+            }
+            document.getElementById('chart-pendapatan').innerHTML = '';
+
+            const options = {
                 chart: {
                     type: 'area',
                     height: 290,
@@ -476,7 +355,7 @@
                     animations: {
                         enabled: true,
                         easing: 'easeinout',
-                        speed: 800,
+                        speed: 600
                     },
                 },
                 series: [{
@@ -484,7 +363,7 @@
                     data: values
                 }],
                 xaxis: {
-                    categories: formattedLabels,
+                    categories: labels,
                     labels: {
                         style: {
                             fontSize: '11px',
@@ -516,9 +395,9 @@
                     type: 'gradient',
                     gradient: {
                         shadeIntensity: 1,
-                        opacityFrom: 0.4,
-                        opacityTo: 0.01,
-                        stops: [0, 100],
+                        opacityFrom: .4,
+                        opacityTo: .01,
+                        stops: [0, 100]
                     },
                 },
                 stroke: {
@@ -530,9 +409,7 @@
                 },
                 tooltip: {
                     y: {
-                        formatter: function(val) {
-                            return 'Rp ' + Number(val).toLocaleString('id-ID');
-                        },
+                        formatter: val => 'Rp ' + Number(val).toLocaleString('id-ID')
                     },
                     theme: 'light',
                 },
@@ -542,7 +419,7 @@
                     padding: {
                         left: 8,
                         right: 8
-                    },
+                    }
                 },
                 markers: {
                     size: 4,
@@ -551,30 +428,36 @@
                     strokeWidth: 2,
                     hover: {
                         size: 6
-                    },
+                    }
                 },
-            }).render();
-        })();
+            };
 
-        (function() {
-            if (!produkTerlaris || !produkTerlaris.length) {
-                document.getElementById('chart-produk').innerHTML =
-                    '<p class="text-center text-muted small py-5">Belum ada data produk.</p>';
+            chartPendapatan = new ApexCharts(document.getElementById('chart-pendapatan'), options);
+            chartPendapatan.render();
+        }
+
+        // ── Render chart produk — selalu destroy & recreate ───────────────────
+        function renderChartProduk(data) {
+            const el = document.getElementById('chart-produk');
+
+            // Selalu destroy instance lama terlebih dahulu
+            if (chartProduk) {
+                chartProduk.destroy();
+                chartProduk = null;
+            }
+            el.innerHTML = '';
+
+            if (!data || !data.length || data.every(p => parseInt(p.total_qty) === 0)) {
+                el.innerHTML = '<p class="text-center text-muted small py-5">Belum ada data produk pada periode ini.</p>';
                 return;
             }
 
-            // Ambil top 6
-            const top = produkTerlaris.slice(0, 6);
-            const labels = top.map(function(p) {
-                return p.nama_produk;
-            });
-            const values = top.map(function(p) {
-                return parseInt(p.total_qty) || 0;
-            });
-
+            const top = data.slice(0, 6);
+            const labels = top.map(p => p.nama_produk);
+            const values = top.map(p => parseInt(p.total_qty) || 0);
             const palette = ['#C5A47E', '#2c3e50', '#e67e22', '#27ae60', '#2980b9', '#8e44ad'];
 
-            new ApexCharts(document.getElementById('chart-produk'), {
+            const options = {
                 chart: {
                     type: 'donut',
                     height: 290,
@@ -585,11 +468,11 @@
                     animations: {
                         enabled: true,
                         easing: 'easeinout',
-                        speed: 800,
+                        speed: 600
                     },
                 },
                 series: values,
-                labels: labels,
+                labels,
                 colors: palette,
                 legend: {
                     position: 'bottom',
@@ -598,15 +481,11 @@
                         horizontal: 4,
                         vertical: 4
                     },
-                    formatter: function(label, opts) {
-                        return label + ' (' + opts.w.globals.series[opts.seriesIndex] + ')';
-                    },
+                    formatter: (label, opts) => label + ' (' + opts.w.globals.series[opts.seriesIndex] + ')',
                 },
                 dataLabels: {
                     enabled: true,
-                    formatter: function(val) {
-                        return Math.round(val) + '%';
-                    },
+                    formatter: val => Math.round(val) + '%',
                     style: {
                         fontSize: '11px',
                         fontWeight: '600',
@@ -628,16 +507,12 @@
                                     label: 'Total',
                                     fontSize: '12px',
                                     color: '#6c757d',
-                                    formatter: function(w) {
-                                        return w.globals.seriesTotals.reduce(function(a, b) {
-                                            return a + b;
-                                        }, 0) + ' terjual';
-                                    },
+                                    formatter: w => w.globals.seriesTotals.reduce((a, b) => a + b, 0) + ' terjual',
                                 },
                                 value: {
                                     fontSize: '18px',
                                     fontWeight: '700',
-                                    color: '#2c3e50',
+                                    color: '#2c3e50'
                                 },
                             },
                         },
@@ -649,13 +524,64 @@
                 },
                 tooltip: {
                     y: {
-                        formatter: function(val) {
-                            return val + ' terjual';
-                        }
+                        formatter: val => val + ' terjual'
                     },
                     theme: 'light',
                 },
-            }).render();
-        })();
+            };
+
+            chartProduk = new ApexCharts(el, options);
+            chartProduk.render();
+        }
+
+        // ── Fetch data dari server via AJAX ───────────────────────────────────
+        async function fetchDashboard(periode) {
+            document.querySelectorAll('.periode-btn').forEach(b => b.disabled = true);
+
+            try {
+                const res = await fetch(`{{ route('admin.dashboard') }}?periode=${periode}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    }
+                });
+                const data = await res.json();
+
+                // Update stat cards
+                document.getElementById('stat-baru').innerText = data.baru;
+                document.getElementById('stat-diproses').innerText = data.diproses;
+                document.getElementById('stat-selesai').innerText = data.selesai;
+                document.getElementById('stat-pendapatan').innerText =
+                    'Rp ' + Number(data.total_bayar).toLocaleString('id-ID');
+
+                // Destroy lama & render baru
+                renderChartPendapatan(data.pendapatan_harian, periode);
+                renderChartProduk(data.produk_terlaris);
+
+            } catch (e) {
+                console.error('Gagal memuat data dashboard:', e);
+            } finally {
+                document.querySelectorAll('.periode-btn').forEach(b => b.disabled = false);
+            }
+        }
+
+        // ── Event listener tombol filter ──────────────────────────────────────
+        document.getElementById('periode-filter').addEventListener('click', function(e) {
+            const btn = e.target.closest('.periode-btn');
+            if (!btn) return;
+            const periode = btn.dataset.periode;
+            if (periode === currentPeriode) return;
+
+            currentPeriode = periode;
+            document.querySelectorAll('.periode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            fetchDashboard(periode);
+        });
+
+        // ── Initial render ────────────────────────────────────────────────────
+        renderChartPendapatan(pendapatanHarian, currentPeriode);
+        renderChartProduk(produkTerlaris);
     </script>
 @endsection

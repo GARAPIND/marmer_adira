@@ -179,13 +179,39 @@ class AdminController extends Controller
     // 2. DASHBOARD & UPDATE PESANAN
     // ==========================================
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
+        $periode = $request->get('periode', 'minggu');
+
+        switch ($periode) {
+            case 'hari':
+                $start = Carbon::now()->startOfDay();
+                $end   = Carbon::now()->endOfDay();
+                $days  = 1;
+                break;
+            case 'bulan':
+                $start = Carbon::now()->startOfMonth();
+                $end   = Carbon::now()->endOfDay();
+                $days  = Carbon::now()->day;
+                break;
+            case 'tahun':
+                $start = Carbon::now()->startOfYear();
+                $end   = Carbon::now()->endOfDay();
+                $days  = Carbon::now()->dayOfYear;
+                break;
+            default: // minggu
+                $start = Carbon::now()->subDays(6)->startOfDay();
+                $end   = Carbon::now()->endOfDay();
+                $days  = 7;
+                break;
+        }
+
         $stats = [
-            'baru'      => Pesanan::where('status', 'Menunggu Verifikasi Admin')->count(),
-            'diproses'  => Pesanan::whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Selesai', 'diekspedisi'])->count(),
-            'selesai'   => Pesanan::where('status', 'Selesai')->count(),
+            'baru'     => Pesanan::where('status', 'Menunggu Verifikasi Admin')->count(),
+            'diproses' => Pesanan::whereIn('status', ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Selesai', 'diekspedisi'])->count(),
+            'selesai'  => Pesanan::where('status', 'Selesai')->count(),
             'total_bayar' => Pesanan::where('status_pembayaran', 'paid')
+                ->whereBetween('created_at', [$start, $end])
                 ->selectRaw('SUM(total_harga + COALESCE(biaya_pengiriman, 0)) as total')
                 ->first()->total ?? 0,
             'pendapatan_harian' => PesananPaymentHistory::select(
@@ -193,15 +219,15 @@ class AdminController extends Controller
                 DB::raw('SUM(nominal) as total_pendapatan')
             )
                 ->where('status', 'success')
-                ->whereBetween('event_time', [
-                    Carbon::now()->subDays(6)->startOfDay(),
-                    Carbon::now()->endOfDay()
-                ])
+                ->whereBetween('event_time', [$start, $end])
                 ->groupBy(DB::raw('DATE(event_time)'))
                 ->orderBy('tanggal', 'asc')
                 ->get()->toArray(),
             'produk_terlaris' => DB::table('produk as p')
-                ->leftJoin('pesanan as pd', 'p.nama_produk', '=', 'pd.nama_produk')
+                ->leftJoin('pesanan_items as pd', function ($join) use ($start, $end) {
+                    $join->on('p.nama_produk', '=', 'pd.nama_produk')
+                        ->whereBetween('pd.created_at', [$start, $end]);
+                })
                 ->select(
                     'p.nama_produk',
                     DB::raw('COUNT(DISTINCT pd.id) as total_transaksi'),
@@ -209,9 +235,16 @@ class AdminController extends Controller
                 )
                 ->groupBy('p.nama_produk')
                 ->orderByDesc('total_qty')
-                ->get()
-                ->toArray()
+                ->get()->toArray(),
+            'periode'  => $periode,
+            'start'    => $start,
+            'end'      => $end,
+            'days'     => $days,
         ];
+
+        if ($request->ajax()) {
+            return response()->json($stats);
+        }
 
         return view('admin.dashboard', compact('stats'));
     }
