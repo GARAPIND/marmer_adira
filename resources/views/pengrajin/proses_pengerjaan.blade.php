@@ -38,7 +38,6 @@
             border: none;
         }
 
-        /* Timeline Status Styling */
         .timeline-container {
             position: relative;
             padding-left: 30px;
@@ -64,7 +63,6 @@
             box-shadow: 0 0 0 2px #ddd;
         }
 
-        /* Warna Status */
         .timeline-item.completed::before {
             background: #27ae60;
             box-shadow: 0 0 0 2px #27ae60;
@@ -270,7 +268,6 @@
             </div>
         </div>
 
-        {{-- ALERT NOTIFIKASI --}}
         @if (session('success'))
             <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4">
                 <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
@@ -374,10 +371,6 @@
                     <h6 class="small fw-bold text-uppercase text-muted mb-4">Timeline Status:</h6>
 
                     <div class="timeline-container mb-4">
-                        <div id="step-diproses" class="timeline-item">
-                            <p class="mb-0 fw-bold">Diproses</p>
-                            <small class="text-muted">Pesanan dikonfirmasi oleh pengrajin</small>
-                        </div>
                         <div id="step-dikerjakan" class="timeline-item">
                             <p class="mb-0 fw-bold">Dikerjakan</p>
                             <small class="text-muted">Dalam tahap pembentukan/pemotongan</small>
@@ -389,8 +382,8 @@
                     </div>
 
                     <div class="alert alert-light border rounded-4 small mb-4">
-                        Klik `Mulai Pengerjaan` terlebih dahulu. Setelah status menjadi `Dikerjakan`, tombol upload foto
-                        akan muncul dan Anda bisa upload banyak gambar sekaligus.
+                        Klik <b>Mulai Pengerjaan</b> untuk mengubah status menjadi <b>Dikerjakan</b>. Setelah itu tombol
+                        upload foto akan muncul dan Anda bisa upload banyak gambar sekaligus.
                     </div>
 
                     <div id="status-action-hint" class="alert alert-warning border-0 small mb-4 d-none"></div>
@@ -436,9 +429,8 @@
                         <div id="preview-foto-selesai" class="photo-grid">
                             <span class="text-muted small">Belum ada foto.</span>
                         </div>
-                        <button type="button" id="btn-foto-selesai"
-                            class="btn btn-outline-dark btn-sm rounded-pill mt-3" data-bs-toggle="modal"
-                            data-bs-target="#modalFotoProgres">
+                        <button type="button" id="btn-foto-selesai" class="btn btn-outline-dark btn-sm rounded-pill mt-3"
+                            data-bs-toggle="modal" data-bs-target="#modalFotoProgres">
                             Kelola Foto Selesai
                         </button>
                     </div>
@@ -447,7 +439,7 @@
                         <div class="col-6" id="col-form-dikerjakan">
                             <form id="form-dikerjakan" method="POST" action="">
                                 @csrf
-                                @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
+                                @method('PATCH')
                                 <input type="hidden" name="status" value="Dikerjakan">
                                 <button type="submit" class="btn btn-outline-dark w-100 py-2 fw-bold small rounded-pill"
                                     disabled>
@@ -458,7 +450,7 @@
                         <div class="col-6 upload-hidden" id="col-form-selesai">
                             <form id="form-selesai" method="POST" action="">
                                 @csrf
-                                @method('PATCH') {{-- Menambahkan method PATCH agar sesuai dengan web.php --}}
+                                @method('PATCH')
                                 <input type="hidden" name="status" value="Selesai" id="input-status-selesai">
                                 <button type="submit"
                                     class="btn btn-gold w-100 py-2 fw-bold small rounded-pill shadow-sm" disabled>
@@ -524,6 +516,7 @@
             </div>
         </div>
     </div>
+
     <script>
         document.querySelectorAll('.btn-lihat-detail').forEach(button => {
             button.addEventListener('click', function() {
@@ -579,7 +572,6 @@
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     tglEstimasi.setHours(0, 0, 0, 0);
-
                     const selisihHari = Math.round((tglEstimasi - today) / (1000 * 60 * 60 * 24));
 
                     estimasiTanggalEl.innerText = tglEstimasi.toLocaleDateString('id-ID', {
@@ -617,7 +609,9 @@
                     paymentBadge.className = 'badge bg-danger px-3 py-2 rounded-pill';
                 }
 
+                // ===== LOGIKA STATUS (tanpa Diproses) =====
                 if (status === 'Dikerjakan') {
+                    // Sudah dikerjakan: sembunyikan tombol mulai, tampilkan tombol selesai + foto
                     colFormDikerjakan.classList.add('d-none');
                     colFormSelesai.classList.remove('upload-hidden', 'col-6');
                     colFormSelesai.classList.add('col-12');
@@ -631,6 +625,8 @@
                     statusActionHint.innerHTML =
                         '<i class="fas fa-circle-info me-1"></i> Upload foto progres dan foto hasil selesai. Jika produksi sudah benar-benar selesai, klik <b>Tandai Selesai</b>. Setelah itu pesanan masuk riwayat pengrajin dan admin bisa lanjut proses resi.';
                 } else {
+                    // Status awal (Diproses atau apapun selain Dikerjakan/Selesai/diekspedisi):
+                    // tampilkan tombol Mulai Pengerjaan saja
                     colFormDikerjakan.classList.remove('d-none');
                     colFormSelesai.classList.add('upload-hidden');
                     colFormSelesai.classList.remove('col-12');
@@ -641,7 +637,7 @@
                     statusActionHint.classList.remove('d-none');
                     statusActionHint.className = 'alert alert-warning border-0 small mb-4';
                     statusActionHint.innerHTML =
-                        '<i class="fas fa-hammer me-1"></i> Klik <b>Mulai Pengerjaan</b> terlebih dahulu. Setelah itu menu upload foto akan muncul.';
+                        '<i class="fas fa-hammer me-1"></i> Klik <b>Mulai Pengerjaan</b> untuk memulai proses produksi. Setelah itu menu upload foto akan muncul.';
                 }
 
                 document.getElementById('form-selesai').onsubmit = null;
@@ -651,7 +647,6 @@
                         container.innerHTML = '<span class="text-muted small">Belum ada foto.</span>';
                         return;
                     }
-
                     container.innerHTML = photos.map((photo) =>
                         `<a href="/storage/${photo}" target="_blank"><img src="/storage/${photo}" alt="Foto progres"></a>`
                     ).join('');
@@ -659,6 +654,7 @@
 
                 renderPhotos(fotoDikerjakanContainer, fotoDikerjakan);
                 renderPhotos(fotoSelesaiContainer, fotoSelesai);
+
                 previewOrderItems.innerHTML = Array.isArray(orderItems) && orderItems.length ? `
                     <table class="order-item-table">
                         <thead>
@@ -672,26 +668,26 @@
                         </thead>
                         <tbody>
                             ${orderItems.map(item => `
-                                            <tr>
-                                                <td>
-                                                    <strong>${item.nama_produk || '-'}</strong>
-                                                </td>
-                                                <td>${item.jumlah || 0}</td>
-                                                <td>
-                                                    <div class="small text-dark fw-semibold">${item.ukuran || '-'}</div>
-                                                    <div class="text-muted small">${item.jenis_marmer || '-'}</div>
-                                                    ${item.catatan_khusus ? `<div class="item-note mt-2">${item.catatan_khusus}</div>` : '<span class="text-muted small">Tanpa catatan.</span>'}
-                                                </td>
-                                                <td>
-                                                    ${Array.isArray(item.gambar_referensi) && item.gambar_referensi.length ? item.gambar_referensi.map((img, index) => `
-                                                    <a href="/storage/${img}" target="_blank" class="item-photo-link ${index > 0 ? 'mt-1' : ''}">
-                                                        <i class="fas fa-image"></i> Foto ${index + 1}
-                                                    </a>
-                                                `).join('<br>') : '<span class="text-muted small">Tidak ada foto</span>'}
-                                                </td>
-                                                <td>Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</td>
-                                            </tr>
-                                        `).join('')}
+                                    <tr>
+                                        <td><strong>${item.nama_produk || '-'}</strong></td>
+                                        <td>${item.jumlah || 0}</td>
+                                        <td>
+                                            <div class="small text-dark fw-semibold">${item.ukuran || '-'}</div>
+                                            <div class="text-muted small">${item.jenis_marmer || '-'}</div>
+                                            ${item.catatan_khusus ? `<div class="item-note mt-2">${item.catatan_khusus}</div>` : '<span class="text-muted small">Tanpa catatan.</span>'}
+                                        </td>
+                                        <td>
+                                            ${Array.isArray(item.gambar_referensi) && item.gambar_referensi.length
+                                                ? item.gambar_referensi.map((img, index) => `
+                                                <a href="/storage/${img}" target="_blank" class="item-photo-link ${index > 0 ? 'mt-1' : ''}">
+                                                    <i class="fas fa-image"></i> Foto ${index + 1}
+                                                </a>
+                                            `).join('<br>')
+                                                : '<span class="text-muted small">Tidak ada foto</span>'}
+                                        </td>
+                                        <td>Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</td>
+                                    </tr>
+                                `).join('')}
                         </tbody>
                     </table>
                 ` : '<span class="text-muted small">Detail item belum tersedia.</span>';
@@ -708,7 +704,6 @@
                         `;
                         return;
                     }
-
                     tableBody.innerHTML = photos.map((photo) => {
                         const fileName = photo.split('/').pop();
                         return `
@@ -757,20 +752,20 @@
                         'Bisa pilih 1 foto atau beberapa foto sekaligus.';
                 });
 
-                // Reset Timeline Classes
-                const steps = ['step-diproses', 'step-dikerjakan', 'step-selesai'];
-                steps.forEach(s => document.getElementById(s).classList.remove('completed', 'active'));
+                // Reset Timeline
+                ['step-dikerjakan', 'step-selesai'].forEach(s =>
+                    document.getElementById(s).classList.remove('completed', 'active')
+                );
 
-                // Logika Update Timeline Berdasarkan Status
-                if (status === 'Diproses') {
-                    document.getElementById('step-diproses').classList.add('active');
-                } else if (status === 'Dikerjakan') {
-                    document.getElementById('step-diproses').classList.add('completed');
+                // Update Timeline (2 step saja)
+                if (status === 'Dikerjakan') {
                     document.getElementById('step-dikerjakan').classList.add('active');
                 } else if (status === 'Selesai' || status === 'diekspedisi') {
-                    document.getElementById('step-diproses').classList.add('completed');
                     document.getElementById('step-dikerjakan').classList.add('completed');
                     document.getElementById('step-selesai').classList.add('active');
+                } else {
+                    // Status awal (Diproses/lainnya) — belum ada step yang active
+                    // Timeline kosong, tombol Mulai Pengerjaan tersedia
                 }
             });
         });
