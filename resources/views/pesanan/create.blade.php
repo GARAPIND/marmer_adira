@@ -721,18 +721,27 @@
         </div>
     </div>
 
-    <script>
-        const CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        const isProdukKatalog = @json(isset($dataProduk) && $dataProduk);
-        const bahanSamples = @json(
-            $listBahan->mapWithKeys(fn($bahan) => [
+    @php
+        $bahanSamplesPayload = $listBahan->mapWithKeys(function ($bahan) {
+            return [
                 (string) $bahan->id => [
                     'id' => $bahan->id,
                     'nama_bahan' => $bahan->nama_bahan,
-                    'foto_sampel' => collect($bahan->foto_sampel ?? [])->map(fn($foto) => asset('storage/' . $foto))->values()->all(),
+                    'foto_sampel' => collect($bahan->foto_sampel ?? [])
+                        ->map(function ($foto) {
+                            return asset('storage/' . $foto);
+                        })
+                        ->values()
+                        ->all(),
                 ],
-            ])
-        );
+            ];
+        })->all();
+    @endphp
+
+    <script>
+        const CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const isProdukKatalog = @json(isset($dataProduk) && $dataProduk);
+        const bahanSamples = @json($bahanSamplesPayload);
 
         let hargaProdukGlobal = 0;
         let beratSatuanGlobal = 0;
