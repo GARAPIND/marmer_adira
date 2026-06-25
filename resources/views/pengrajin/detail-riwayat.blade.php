@@ -214,6 +214,14 @@
                         "{{ $pesanan->catatan_khusus ?? 'Tidak ada catatan kustomisasi.' }}"
                     </div>
 
+                    @if (!empty($pesanan->foto_sampel_terpilih))
+                        <div class="info-label mt-3">Sampel Bahan Terpilih</div>
+                        <a href="{{ $pesanan->foto_sampel_terpilih }}" target="_blank" title="Klik untuk memperbesar">
+                            <img src="{{ $pesanan->foto_sampel_terpilih }}" alt="Sampel bahan terpilih"
+                                style="width:88px;height:88px;object-fit:cover;border-radius:12px;border:2px solid var(--adira-gold);">
+                        </a>
+                    @endif
+
                     <h5 class="section-subtitle mt-5"><i class="fas fa-camera me-2"></i> Foto Progres Pengrajin</h5>
 
                     <div class="info-label">Saat Dikerjakan</div>

@@ -472,7 +472,7 @@
                             <tr>
                                 <td><strong>${item.nama_produk || '-'}</strong></td>
                                 <td>${item.jumlah || 0}</td>
-                                <td>${item.ukuran || '-'}<br><span class="text-muted small">${item.jenis_marmer || '-'}</span></td>
+                                <td>${item.ukuran || '-'}<br><span class="text-muted small">${item.jenis_marmer || '-'}</span>${item.foto_sampel_terpilih ? `<div class="mt-2"><img src="${item.foto_sampel_terpilih}" alt="Sampel bahan terpilih" style="width:56px;height:56px;object-fit:cover;border-radius:10px;border:2px solid #C5A47E;"></div>` : ''}</td>
                                 <td>Rp ${Number(item.subtotal || 0).toLocaleString('id-ID')}</td>
                             </tr>
                         `).join('')}

@@ -261,6 +261,16 @@
             line-height: 1.5;
         }
 
+        .item-sample-thumb {
+            width: 58px;
+            height: 58px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid var(--adira-gold);
+            margin-top: 8px;
+            display: block;
+        }
+
         .shipping-mini-card {
             background: #f8fafb;
             border: 1px solid rgba(44, 62, 80, 0.08);
@@ -885,6 +895,7 @@
                                                                 <div class="small text-dark fw-semibold">${item.ukuran || '-'}</div>
                                                                 <div class="text-muted small">${item.jenis_marmer || '-'}</div>
                                                                 ${item.catatan_khusus ? `<div class="item-note mt-2">${item.catatan_khusus}</div>` : '<span class="text-muted small">Tanpa catatan.</span>'}
+                                                                ${item.foto_sampel_terpilih ? `<img src="${item.foto_sampel_terpilih}" alt="Sampel bahan terpilih" class="item-sample-thumb">` : ''}
                                                             </td>
                                                             <td>
                                                                 ${Array.isArray(item.gambar_referensi) && item.gambar_referensi.length
