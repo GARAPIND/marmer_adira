@@ -15,6 +15,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
@@ -720,26 +721,60 @@ class AdminController extends Controller
         return view('admin.manajemen-produk', compact('bahans'));
     }
 
+    private function uploadFotoSampelBahan(Request $request): array
+    {
+        $paths = [];
+
+        foreach ($request->file('foto_sampel', []) as $file) {
+            $paths[] = $file->store('bahan_sampel', 'public');
+        }
+
+        return array_values(array_slice($paths, 0, 4));
+    }
+
     public function simpanBahan(Request $request)
     {
         $request->validate([
-            'nama_bahan' => 'required|string|max:255|unique:bahan,nama_bahan'
+            'nama_bahan' => 'required|string|max:255|unique:bahan,nama_bahan',
+            'foto_sampel' => 'nullable|array|max:4',
+            'foto_sampel.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
-            'nama_bahan.unique' => 'Nama bahan ini sudah ada di sistem.'
+            'nama_bahan.unique' => 'Nama bahan ini sudah ada di sistem.',
+            'foto_sampel.max' => 'Maksimal 4 foto sampel yang dapat diunggah.',
+            'foto_sampel.*.image' => 'Setiap file sampel harus berupa gambar.',
+            'foto_sampel.*.mimes' => 'Format foto sampel harus jpeg, jpg, png, atau webp.',
+            'foto_sampel.*.max' => 'Ukuran setiap foto sampel maksimal 2MB.',
         ]);
 
-        Bahan::create($request->all());
+        Bahan::create([
+            'nama_bahan' => $request->nama_bahan,
+            'foto_sampel' => $this->uploadFotoSampelBahan($request),
+        ]);
+
         return redirect()->back()->with('success', 'Bahan baru berhasil ditambahkan.');
     }
 
     public function updateBahan(Request $request, $id)
     {
         $request->validate([
-            'nama_bahan' => 'required|string|max:255|unique:bahan,nama_bahan,' . $id
+            'nama_bahan' => 'required|string|max:255|unique:bahan,nama_bahan,' . $id,
+            'foto_sampel' => 'nullable|array|max:4',
+            'foto_sampel.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         $bahan = Bahan::findOrFail($id);
-        $bahan->update($request->all());
+        $payload = [
+            'nama_bahan' => $request->nama_bahan,
+        ];
+
+        if ($request->hasFile('foto_sampel')) {
+            foreach ($bahan->foto_sampel ?? [] as $existingPath) {
+                Storage::disk('public')->delete($existingPath);
+            }
+            $payload['foto_sampel'] = $this->uploadFotoSampelBahan($request);
+        }
+
+        $bahan->update($payload);
 
         return redirect()->back()->with('success', 'Data bahan berhasil diperbarui.');
     }
@@ -761,7 +796,11 @@ class AdminController extends Controller
             ->whereNull('bahan_besar_id')
             ->delete();
 
-        Bahan::destroy($id);
+        $bahan = Bahan::findOrFail($id);
+        foreach ($bahan->foto_sampel ?? [] as $existingPath) {
+            Storage::disk('public')->delete($existingPath);
+        }
+        $bahan->delete();
 
         return redirect()->back()->with('success', 'Bahan berhasil dihapus.');
     }

@@ -81,6 +81,27 @@
             overflow: hidden;
         }
 
+        .sample-thumb-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .sample-thumb {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid #f1ece1;
+            background: #f8f9fa;
+        }
+
+        .sample-hint {
+            font-size: 0.78rem;
+            color: #8c8c8c;
+        }
+
         .modal-header-elegant {
             background: var(--adira-dark);
             color: white;
@@ -170,6 +191,7 @@
                         <tr>
                             <th class="ps-5 text-center" style="width: 100px;">Icon</th>
                             <th>Nama Bahan / Material</th>
+                            <th>Foto Sampel</th>
                             <th class="text-center pe-5">Kelola</th>
                         </tr>
                     </thead>
@@ -184,6 +206,18 @@
                                 <td>
                                     <div class="fw-bold text-dark fs-5">{{ $b->nama_bahan }}</div>
                                     <small class="text-muted italic">Material Utama Katalog Premium</small>
+                                </td>
+                                <td>
+                                    @if (!empty($b->foto_sampel))
+                                        <div class="sample-thumb-grid">
+                                            @foreach ($b->foto_sampel as $foto)
+                                                <img src="{{ asset('storage/' . $foto) }}" alt="Foto sampel {{ $b->nama_bahan }}"
+                                                    class="sample-thumb">
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <small class="text-muted">Belum ada foto sampel.</small>
+                                    @endif
                                 </td>
                                 <td class="text-center pe-5">
                                     <div class="d-flex justify-content-center gap-3">
@@ -208,7 +242,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="text-center py-5 text-muted">
+                                <td colspan="4" class="text-center py-5 text-muted">
                                     <i class="fas fa-info-circle me-2"></i> Belum ada data bahan master yang tersedia.
                                 </td>
                             </tr>
@@ -230,7 +264,8 @@
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-5 bg-white">
-                    <form id="formBahan" action="{{ route('admin.bahan.simpan') }}" method="POST">
+                    <form id="formBahan" action="{{ route('admin.bahan.simpan') }}" method="POST"
+                        enctype="multipart/form-data">
                         @csrf
                         <div class="mb-4">
                             <label class="fw-bold small text-muted mb-2 text-uppercase letter-spacing-1">Nama Bahan /
@@ -242,6 +277,24 @@
                                     class="form-control form-control-premium border-start-0 rounded-end-4"
                                     placeholder="Contoh: Marmer Carrara" required>
                             </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="fw-bold small text-muted mb-2 text-uppercase letter-spacing-1">
+                                Foto Sampel Tekstur & Warna (Maksimal 4)
+                            </label>
+                            <input type="file" name="foto_sampel[]" id="foto_sampel"
+                                class="form-control form-control-premium" accept="image/jpeg,image/png,image/jpg,image/webp"
+                                multiple>
+                            <div class="sample-hint mt-2">
+                                Saat edit, upload baru akan menggantikan seluruh foto sampel yang sebelumnya tersimpan.
+                            </div>
+                        </div>
+
+                        <div id="existingSampleWrapper" class="mb-3" style="display:none;">
+                            <div class="fw-bold small text-muted mb-2 text-uppercase letter-spacing-1">Foto Sampel Saat Ini
+                            </div>
+                            <div id="existingSampleGrid" class="sample-thumb-grid"></div>
                         </div>
 
                         <div class="d-grid gap-2 mt-5">
@@ -268,7 +321,30 @@
                 '<i class="fas fa-edit me-2 text-gold"></i> Edit Master Bahan';
             document.getElementById('formBahan').action = `/admin/bahan/update/${data.id}`;
             document.getElementById('nama_bahan').value = data.nama_bahan;
+            document.getElementById('foto_sampel').value = '';
+            renderExistingSamples(data.foto_sampel || []);
             new bootstrap.Modal(document.getElementById('modalTambahBahan')).show();
+        }
+
+        function renderExistingSamples(samples) {
+            const wrapper = document.getElementById('existingSampleWrapper');
+            const grid = document.getElementById('existingSampleGrid');
+            grid.innerHTML = '';
+
+            if (!samples.length) {
+                wrapper.style.display = 'none';
+                return;
+            }
+
+            samples.forEach((sample) => {
+                const img = document.createElement('img');
+                img.src = `/storage/${sample}`;
+                img.alt = 'Foto sampel';
+                img.className = 'sample-thumb';
+                grid.appendChild(img);
+            });
+
+            wrapper.style.display = 'block';
         }
 
         function confirmDelete(id, nama) {
@@ -310,6 +386,7 @@
                 '<i class="fas fa-edit me-2 text-gold"></i> Form Master Bahan';
             document.getElementById('formBahan').action = "{{ route('admin.bahan.simpan') }}";
             document.getElementById('formBahan').reset();
+            renderExistingSamples([]);
         });
     </script>
 @endsection

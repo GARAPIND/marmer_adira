@@ -9,8 +9,14 @@ class Bahan extends Model
 {
     use HasFactory;
 
-    // WAJIB: Tambahkan baris ini untuk memberitahu nama tabel yang benar
-    protected $table = 'bahan'; 
+    protected $table = 'bahan';
 
-    protected $fillable = ['nama_bahan'];
+    protected $fillable = [
+        'nama_bahan',
+        'foto_sampel',
+    ];
+
+    protected $casts = [
+        'foto_sampel' => 'array',
+    ];
 }

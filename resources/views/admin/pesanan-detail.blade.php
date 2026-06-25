@@ -244,6 +244,12 @@
                                                 <div class="small fst-italic text-secondary mt-1">
                                                     {{ $item->catatan_khusus }}</div>
                                             @endif
+                                            @if ($item->foto_sampel_terpilih)
+                                                <div class="mt-2">
+                                                    <img src="{{ $item->foto_sampel_terpilih }}" alt="Sampel terpilih"
+                                                        style="width:54px;height:54px;object-fit:cover;border-radius:10px;border:2px solid #C5A47E;">
+                                                </div>
+                                            @endif
                                             <input type="hidden" name="items[{{ $index }}][id]"
                                                 value="{{ $item->id }}">
                                         </td>

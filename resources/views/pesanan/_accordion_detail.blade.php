@@ -56,6 +56,12 @@
 <div class="acc-block">
     <label>Catatan Kustom</label>
     <div class="val-muted fst-italic">{{ $item->catatan_khusus ?? 'Tidak ada catatan tambahan.' }}</div>
+    @if (!empty($item->foto_sampel_terpilih))
+        <div class="mt-2">
+            <img src="{{ $item->foto_sampel_terpilih }}" alt="Sampel terpilih"
+                style="width:68px;height:68px;object-fit:cover;border-radius:12px;border:2px solid #C5A47E;">
+        </div>
+    @endif
 </div>
 
 <div class="acc-block">

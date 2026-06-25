@@ -370,7 +370,15 @@ class PesananController extends Controller
         $listTerminal = Terminal::all();
         $listAlamat  = AlamatPembeli::where('user_id', Auth::id())->latest()->get();
         // dd($listAlamat);
-        return view('pesanan.create', compact('produk', 'produkTerpilih', 'produkData', 'listBahan', 'listTerminal', 'listAlamat'));
+        return view('pesanan.create', [
+            'produk' => $produk,
+            'produkTerpilih' => $produkTerpilih,
+            'produkData' => $produkData,
+            'dataProduk' => $produkData,
+            'listBahan' => $listBahan,
+            'listTerminal' => $listTerminal,
+            'listAlamat' => $listAlamat,
+        ]);
     }
 
     public function store(Request $request)
@@ -425,6 +433,7 @@ class PesananController extends Controller
             'ukuran' => $itemPertama->ukuran,
             'jenis_marmer' => $itemPertama->jenis_marmer,
             'catatan_khusus' => $itemPertama->catatan_khusus,
+            'foto_sampel_terpilih' => $itemPertama->foto_sampel_terpilih,
             'gambar_referensi' => $itemPertama->gambar_referensi,
             'jumlah' => $totalQty,
             'metode_pengambilan' => $request->metode_pengambilan,
@@ -462,6 +471,7 @@ class PesananController extends Controller
                     'ukuran' => $item->ukuran,
                     'jenis_marmer' => $item->jenis_marmer,
                     'catatan_khusus' => $item->catatan_khusus,
+                    'foto_sampel_terpilih' => $item->foto_sampel_terpilih,
                     'gambar_referensi' => $item->gambar_referensi,
                     'jumlah' => $item->jumlah,
                     'berat_satuan' => $item->berat_satuan,

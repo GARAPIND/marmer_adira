@@ -356,6 +356,77 @@
             color: #e74c3c;
         }
 
+        .sample-picker {
+            margin-top: 1rem;
+        }
+
+        .sample-thumb-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 88px));
+            gap: 12px;
+            align-items: start;
+        }
+
+        .sample-thumb-option {
+            position: relative;
+            width: 88px;
+            height: 88px;
+            border-radius: 14px;
+            border: 2px solid #e9ecef;
+            overflow: hidden;
+            cursor: pointer;
+            background: #fff;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .sample-thumb-option:hover {
+            border-color: var(--adira-gold);
+            transform: translateY(-1px);
+        }
+
+        .sample-thumb-option.active {
+            border-color: var(--adira-gold);
+            box-shadow: 0 0 0 4px rgba(197, 164, 126, 0.16);
+        }
+
+        .sample-thumb-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .sample-thumb-check {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(44, 62, 80, 0.72);
+            color: white;
+            font-size: 0.72rem;
+            opacity: 0;
+            transition: opacity 0.2s ease, background-color 0.2s ease;
+        }
+
+        .sample-thumb-option.active .sample-thumb-check {
+            opacity: 1;
+            background: var(--adira-gold);
+        }
+
+        .sample-picker-empty {
+            font-size: 0.82rem;
+            color: #8b8f94;
+            background: #f8f9fa;
+            border: 1px dashed #d8dde3;
+            border-radius: 14px;
+            padding: 0.9rem 1rem;
+        }
+
         /* ── DISCLAIMER ── */
         .disclaimer-box {
             background: linear-gradient(135deg, #fffbf4, #fff5e6);
@@ -393,6 +464,7 @@
                             <input type="hidden" name="harga_satuan" id="harga_satuan_hidden" value="0">
                             <input type="hidden" name="subtotal" id="subtotal_hidden" value="0">
                             <input type="hidden" name="berat_satuan" id="berat_satuan_hidden" value="0">
+                            <input type="hidden" name="foto_sampel_terpilih" id="foto_sampel_terpilih" value="">
 
                             <div class="row g-5">
                                 {{-- ══ KOLOM KIRI ══ --}}
@@ -430,6 +502,7 @@
                                                     <option value="" disabled selected>-- Pilih Ukuran --</option>
                                                     @if ($dataProduk->ukuran_kecil)
                                                         <option value="{{ $dataProduk->ukuran_kecil }}"
+                                                            data-bahan-id="{{ $dataProduk->bahan_kecil_id }}"
                                                             data-bahan="{{ $dataProduk->bahan_kecil->nama_bahan ?? '' }}"
                                                             data-harga="{{ $dataProduk->harga_kecil }}"
                                                             data-berat="{{ $dataProduk->berat_kecil ?? 0 }}">
@@ -437,6 +510,7 @@
                                                     @endif
                                                     @if ($dataProduk->ukuran_sedang)
                                                         <option value="{{ $dataProduk->ukuran_sedang }}"
+                                                            data-bahan-id="{{ $dataProduk->bahan_sedang_id }}"
                                                             data-bahan="{{ $dataProduk->bahan_sedang->nama_bahan ?? '' }}"
                                                             data-harga="{{ $dataProduk->harga_sedang }}"
                                                             data-berat="{{ $dataProduk->berat_sedang ?? 0 }}">
@@ -444,6 +518,7 @@
                                                     @endif
                                                     @if ($dataProduk->ukuran_besar)
                                                         <option value="{{ $dataProduk->ukuran_besar }}"
+                                                            data-bahan-id="{{ $dataProduk->bahan_besar_id }}"
                                                             data-bahan="{{ $dataProduk->bahan_besar->nama_bahan ?? '' }}"
                                                             data-harga="{{ $dataProduk->harga_besar }}"
                                                             data-berat="{{ $dataProduk->berat_besar ?? 0 }}">
@@ -529,10 +604,12 @@
                                                 placeholder="Otomatis terisi saat ukuran dipilih" readonly>
                                         @else
                                             <select name="jenis_marmer" id="jenis_marmer"
-                                                class="form-select input-aesthetic" required>
+                                                class="form-select input-aesthetic" onchange="handleCustomBahanChange()"
+                                                required>
                                                 <option value="" selected disabled>-- Pilih Bahan Marmer --</option>
                                                 @foreach ($listBahan as $bahan)
-                                                    <option value="{{ $bahan->nama_bahan }}">{{ $bahan->nama_bahan }}
+                                                    <option value="{{ $bahan->nama_bahan }}"
+                                                        data-bahan-id="{{ $bahan->id }}">{{ $bahan->nama_bahan }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -548,6 +625,13 @@
                                         <label class="label-aesthetic">Catatan Khusus (Warna/Tekstur)</label>
                                         <textarea name="catatan_khusus" class="form-control input-aesthetic" rows="3"
                                             placeholder="Gambarkan keinginan detail Anda..."></textarea>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="label-aesthetic">Pilihan Sampel Tekstur & Warna</label>
+                                        <div id="samplePicker" class="sample-picker-empty">
+                                            Pilih bahan marmer terlebih dahulu untuk melihat sampel tekstur dan warna.
+                                        </div>
                                     </div>
 
                                     {{-- ── GAMBAR REFERENSI MAX 5 ── --}}
@@ -640,10 +724,20 @@
     <script>
         const CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const isProdukKatalog = @json(isset($dataProduk) && $dataProduk);
+        const bahanSamples = @json(
+            $listBahan->mapWithKeys(fn($bahan) => [
+                (string) $bahan->id => [
+                    'id' => $bahan->id,
+                    'nama_bahan' => $bahan->nama_bahan,
+                    'foto_sampel' => collect($bahan->foto_sampel ?? [])->map(fn($foto) => asset('storage/' . $foto))->values()->all(),
+                ],
+            ])
+        );
 
         let hargaProdukGlobal = 0;
         let beratSatuanGlobal = 0;
         let beratTotalGlobal = 0;
+        let selectedSamplePhoto = '';
 
         // ── FILE LIST untuk gambar referensi ──────────────────────
         let fileList = []; // array of File objects, max 5
@@ -652,6 +746,8 @@
         const inputEl = document.getElementById('gambar_referensi_input');
         const previewGrid = document.getElementById('previewGrid');
         const counter = document.getElementById('uploadCounter');
+        const samplePicker = document.getElementById('samplePicker');
+        const selectedSampleInput = document.getElementById('foto_sampel_terpilih');
 
         inputEl.addEventListener('change', function() {
             const incoming = Array.from(this.files);
@@ -718,6 +814,64 @@
             const dt = new DataTransfer();
             fileList.forEach(f => dt.items.add(f));
             inputEl.files = dt.files;
+        }
+
+        function renderSamplePicker(sampleUrls = []) {
+            samplePicker.innerHTML = '';
+
+            if (!sampleUrls.length) {
+                samplePicker.className = 'sample-picker-empty';
+                samplePicker.textContent = 'Belum ada foto sampel untuk bahan marmer ini.';
+                selectedSamplePhoto = '';
+                selectedSampleInput.value = '';
+                return;
+            }
+
+            samplePicker.className = 'sample-picker';
+
+            const grid = document.createElement('div');
+            grid.className = 'sample-thumb-grid';
+
+            sampleUrls.slice(0, 4).forEach((url, index) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'sample-thumb-option' + (index === 0 ? ' active' : '');
+                button.dataset.sampleUrl = url;
+                button.innerHTML = `
+                    <img src="${url}" alt="Sampel tekstur marmer ${index + 1}">
+                    <span class="sample-thumb-check"><i class="fa-solid fa-check"></i></span>
+                `;
+                button.addEventListener('click', function() {
+                    selectSamplePhoto(url, button);
+                });
+                grid.appendChild(button);
+            });
+
+            samplePicker.appendChild(grid);
+            selectSamplePhoto(sampleUrls[0], grid.querySelector('.sample-thumb-option'));
+        }
+
+        function selectSamplePhoto(url, activeButton = null) {
+            selectedSamplePhoto = url || '';
+            selectedSampleInput.value = selectedSamplePhoto;
+
+            document.querySelectorAll('.sample-thumb-option').forEach((button) => {
+                const isActive = activeButton ? button === activeButton : button.dataset.sampleUrl === url;
+                button.classList.toggle('active', isActive);
+            });
+        }
+
+        function syncSamplePickerByBahanId(bahanId) {
+            const bahan = bahanId ? bahanSamples[String(bahanId)] : null;
+            renderSamplePicker(bahan?.foto_sampel || []);
+        }
+
+        function handleCustomBahanChange() {
+            if (isProdukKatalog) return;
+
+            const select = document.getElementById('jenis_marmer');
+            const option = select.options[select.selectedIndex];
+            syncSamplePickerByBahanId(option?.dataset?.bahanId || '');
         }
 
         // ── CSRF ──────────────────────────────────────────────────
@@ -843,12 +997,14 @@
 
             const sel = document.getElementById('ukuran');
             const opt = sel.options[sel.selectedIndex];
-            const bahanId = (opt && opt.getAttribute('data-bahan')) ? opt.getAttribute('data-bahan') : null;
+            const bahanNama = (opt && opt.getAttribute('data-bahan')) ? opt.getAttribute('data-bahan') : null;
+            const bahanId = (opt && opt.getAttribute('data-bahan-id')) ? opt.getAttribute('data-bahan-id') : null;
             const hargaSatuan = (opt && opt.getAttribute('data-harga')) ? parseInt(opt.getAttribute('data-harga')) : 0;
             beratSatuanGlobal = (opt && opt.getAttribute('data-berat')) ? parseFloat(opt.getAttribute('data-berat')) : 0;
             const qty = parseInt(document.getElementById('input_qty').value) || 1;
 
-            document.getElementById('jenis_marmer').value = bahanId;
+            document.getElementById('jenis_marmer').value = bahanNama || '';
+            syncSamplePickerByBahanId(bahanId);
 
             const wrapperBerat = document.getElementById('wrapper_berat_satuan');
             if (beratSatuanGlobal > 0 && opt && !opt.disabled) {
@@ -897,6 +1053,9 @@
 
         window.onload = function() {
             updateHarga();
+            if (!isProdukKatalog) {
+                handleCustomBahanChange();
+            }
         };
     </script>
 @endsection

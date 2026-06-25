@@ -99,6 +99,12 @@
                                         @if ($item->catatan_khusus)
                                             <div class="small mt-2 fst-italic text-secondary">{{ $item->catatan_khusus }}</div>
                                         @endif
+                                        @if ($item->foto_sampel_terpilih)
+                                            <div class="mt-2">
+                                                <img src="{{ $item->foto_sampel_terpilih }}" alt="Sampel terpilih"
+                                                    style="width:56px;height:56px;object-fit:cover;border-radius:10px;border:2px solid #C5A47E;">
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="text-end">
                                         <div class="fw-bold">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</div>

@@ -18,6 +18,7 @@ class CartItem extends Model
         'ukuran',
         'jenis_marmer',
         'catatan_khusus',
+        'foto_sampel_terpilih',
         'gambar_referensi',
         'jumlah',
         'berat_satuan',
