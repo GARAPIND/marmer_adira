@@ -5,6 +5,7 @@
         ? $item->foto_dikerjakan
         : json_decode($item->foto_dikerjakan, true) ?? [];
     $fotosSelesai = is_array($item->foto_selesai) ? $item->foto_selesai : json_decode($item->foto_selesai, true) ?? [];
+    $effectiveExpiresAt = $item->effective_expires_at;
 @endphp
 
 <div class="acc-block">
@@ -83,6 +84,16 @@
         <div class="val">
             {{ \Carbon\Carbon::parse($item->estimasi_selesai)->locale('id')->isoFormat('D MMMM YYYY') }}
         </div>
+    </div>
+@endif
+
+@if ($item->status_pembayaran === 'no_paid' && $effectiveExpiresAt)
+    <div class="acc-block">
+        <label>Batas Pembayaran</label>
+        <div class="val text-danger">
+            {{ \Carbon\Carbon::parse($effectiveExpiresAt)->locale('id')->isoFormat('D MMMM YYYY, HH:mm') }}
+        </div>
+        <div class="val-muted">Pesanan akan dipindahkan ke halaman expired jika belum dibayar sampai waktu ini.</div>
     </div>
 @endif
 

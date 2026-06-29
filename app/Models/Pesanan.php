@@ -54,7 +54,9 @@ class Pesanan extends Model
         'midtrans_currency',
         'midtrans_fraud_status',
         'midtrans_payload',
-        'estimasi_selesai'
+        'estimasi_selesai',
+        'expires_at',
+        'expired_at',
     ];
 
     protected $casts = [
@@ -69,6 +71,8 @@ class Pesanan extends Model
         'deleted_at' => 'datetime',
         'gambar_referensi' => 'array',
         'estimasi_selesai' => 'date',
+        'expires_at' => 'datetime',
+        'expired_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -76,6 +80,8 @@ class Pesanan extends Model
         'foto_selesai',
         'status_label_pembeli',
         'is_menunggu_pelunasan',
+        'is_expired',
+        'effective_expires_at',
     ];
 
     public function user(): BelongsTo
@@ -150,10 +156,28 @@ class Pesanan extends Model
         );
     }
 
+    protected function isExpired(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->status === 'Expired'
+        );
+    }
+
+    protected function effectiveExpiresAt(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->expires_at ?? $this->created_at?->copy()->addDay()
+        );
+    }
+
     protected function statusLabelPembeli(): Attribute
     {
         return Attribute::make(
             get: function () {
+                if ($this->status === 'Expired') {
+                    return 'Expired';
+                }
+
                 if ($this->status === 'diekspedisi') {
                     return 'Dikirim';
                 }

@@ -235,12 +235,17 @@
                 <div>
                     <h2 class="fw-bold mb-0 text-dark" style="border-left:5px solid #000;padding-left:15px;">Riwayat Pesanan
                     </h2>
-                    <p class="text-muted small mb-0">Pantau status produksi dan rincian biaya pesanan Anda</p>
+                    <p class="text-muted small mb-0">Pantau status produksi, batas pembayaran, dan rincian biaya pesanan Anda</p>
                 </div>
             </div>
-            <a href="{{ route('produk.index') }}" class="btn btn-dark rounded-pill px-4 shadow-sm fw-bold">
-                <i class="fas fa-plus me-2 text-gold"></i> Buat Pesanan Baru
-            </a>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a href="{{ route('pesanan.expired') }}" class="btn btn-outline-danger rounded-pill px-4 shadow-sm fw-bold">
+                    <i class="fas fa-clock me-2"></i> Pesanan Expired
+                </a>
+                <a href="{{ route('produk.index') }}" class="btn btn-dark rounded-pill px-4 shadow-sm fw-bold">
+                    <i class="fas fa-plus me-2 text-gold"></i> Buat Pesanan Baru
+                </a>
+            </div>
         </div>
 
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-5">
@@ -314,6 +319,11 @@
                                             &middot; {{ strtoupper($item->midtrans_bank ?? $item->midtrans_payment_type) }}
                                         @endif
                                     </div>
+                                    @if ($item->status_pembayaran === 'no_paid' && $item->effective_expires_at)
+                                        <div class="small mt-1 text-danger fw-semibold">
+                                            Exp: {{ \Carbon\Carbon::parse($item->effective_expires_at)->format('d M Y H:i') }}
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="text-end pe-4">
                                     <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold btn-detail-acc"
@@ -370,6 +380,11 @@
                                 <td class="text-center">
                                     <span
                                         class="badge badge-status-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Menunggu</span>
+                                    @if ($item->status_pembayaran === 'no_paid' && $item->effective_expires_at)
+                                        <div class="small mt-1 text-danger fw-semibold">
+                                            Exp: {{ \Carbon\Carbon::parse($item->effective_expires_at)->format('d M Y H:i') }}
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="text-end pe-4">
                                     <button class="btn btn-dark btn-sm rounded-pill px-3 fw-bold btn-detail-acc"
@@ -474,7 +489,11 @@
             }
 
             let html = '';
-            if (data.status === 'Menunggu Verifikasi Admin') {
+            if (data.status === 'Expired') {
+                html = `<div class="alert alert-danger border-0 small mb-2 py-2" style="border-radius:12px;">
+                    <i class="fas fa-clock me-1"></i> Pesanan sudah expired dan dipindahkan ke halaman pesanan expired. Tidak bisa diproses lagi.
+                </div>`;
+            } else if (data.status === 'Menunggu Verifikasi Admin') {
                 html = `<span class="badge w-100 bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 py-2">
                     <i class="fas fa-hourglass-half me-1"></i> Sedang diperiksa Admin</span>`;
             } else if (data.status === 'Ditolak') {

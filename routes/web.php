@@ -48,9 +48,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('index');
         Route::post('/', [CartController::class, 'store'])->name('store');
         Route::delete('/{id}', [CartController::class, 'destroy'])->name('destroy');
-    });
+        });
     Route::prefix('pesanan')->name('pesanan.')->group(function () {
         Route::get('/', [PesananController::class, 'index'])->name('index');
+        Route::get('/expired', [PesananController::class, 'expired'])->name('expired');
         Route::get('/create', [ProdukController::class, 'showOrderForm'])->name('create');
         Route::post('/', [PesananController::class, 'store'])->name('store');
         Route::put('/{id}/status', [PesananController::class, 'updateStatus'])->name('updateStatus');
@@ -134,3 +135,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/katalog/hapus/{id}', [PengrajinController::class, 'hapusProduk'])->name('katalog.hapus');
     });
 });
+
+
+
+

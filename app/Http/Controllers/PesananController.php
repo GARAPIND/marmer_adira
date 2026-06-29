@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Carbon\Carbon;
 
 class PesananController extends Controller
 {
@@ -328,6 +329,8 @@ class PesananController extends Controller
             'jumlah_dibayar'          => $jumlahDibayar,
             'tanggal_bayar'           => $tanggalBayar,
             'tanggal_lunas'           => $tanggalLunas,
+            'expires_at'              => in_array($statusPembayaran, ['dp', 'paid'], true) ? null : ($pesanan->expires_at ?? $pesanan->created_at?->copy()->addDay()),
+            'expired_at'              => in_array($statusPembayaran, ['dp', 'paid'], true) ? null : $pesanan->expired_at,
         ];
 
         $payloadJson = $this->appendMidtransPayload($pesanan, $payload, $source);
@@ -341,13 +344,94 @@ class PesananController extends Controller
         return $statusPembayaran;
     }
 
+    private function refreshExpiredOrdersForUser(int $userId): void
+    {
+        $now = now();
+
+        Pesanan::query()
+            ->where('user_id', $userId)
+            ->where('status_pembayaran', 'no_paid')
+            ->where('status', '!=', 'Expired')
+            ->get()
+            ->each(function (Pesanan $pesanan) use ($now) {
+                $expiresAt = $pesanan->expires_at ?? $pesanan->created_at?->copy()->addDay();
+
+                if ($expiresAt === null) {
+                    return;
+                }
+
+                $updates = [];
+
+                if ($pesanan->expires_at === null) {
+                    $updates['expires_at'] = $expiresAt;
+                }
+
+                if ($expiresAt->lte($now)) {
+                    $updates['status'] = 'Expired';
+                    $updates['expired_at'] = $pesanan->expired_at ?? $now;
+                }
+
+                if ($updates !== []) {
+                    $pesanan->update($updates);
+                }
+            });
+
+        Pesanan::query()
+            ->where('user_id', $userId)
+            ->whereIn('status_pembayaran', ['dp', 'paid'])
+            ->where(function ($query) {
+                $query->whereNotNull('expires_at')
+                    ->orWhereNotNull('expired_at')
+                    ->orWhere('status', 'Expired');
+            })
+            ->get()
+            ->each(function (Pesanan $pesanan) {
+                $updates = [
+                    'expires_at' => null,
+                    'expired_at' => null,
+                ];
+
+                if ($pesanan->status === 'Expired') {
+                    $updates['status'] = 'Diverifikasi';
+                }
+
+                $pesanan->update($updates);
+            });
+    }
+
+    private function ensureOrderIsNotExpired(Pesanan $pesanan): void
+    {
+        $this->refreshExpiredOrdersForUser((int) $pesanan->user_id);
+        $pesanan->refresh();
+
+        if ($pesanan->status === 'Expired') {
+            abort(422, 'Pesanan sudah expired dan tidak bisa diproses lagi.');
+        }
+    }
     public function index()
     {
+        $this->refreshExpiredOrdersForUser((int) Auth::id());
+
         $pesanan = Pesanan::with(['paymentHistories', 'progressPhotos', 'items'])
             ->where('user_id', Auth::id())
+            ->where('status', '!=', 'Expired')
             ->latest()
             ->get();
+
         return view('pesanan.index', compact('pesanan'));
+    }
+
+    public function expired()
+    {
+        $this->refreshExpiredOrdersForUser((int) Auth::id());
+
+        $pesanan = Pesanan::with(['paymentHistories', 'progressPhotos', 'items'])
+            ->where('user_id', Auth::id())
+            ->where('status', 'Expired')
+            ->latest('expired_at')
+            ->get();
+
+        return view('pesanan.expired', compact('pesanan'));
     }
 
     public function create(Request $request)
@@ -458,6 +542,12 @@ class PesananController extends Controller
         if (Schema::hasColumn('pesanan', 'jumlah_dibayar')) {
             $payload['jumlah_dibayar'] = 0;
         }
+        if (Schema::hasColumn('pesanan', 'expires_at')) {
+            $payload['expires_at'] = now()->addDay();
+        }
+        if (Schema::hasColumn('pesanan', 'expired_at')) {
+            $payload['expired_at'] = null;
+        }
 
         DB::transaction(function () use ($payload, $cartItems) {
             $pesanan = Pesanan::create($payload);
@@ -489,7 +579,8 @@ class PesananController extends Controller
 
     public function selesai($id)
     {
-        $pesanan = Pesanan::findOrFail($id);
+        $pesanan = Pesanan::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $this->ensureOrderIsNotExpired($pesanan);
         $pesanan->update(['status' => 'Selesai']);
         return redirect()->back()->with('success', 'Pesanan selesai!');
     }
@@ -497,6 +588,7 @@ class PesananController extends Controller
     public function getSnapToken($id)
     {
         $pesanan = Pesanan::with('items')->where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $this->ensureOrderIsNotExpired($pesanan);
         $paymentStep = request()->query('payment_step', 'lunas');
         $allowedStatusesForDp = ['Diverifikasi'];
         $allowedStatusesForLunas = ['Diverifikasi', 'Diproses', 'Dikerjakan', 'Selesai', 'diekspedisi'];
@@ -588,6 +680,7 @@ class PesananController extends Controller
     public function paymentSuccess(Request $request, $id)
     {
         $pesanan = Pesanan::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $this->ensureOrderIsNotExpired($pesanan);
 
         $request->validate([
             'order_id'           => 'required|string',
@@ -661,3 +754,5 @@ class PesananController extends Controller
         }
     }
 }
+
+
